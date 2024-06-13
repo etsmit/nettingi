@@ -1,16 +1,13 @@
-.. rfi-mitigation documentation master file, created by
-   sphinx-quickstart on Wed Jun 12 16:32:10 2024.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to rfi-mitigation's documentation!
-==========================================
+********************
+2024 Summer Research
+********************
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
+   report/index
+   notebooks/index
 
 Indices and tables
 ==================
