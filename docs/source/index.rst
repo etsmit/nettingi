@@ -8,6 +8,7 @@
 
    report/index
    notebooks/index
+   start/index
 
 Indices and tables
 ==================

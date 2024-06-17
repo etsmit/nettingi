@@ -4,6 +4,6 @@ Abstract
 
 .. attention::
 
-    This section is due on DATE
+    Change
 
 This is the abstract
