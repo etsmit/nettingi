@@ -5,9 +5,9 @@ After installation, ``name`` can be used in terminal or a python environment. Th
 
 In terminal
 ====================
-If using terminal, this is how you would use it. Note that filename is the file path to the data with RFI you want to mitigate.
+If using terminal, this is how you would use it. Note that ``filename`` is the file path to the data with RFI you want to mitigate and ``replacement`` is either ``nans`` or ``noise`` depending on what the RFI should be replaced with.
 
 .. code::
 
-    $ python mitigateRFI filename
+    $ python mitigateRFI -i filename -r replacement
 
