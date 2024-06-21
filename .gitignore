@@ -163,4 +163,4 @@ cython_debug/
 
 # additional unwanted
 docs/jupyter_execute
-src/RFImitigation/testing.ipynb
+src/RFIMitigation/testing.ipynb
