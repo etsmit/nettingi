@@ -170,9 +170,9 @@ def mitigateRFI_IQRM(*args):
     #pattern for your parameters specific to the RFI
     #example for SK:
     if IQRM_datatype == 'std':
-        outfile_pattern = f"r{IQRM_radius}_t{IQRM_threshold}_{IQRM_datatype}_b{IQRM_breakdown}"
+        outfile_pattern = f'r{IQRM_radius}_t{IQRM_threshold}_{IQRM_datatype}_b{IQRM_breakdown}'
     else:
-        outfile_pattern = f"r{IQRM_radius}_t{IQRM_threshold}_{IQRM_datatype}"
+        outfile_pattern = f'r{IQRM_radius}_t{IQRM_threshold}_{IQRM_datatype}'
 
 
     # any separate results filenames you need, in addition to the flags filename, put them here

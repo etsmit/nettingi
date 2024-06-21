@@ -338,14 +338,14 @@ def template_print_flagstats(flags_all):
 
 #print(f'Pol0: {flagged_pts_p2} datapoints were flagged out of {tot_points}')
 	flagged_percent = (float(flagged_pts_p1)/tot_points)*100
-	print(f'Pol0: {np.mean(flags_all[:,:,0])}% of data outside acceptable ranges')
+	print(f'Pol0: {flagged_percent}% of data outside acceptable ranges')
 
-#print(f'Pol1: {flagged_pts_p2} datapoints were flagged out of {tot_points}')
-	flagged_percent = (float(flagged_pts_p2)/tot_points)*100
-	print(f'Pol1: {np.mean(flags_all[:,:,0])}% of data outside acceptable ranges')
+#print(f'Pol1: {flagged_pts_p2} datapoints were flagged out of {tot_points}') np.mean(flags_all[:,:,0])
+	flagged_percent1 = (float(flagged_pts_p2)/tot_points)*100
+	print(f'Pol1: {flagged_percent1}% of data outside acceptable ranges')
 
 	flags_all[:,:,0][flags_all[:,:,1]==1]=1
-	print(f'Union of flags: {np.mean(flags_all[:,:,0])}% of data flagged')
+	print(f'Union of flags: {(flagged_percent1+flagged_percent)/2.0}% of data flagged')
 
 
 # 	tot_points = flags_all[:,:,1].size
