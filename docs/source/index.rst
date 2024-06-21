@@ -22,7 +22,7 @@ Indices and tables
 
 
 Dev Team
---------
+==================
 | `Kaitlyn Chen <https://kaitlynchen1.github.io/>`_ (Harvey Mudd/GBO)
 | Evan Smith (GBO)
 | V. Cat Catlett (GBO)
