@@ -345,7 +345,7 @@ def template_print_flagstats(flags_all):
 	print(f'Pol1: {flagged_percent1}% of data outside acceptable ranges')
 
 	flags_all[:,:,0][flags_all[:,:,1]==1]=1
-	print(f'Union of flags: {np.mean(flags_all[:,:,0])}% of data flagged')
+	print(f'Union of flags: {np.mean(flags_all[:,:,0])*100}% of data flagged')
 
 
 # 	tot_points = flags_all[:,:,1].size
