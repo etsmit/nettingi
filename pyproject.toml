@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nettingi"
+description = "Toolbox for NETTING radio frequency Interference in Green Bank Telescope data"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+keywords = ["rfi mitigation", "rfi", "radio frequency interference", "green bank"]
+dynamic = ["version"]
+authors = [
+  { name = "Kaitlyn Chen", email = "kaichen@g.hmc.edu" },
+  { name = "Evan Smith", email = "esmith@nrao.edu" },
+  { name = "Victoria Catlett", email = "vcatlett@nrao.edu" },
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
+dynamic = ["dependencies"]
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+
+[project.urls]
+Documentation = "https://nettingi.readthedocs.io"
+Repository = "https://github.com/kaitlynchen1/nettingi"
+Issues = "https://github.com/kaitlynchen1/nettingi/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "nettingi.__version__"}
