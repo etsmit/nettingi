@@ -1,11 +1,20 @@
 #h
 
+
+
+import numpy as np
+
+import scipy as sp
+import scipy.optimize
+import scipy.special
+import math as math
+
 from .core import mitigateRFI
 
 from .utils import *
 
 
-Class rfi-sk(mitigateRFI):
+Class rfi_sk(mitigateRFI):
     #h
     def __init__(self, infile, repl_method, m, mssk, n, d, s, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         #user-given attributes
