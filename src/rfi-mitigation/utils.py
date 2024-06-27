@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from numba import jit,prange
 
 
-from statsmodels.stats.weightstats import DescrStatsW
+#from statsmodels.stats.weightstats import DescrStatsW
 
 
 

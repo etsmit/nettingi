@@ -14,7 +14,7 @@ from .core import mitigateRFI
 from .utils import *
 
 
-Class rfi_sk(mitigateRFI):
+class rfi_sk(mitigateRFI):
     #h
     def __init__(self, infile, repl_method, m, mssk, n, d, s, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         #user-given attributes
@@ -125,10 +125,6 @@ Class rfi_sk(mitigateRFI):
         return flags_block
         
         #pass
-
-    def save_npys(self)
-        np.save(self._sk_filename, self.ss_sk)
-        np.save(self._mssk_filname, self.ms_sk)
 
 
 
