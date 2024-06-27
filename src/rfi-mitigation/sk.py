@@ -7,20 +7,20 @@ from .utils import *
 
 Class rfi-sk(mitigateRFI):
     #h
-    def __init__(self, det_method, infile, repl_method, m, mssk, n, d, s, cust='', output_bool = True, mb=1, rawdata=False):
+    def __init__(self, infile, repl_method, m, mssk, n, d, s, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         #user-given attributes
-        self.det_method = det_method        
+        self.det_method = 'SK'       
         self.infile = template_infile_mod(infile,in_dir)[0]
         self.repl_method = repl_method
         self.cust = cust
         self.output_bool = output_bool 
         self.mb = mb
-        self.rawdata = rawdata  
+        self.rawdata = rawdata
+        self.ave_factor = ave_factor 
 
         #default/hardcoded attributes
         self.in_dir = '/data/rfimit/unmitigated/rawdata/'#move to actual data dir
         self._rawFile = GuppiRaw(infile)
-
 
 
         self.SK_m = m
@@ -28,7 +28,6 @@ Class rfi-sk(mitigateRFI):
         self.n = n
         self.d = d
         self.sigma = s
-
 
         self._out_dir = '/data/scratch/SKresults/'
         self._jetstor_dir = '/jetstor/scratch/SK_rawdata_results/'
@@ -43,13 +42,16 @@ Class rfi-sk(mitigateRFI):
         # any separate results filenames you need, in addition to the flags filename, put them here
         npybase = out_dir+'npy_results/'+infile[len(in_dir):-4]
 
-        self._flags_filename = f"{npybase}_flags_{IDstr}_{outfile_pattern}_{cust}.npy"
-        self._spost_filename = f"{npybase}_spost_{IDstr}_{outfile_pattern}_{cust}.npy"
-        self._spect_filename = f"{npybase}_spect_{IDstr}_{outfile_pattern}_{cust}.npy"
-        self._sk_filename = f"{npybase}_skval_{IDstr}_{outfile_pattern}_{cust}.npy"
-        self._regen_filename = f"{npybase}_regen_{IDstr}_{outfile_pattern}_{cust}.npy"
 
-        self._outfile = f"{jstor_dir}{infile[len(in_dir):-4]}_{IDstr}_{outfile_pattern}_mb{mb}_{cust}{infile[-4:]}"
+        self._flags_filename = f"{npybase}_flags_{IDstr}_{outfile_pattern}_{cust}.npy"
+
+        self._sk_filename = f"{npybase}_skval_{IDstr}_{outfile_pattern}_{cust}.npy"
+        self._mssk_filename = f"{npybase}_mssk_{IDstr}_{outfile_pattern}_{cust}.npy"
+
+
+        self._outfile = f"{jetstor_dir}{infile[len(in_dir):-4]}_{IDstr}_{outfile_pattern}_mb{mb}_{cust}{infile[-4:]}"
+        
+        
 
         #any derived thresholds/arrays
         self._SK_p = (1-scipy.special.erf(sigma/math.sqrt(2))) / 2
@@ -67,9 +69,13 @@ Class rfi-sk(mitigateRFI):
         print(f'MS Lower Threshold: {ms_lt}')
 
 
-    def SK_detection(self,data):
+    def SK_detection(self,data,bi):
 
         s = np.abs(data)**2
+
+        num_coarsechan = s.shape[0]
+        num_timesamples = s.shape[1]
+        num_SKbins = num_timesamples // self.SK_m
 
         flags_block = np.zeros((s.shape[0], s.shape[1]//SK_m, s.shape[2]),dtype=np.int8)
         ms_flags_block = np.zeros((s.shape[0] - (ms0-1) , flags_block.shape[1] - (ms1-1) , s.shape[2]))
@@ -93,12 +99,27 @@ Class rfi-sk(mitigateRFI):
 
                 for ichan in range(self._ms0):
                     for itime in range(self._ms1):
-                        flags_block[ichan:ichan+(num_coarsechan-(self._ms0-1)),itime:itime+(num_SKbins-(ms1-1)),:][ms_flags_block==1] = 1 
+                        flags_block[ichan:ichan+(num_coarsechan-(self._ms0-1)),itime:itime+(num_SKbins-(ms1-1)),:][ms_flags_block==1] = 1
+
+        #track intermediate results
+        if bi == 0:
+            self.flags_all = flags_block
+            self.ss_sk_all = ss_sk_block
+            self.ms_sk_all = ms_sk_block
+        else:
+            self.ss_sk_all = np.concatenate((self.ss_sk_all, flags_block),axis=1)
+            self.ss_sk_all = np.concatenate((self.ss_sk_all, ss_sk_block),axis=1)
+            self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
+
+
 
         return flags_block
         
         #pass
 
+    def save_npys(self)
+        np.save(self._sk_filename, self.ss_sk)
+        np.save(self._mssk_filname, self.ms_sk)
 
 
 
