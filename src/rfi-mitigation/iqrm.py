@@ -25,14 +25,14 @@ from .utils import *
 import iqrm
 
 class rfi_iqrm(mitigateRFI):
-    def __init__(self, infile, repl_method, IQRM_radius=5, IQRM_threshold=3.0, IQRM_datatype='std', IQRM_breakdown=512, rawdata=False):
+    def __init__(self, infile, repl_method, IQRM_radius=5, IQRM_threshold=3.0, IQRM_datatype='std', IQRM_breakdown=512, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         #user-given attributes
         self.det_method = 'IQRM'       
         self.infile = template_infile_mod(infile,self.in_dir)[0]
         self.repl_method = repl_method
-        # self.cust = cust
+        self.cust = cust
         # self.output_bool = output_bool 
-        # self.mb = mb
+        self.mb = mb
         self.rawdata = rawdata
         # self.ave_factor = ave_factor 
 
@@ -61,27 +61,18 @@ class rfi_iqrm(mitigateRFI):
         npybase = self.out_dir+'npy_results/'+infile[len(self.in_dir):-4]
 
 
-        self._flags_filename = f"{npybase}_flags_{IDstr}_{outfile_pattern}_{cust}.npy"
+        self._flags_filename = f"{npybase}_flags_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
 
-        self._sk_filename = f"{npybase}_skval_{IDstr}_{outfile_pattern}_{cust}.npy"
-        self._mssk_filename = f"{npybase}_mssk_{IDstr}_{outfile_pattern}_{cust}.npy"
+        self.avg_pre_filename = f"{npybase}_avg_pre_{self.det_method}_{outfile_pattern}_{cust}.npy"
+        self.avg_post_filename = f"{npybase}_avg_post_{self.det_method}_{outfile_pattern}_{cust}.npy"
+        self.spost_filename = f"{npybase}_spost_{self.det_method}_{outfile_pattern}_{cust}.npy"
 
+        
+    
 
-        self._outfile = f"{jetstor_dir}{infile[len(in_dir):-4]}_{IDstr}_{outfile_pattern}_mb{mb}_{cust}{infile[-4:]}"
+        self._outfile = f"{self._jetstor_dir}{infile[len(self.in_dir):-4]}_{self.det_method}_{self._outfile_pattern}_mb{mb}_{cust}{infile[-4:]}"
+        #threshold calc from sigma
+        self.IQRM_lag = iqrm.core.genlags(IQRM_radius, geofactor=1.5)
+        print('integer lags, k: {}'.format(self.IQRM_lag))
         
         
-
-        #any derived thresholds/arrays
-        self._SK_p = (1-scipy.special.erf(sigma/math.sqrt(2))) / 2
-        print(f'Probability of false alarm: {SK_p}')
-
-        #calculate thresholds
-        print('Calculating SK thresholds...')
-        self._lt, self._ut = self.SK_thresholds(self)
-        print(f'Upper Threshold: {ut}'+str(ut))
-        print(f'Lower Threshold: {lt}'+str(lt))
-
-        #calculate ms thresholds
-        self._ms_lt, self._ms_ut = self.SK_thresholds(SK_M*ms0*ms1, N = n, d = d, p = SK_p)
-        print(f'MS Upper Threshold: {ms_ut}')
-        print(f'MS Lower Threshold: {ms_lt}')
