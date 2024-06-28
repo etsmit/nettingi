@@ -15,6 +15,7 @@ import time
 from blimpy import GuppiRaw
 
 from .utils import *
+#from .sk import rfi_sk
 
 import iqrm
 
@@ -54,31 +55,31 @@ class mitigateRFI:
 
         start_time = time.time()
         if self.output_bool:
-            template_check_outfile(infile,outfile)
-            out_rawFile = open(outfile,'rb+')
+            template_check_outfile(self.infile,self._outfile)
+            out_rawFile = open(self._outfile,'rb+')
 
         
-        template_check_nblocks(rawFile,mb)
-        numblocks = self.rawFile.find_n_data_blocks()
+        template_check_nblocks(self._rawFile,self.mb)
+        numblocks = self._rawFile.find_n_data_blocks()
 
-        for bi in range(numblocks//mb):
+        for bi in range(numblocks//self.mb):
             print('------------------------------------------')
-            print(f'Block: {(block*mb)+1}/{numblocks}')
+            print(f'Block: {(bi*self.mb)+1}/{numblocks}')
 
 
             #print header for the first block
             if bi == 0:
-                template_print_header(rawFile)
+                template_print_header(self._rawFile)
 
 
             #loading multiple blocks at once?        
-            for mb_i in range(mb):
+            for mb_i in range(self.mb):
                 if mb_i==0:
-                    header,data = rawFile.read_next_data_block()
+                    header,data = self._rawFile.read_next_data_block()
                     data = np.copy(data)
                     d1s = data.shape[1]
                 else:
-                    h2,d2 = rawFile.read_next_data_block()
+                    h2,d2 = self._rawFile.read_next_data_block()
                     data = np.append(data,np.copy(d2),axis=1)
 
             #find data shape
@@ -88,8 +89,8 @@ class mitigateRFI:
             print(f'Data shape: {data.shape} || block size: {data.nbytes}')
 
             #save raw data?
-            if rawdata:
-                template_save_npy(data,block,npy_base)    
+            if self.rawdata:
+                template_save_npy(data,bi,npy_base)    
        
 
             spect_block = template_averager(data, self.ave_factor)
@@ -98,8 +99,9 @@ class mitigateRFI:
             #===============================================
             #***********************************************
 
-            if self.method == 'SK':
-                flags_block, ss_sk_block, ms_sk_block = sk-rfi.SK_detection(self,data)
+            if self.det_method == 'SK':
+                print('SK mitigation')
+                flags_block, ss_sk_block, ms_sk_block = self.SK_detection(data)
                 if bi == 0:
                     self.ss_sk_all = ss_sk_block
                     self.ms_sk_all = ms_sk_block
@@ -107,8 +109,12 @@ class mitigateRFI:
                     self.ss_sk_all = np.concatenate((self.ss_sk_all, ss_sk_block),axis=1)
                     self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
 
-            elif self.method == 'IQRM':
+            elif self.det_method == 'IQRM':
                 pass
+
+
+            #***********************************************
+            #===============================================
 
 
 
@@ -121,8 +127,6 @@ class mitigateRFI:
                 self.spect_all = np.concatenate((self.spect_all, spect_block),axis=1)
 
 
-            #***********************************************
-            #===============================================
 
             
 
@@ -139,7 +143,7 @@ class mitigateRFI:
 
             #now flag shape is (chan,spectra,pol)
             #apply union of flags between the pols
-            if combine_flag_pols:
+            if True:
                 flags_block[:,:,0][flags_block[:,:,1]==1]=1
                 flags_block[:,:,1][flags_block[:,:,0]==1]=1
 
@@ -150,18 +154,18 @@ class mitigateRFI:
                 sys.exit()
                 
 
-            if repl_method == 'nans':
+            if self.repl_method == 'nans':
                 data = repl_nans(data,flags_block)
 
-            if repl_method == 'zeros':
+            if self.repl_method == 'zeros':
                 #replace data with zeros
                 data = repl_zeros(data,flags_block)
 
-            if repl_method == 'previousgood':
+            if self.repl_method == 'previousgood':
                 #replace data with previous (or next) good
                 data = previous_good(data,flags_block,ts_factor)
 
-            if repl_method == 'stats':
+            if self.repl_method == 'stats':
                 #replace data with statistical noise derived from good datapoints
                 data = statistical_noise_fir(data,flags_block,ts_factor)
 
@@ -176,7 +180,7 @@ class mitigateRFI:
 
 
             #write back raw data
-            if output_bool:
+            if self.output_bool:
                 print('Re-formatting data and writing back to file...')
                 for mb_i in range(mb):
                     out_rawFile.seek(headersize,1)

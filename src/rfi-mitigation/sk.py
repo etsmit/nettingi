@@ -47,20 +47,20 @@ class rfi_sk(mitigateRFI):
         self.ms1 = int(mssk.split(',')[1])
 
         
-        self._outfile_pattern = "m{SK_M}_s{sigma}_ms{ms0}-{ms1}"
+        self._outfile_pattern = f"m{self.SK_m}_s{self.sigma}_ms{self.ms0}-{self.ms1}"
 
 
         # any separate results filenames you need, in addition to the flags filename, put them here
         npybase = self._out_dir+'npy_results/'+infile[len(self.in_dir):-4]
 
 
-        self._flags_filename = f"{npybase}_flags_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
+        self._flags_filename = f"{npybase}_flags_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
 
-        self._sk_filename = f"{npybase}_skval_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
-        self._mssk_filename = f"{npybase}_mssk_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
+        self._sk_filename = f"{npybase}_skval_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._mssk_filename = f"{npybase}_mssk_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
 
 
-        self._outfile = f"{self._jetstor_dir}{infile[len(self.in_dir):-4]}_{self.det_method}_{self._outfile_pattern}_mb{mb}_{cust}{infile[-4:]}"
+        self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self._outfile_pattern}_mb{self.mb}_{self.cust}{infile[-4:]}"
         
         
 
@@ -88,29 +88,30 @@ class rfi_sk(mitigateRFI):
         num_timesamples = s.shape[1]
         num_SKbins = num_timesamples // self.SK_m
 
-        flags_block = np.zeros((s.shape[0], s.shape[1]//SK_m, s.shape[2]),dtype=np.int8)
-        ms_flags_block = np.zeros((s.shape[0] - (ms0-1) , flags_block.shape[1] - (ms1-1) , s.shape[2]))
+        flags_block = np.zeros((s.shape[0], s.shape[1]//self.SK_m, s.shape[2]),dtype=np.int8)
+        ms_flags_block = np.zeros((s.shape[0] - (self.ms0-1) , flags_block.shape[1] - (self.ms1-1) , s.shape[2]))
 
         #detect and flag RFI
         for pol in range(s.shape[2]):
 
 
             #single scale
-            ss_sk_block = single_scale_SK_EST(self,s)
+            ss_sk_block = self.single_scale_SK_EST(s)
+            print(ss_sk_block.shape,flags_block.shape)
             flags_block[ss_sk_block < self._lt] = 1
             flags_block[ss_sk_block > self._ut] = 1
 
 
             #multiscale
             if (self.mssk != '0,0'):
-                ms_sk_block = multi_scale_SK_EST(self,s)
+                ms_sk_block = self.multi_scale_SK_EST(s)
                 ms_flags_block[ms_sk_block < self._ms_lt] = 1
                 ms_flags_block[ms_sk_block > self._ms_ut] = 1
 
 
-                for ichan in range(self._ms0):
-                    for itime in range(self._ms1):
-                        flags_block[ichan:ichan+(num_coarsechan-(self._ms0-1)),itime:itime+(num_SKbins-(ms1-1)),:][ms_flags_block==1] = 1
+                for ichan in range(self.ms0):
+                    for itime in range(self.ms1):
+                        flags_block[ichan:ichan+(num_coarsechan-(self.ms0-1)),itime:itime+(num_SKbins-(self.ms1-1)),:][ms_flags_block==1] = 1
 
         #track intermediate results
         #if bi == 0:
@@ -124,7 +125,7 @@ class rfi_sk(mitigateRFI):
 
 
 
-        return flags_block,self.ss_sk_block,self.ms_sk_block
+        return flags_block,ss_sk_block,ms_sk_block
         
         #pass
 
@@ -151,9 +152,9 @@ class rfi_sk(mitigateRFI):
             Spectrum of SK values.
         """
         nd = self.n * self.d
-        a = np.reshape(s,(s.shape[0],-1,self.SK_m))
-        sum1=np.sum(a,axis=1)
-        sum2=np.sum(a**2,axis=1)
+        a = np.reshape(s,(s.shape[0],-1,self.SK_m,s.shape[2]))
+        sum1=np.sum(a,axis=2)
+        sum2=np.sum(a**2,axis=2)
         sk_est = ((self.SK_m*nd+1)/(self.SK_m-1))*(((self.SK_m*sum2)/(sum1**2))-1)                     
         return sk_est
 
@@ -187,18 +188,28 @@ class rfi_sk(mitigateRFI):
         """
 
         ms_binsize = self.ms0*self.ms1
-        ms_s1 = np.zeros((num_coarsechan-(self.ms0-1),num_SKbins-(self.ms1-1),2))
-        ms_s2 = np.zeros((num_coarsechan-(self.ms0-1),num_SKbins-(self.ms1-1),2))
+        num_SKbins = s.shape[1] // self.SK_m
+        ms_s1 = np.zeros((s.shape[0]-(self.ms0-1),num_SKbins-(self.ms1-1),2))
+        ms_s2 = np.zeros((s.shape[0]-(self.ms0-1),num_SKbins-(self.ms1-1),2))
         nd = self.n * self.d
 
+        a = np.reshape(s,(s.shape[0],-1,self.SK_m,s.shape[2]))
+        s1=np.sum(a,axis=2)
+        s2=np.sum(a**2,axis=2)
+
+
         #make multiscale S1, S2
-        for ichan in range(ms0):
-                for itime in range(ms1):
-                        ms_s1 += (1./ms_binsize) * (s1[ichan:ichan+(num_coarsechan-(ms0-1)),itime:itime+(num_SKbins-(ms1-1)),:])
-                        ms_s2 += (1./ms_binsize) * (s2[ichan:ichan+(num_coarsechan-(ms0-1)),itime:itime+(num_SKbins-(ms1-1)),:])
+        for ichan in range(self.ms0):
+                for itime in range(self.ms1):
+                        ms_s1 += (1./ms_binsize) * (s1[ichan:ichan+(s.shape[0]-(self.ms0-1)),itime:itime+(num_SKbins-(self.ms1-1)),:])
+                        ms_s2 += (1./ms_binsize) * (s2[ichan:ichan+(s.shape[0]-(self.ms0-1)),itime:itime+(num_SKbins-(self.ms1-1)),:])
         
                  #((m*n*d+1)/(m-1))*(((m*sum2)/(sum1**2))-1)
-        sk_est = ((self.SK_m*nd+1)/(self.SK_m-1))*(((self.SK_m*s2)/(s1**2))-1)
+
+
+
+
+        sk_est = ((self.SK_m*nd+1)/(self.SK_m-1))*(((self.SK_m*ms_s2)/(ms_s1**2))-1)
         #print(sk_est)
         return sk_est
 

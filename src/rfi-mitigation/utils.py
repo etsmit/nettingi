@@ -70,7 +70,7 @@ def template_check_outfile(infile,outfile):
     print('Saving replaced data to '+outfile)
     print(infile,outfile)
     if os.path.isfile(outfile):
-        yn = input((f"The output file {outfile} already exists. Press 'y' to start with a fresh copy of the input file, 'n' to continue overwriting what's already there, or ctrl-c to end the script"))
+        yn = input((f"The output file {outfile} already exists. Press 'y' to redo the copy, 'n' to continue without copying, or ctrl-c to end the script"))
         if yn=='y':
             print('Copying infile to outfile...')
             os.system('cp '+infile+' '+outfile)
@@ -151,8 +151,13 @@ def repl_nans(a,f):
     out : ndarray
         3-dimensional array of power values with flagged data replaced. Shape (Num Channels , Num Raw Spectra , Npol)
     """
-    #these will get cast to 0 in the next step, the 1e-4 is to stop any possible issues with log10
-    a[f==1]=np.nan
+    ts = a.shape[1] // f.shape[1]
+    print(ts,ts!=1)
+    if ts != 1:
+            for i in range(a.shape[1]):
+                a[:,i,:][f[:,i//ts,:] == 1] = np.nan
+    else:
+        a[f==1]=np.nan
     return a
 
 
@@ -371,7 +376,7 @@ def template_averager(data,m):
     step1_p1 = np.reshape(s[:,:,1], (s.shape[0],-1,m))
     out[:,:,0] = np.nanmean(step1_p0,axis=2)
     out[:,:,1] = np.nanmean(step1_p1,axis=2)
-    return step2
+    return out
 
 #test
 
