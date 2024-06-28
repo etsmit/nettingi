@@ -8,6 +8,7 @@ import scipy as sp
 import scipy.optimize
 import scipy.special
 import math as math
+from blimpy import GuppiRaw
 
 from .core import mitigateRFI
 
@@ -19,7 +20,7 @@ class rfi_sk(mitigateRFI):
     def __init__(self, infile, repl_method, m, mssk, n, d, s, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         #user-given attributes
         self.det_method = 'SK'       
-        self.infile = template_infile_mod(infile,in_dir)[0]
+        #self.infile = template_infile_mod(infile,self.in_dir)[0]
         self.repl_method = repl_method
         self.cust = cust
         self.output_bool = output_bool 
@@ -29,7 +30,8 @@ class rfi_sk(mitigateRFI):
 
         #default/hardcoded attributes
         self.in_dir = '/data/rfimit/unmitigated/rawdata/'#move to actual data dir
-        self._rawFile = GuppiRaw(infile)
+        self.infile = template_infile_mod(infile,self.in_dir)
+        self._rawFile = GuppiRaw(self.infile)
 
 
         self.SK_m = m
@@ -41,44 +43,44 @@ class rfi_sk(mitigateRFI):
         self._out_dir = '/data/scratch/SKresults/'
         self._jetstor_dir = '/jetstor/scratch/SK_rawdata_results/'
 
-        self.ms0 = mssk.split(',')[0]
-        self.ms1 = mssk.split(',')[1]
+        self.ms0 = int(mssk.split(',')[0])
+        self.ms1 = int(mssk.split(',')[1])
 
         
         self._outfile_pattern = "m{SK_M}_s{sigma}_ms{ms0}-{ms1}"
 
 
         # any separate results filenames you need, in addition to the flags filename, put them here
-        npybase = out_dir+'npy_results/'+infile[len(in_dir):-4]
+        npybase = self._out_dir+'npy_results/'+infile[len(self.in_dir):-4]
 
 
-        self._flags_filename = f"{npybase}_flags_{IDstr}_{outfile_pattern}_{cust}.npy"
+        self._flags_filename = f"{npybase}_flags_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
 
-        self._sk_filename = f"{npybase}_skval_{IDstr}_{outfile_pattern}_{cust}.npy"
-        self._mssk_filename = f"{npybase}_mssk_{IDstr}_{outfile_pattern}_{cust}.npy"
+        self._sk_filename = f"{npybase}_skval_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
+        self._mssk_filename = f"{npybase}_mssk_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
 
 
-        self._outfile = f"{jetstor_dir}{infile[len(in_dir):-4]}_{IDstr}_{outfile_pattern}_mb{mb}_{cust}{infile[-4:]}"
+        self._outfile = f"{self._jetstor_dir}{infile[len(self.in_dir):-4]}_{self.det_method}_{self._outfile_pattern}_mb{mb}_{cust}{infile[-4:]}"
         
         
 
         #any derived thresholds/arrays
-        self._SK_p = (1-scipy.special.erf(sigma/math.sqrt(2))) / 2
-        print(f'Probability of false alarm: {SK_p}')
+        self._SK_p = (1-scipy.special.erf(self.sigma/math.sqrt(2))) / 2
+        print(f'Probability of false alarm: {self._SK_p}')
 
         #calculate thresholds
         print('Calculating SK thresholds...')
-        self._lt, self._ut = self.SK_thresholds(self)
-        print(f'Upper Threshold: {ut}'+str(ut))
-        print(f'Lower Threshold: {lt}'+str(lt))
+        self._lt, self._ut = self.SK_thresholds(self.SK_m)
+        print(f'Upper Threshold: {self._ut}')
+        print(f'Lower Threshold: {self._lt}')
 
         #calculate ms thresholds
-        self._ms_lt, self._ms_ut = self.SK_thresholds(SK_M*ms0*ms1, N = n, d = d, p = SK_p)
-        print(f'MS Upper Threshold: {ms_ut}')
-        print(f'MS Lower Threshold: {ms_lt}')
+        self._ms_lt, self._ms_ut = self.SK_thresholds(self.SK_m*self.ms0*self.ms1)
+        print(f'MS Upper Threshold: {self._ms_ut}')
+        print(f'MS Lower Threshold: {self._ms_lt}')
 
 
-    def SK_detection(self,data,bi):
+    def SK_detection(self,data):
 
         s = np.abs(data)**2
 
@@ -111,18 +113,18 @@ class rfi_sk(mitigateRFI):
                         flags_block[ichan:ichan+(num_coarsechan-(self._ms0-1)),itime:itime+(num_SKbins-(ms1-1)),:][ms_flags_block==1] = 1
 
         #track intermediate results
-        if bi == 0:
-            self.flags_all = flags_block
-            self.ss_sk_all = ss_sk_block
-            self.ms_sk_all = ms_sk_block
-        else:
-            self.ss_sk_all = np.concatenate((self.ss_sk_all, flags_block),axis=1)
-            self.ss_sk_all = np.concatenate((self.ss_sk_all, ss_sk_block),axis=1)
-            self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
+        #if bi == 0:
+        #    self.flags_all = flags_block
+        #    self.ss_sk_all = ss_sk_block
+        #    self.ms_sk_all = ms_sk_block
+        #else:
+        #    self.ss_sk_all = np.concatenate((self.ss_sk_all, flags_block),axis=1)
+        #    self.ss_sk_all = np.concatenate((self.ss_sk_all, ss_sk_block),axis=1)
+        #    self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
 
 
 
-        return flags_block
+        return flags_block,self.ss_sk_block,self.ms_sk_block
         
         #pass
 
@@ -215,7 +217,7 @@ class rfi_sk(mitigateRFI):
     #fully calculates upper and lower thresholds
     #M = SK_ints
     #default p = PFA = 0.0013499 corresponds to 3sigma excision
-    def SK_thresholds(self):
+    def SK_thresholds(self,M):
         """
         Determine SK thresholds numerically.
 
@@ -237,7 +239,6 @@ class rfi_sk(mitigateRFI):
         """
 
         Nd = self.n * self.d
-        M = self.SK_m
         p = self._SK_p
         #Statistical moments
         moment_1 = 1
