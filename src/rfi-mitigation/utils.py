@@ -377,7 +377,14 @@ def template_averager(data,m):
     out[:,:,1] = np.nanmean(step1_p1,axis=2)
     return out
 
-#test
+def template_stdever(data,m):
+    out = np.zeros((data.shape[0],data.shape[1]//m,data.shape[2]))
+    s = np.abs(data)**2
 
+    step1_p0 = np.reshape(s[:,:,0], (s.shape[0],-1,m))
+    step1_p1 = np.reshape(s[:,:,1], (s.shape[0],-1,m))
+    out[:,:,0] = np.nanstd(step1_p0,axis=2)
+    out[:,:,1] = np.nanstd(step1_p1,axis=2)
+    return out
 
 

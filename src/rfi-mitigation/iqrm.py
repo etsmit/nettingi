@@ -98,8 +98,10 @@ def iqrm_detection(self, data):
     if self.IQRM_datatype == 'power':
         flag_chunk, avg_pre = iqrm_power(data, self.IQRM_radius, self.IQRM_threshold)
 
+    elif self.IQRM_datatype == 'avg':
+        flag_chunk, avg_pre = iqrm_avg(data, self.IQRM_radius, self.IQRM_threshold, self.IQRM_breakdown)
         # standard dev
-    else:# if IQRM_datatype == 'std': 
+    else:# if self.IQRM_datatype == 'std': 
         flag_chunk, avg_pre = iqrm_std(data, self.IQRM_radius, self.IQRM_threshold, self.IQRM_breakdown)
 
     return flag_chunk, avg_pre
@@ -155,7 +157,7 @@ def iqrm_std(data, radius, threshold, breakdown):
 # 	flag_chunk = np.zeros((*data_pol0.shape[:2], 2))
 # 	print('Data shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
     
-	data = stdever(np.abs(data)**2, breakdown)
+	data = template_stdever(np.abs(data)**2, breakdown)
 	flag_chunk = np.zeros(data.shape)
 	print('Flag shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
 	for i in tqdm(range(data.shape[2])): # iterate through polarizations
@@ -170,5 +172,21 @@ def iqrm_std(data, radius, threshold, breakdown):
 # 	data_pol1 = stdever(np.abs(data[:,:,1])**2, breakdown) # make it a stdev
 # 	for j in range(data_pol1.shape[0]): # iterate through channels
 # 		flag_chunk[j,:,1] = iqrm.iqrm_mask(data_pol1[j,:], radius = radius, threshold = threshold)[0]
+
+	return flag_chunk, avg_pre
+
+def iqrm_avg(data, radius, threshold, breakdown):
+	"""
+	breakdown must be a factor of the time shape data[1].shape()
+	"""
+	m = 512 # constant
+	avg_pre = template_averager(np.abs(data)**2, m)
+    
+	data = template_averager(np.abs(data)**2, breakdown)
+	flag_chunk = np.zeros(data.shape)
+	print('Flag shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
+	for i in tqdm(range(data.shape[2])): # iterate through polarizations
+		for j in range(data.shape[0]): # iterate through channels
+			flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius, threshold = threshold)[0]
 
 	return flag_chunk, avg_pre
