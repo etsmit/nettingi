@@ -97,7 +97,6 @@ class rfi_sk(mitigateRFI):
 
             #single scale
             ss_sk_block = self.single_scale_SK_EST(s)
-            print(ss_sk_block.shape,flags_block.shape)
             flags_block[ss_sk_block < self._lt] = 1
             flags_block[ss_sk_block > self._ut] = 1
 
