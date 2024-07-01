@@ -69,7 +69,7 @@ class mitigateRFI:
 
             #print header for the first block
             if bi == 0:
-                template_print_header(self._rawFile)
+                headersize = template_print_header(self._rawFile)
 
 
             #loading multiple blocks at once?        
@@ -182,7 +182,7 @@ class mitigateRFI:
             #write back raw data
             if self.output_bool:
                 print('Re-formatting data and writing back to file...')
-                for mb_i in range(mb):
+                for mb_i in range(self.mb):
                     out_rawFile.seek(headersize,1)
                     d1 = template_guppi_format(data[:,d1s*mb_i:d1s*(mb_i+1),:])
                     out_rawFile.write(d1.tostring())
@@ -207,6 +207,10 @@ class mitigateRFI:
             print(f'MS-SK: {self._ms_sk_filename}')
             np.save(self._mssk_filname, self.ms_sk)
             #need to add the logging thing
+            log = '/data/scratch/SKresults/SK_log.txt'
+            os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ss_sk_filename}','{self._ms_sk_filename}'\n===============================" >> {log}"""
+
+        
 
 
         #***********************************************

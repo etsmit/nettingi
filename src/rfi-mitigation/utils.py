@@ -152,7 +152,6 @@ def repl_nans(a,f):
         3-dimensional array of power values with flagged data replaced. Shape (Num Channels , Num Raw Spectra , Npol)
     """
     ts = a.shape[1] // f.shape[1]
-    print(ts,ts!=1)
     if ts != 1:
             for i in range(a.shape[1]):
                 a[:,i,:][f[:,i//ts,:] == 1] = np.nan
