@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 
 from numba import jit,prange
 
+from tqdm import tqdm
+import iqrm
 
 #from statsmodels.stats.weightstats import DescrStatsW
 
@@ -386,5 +388,64 @@ def template_stdever(data,m):
     out[:,:,0] = np.nanstd(step1_p0,axis=2)
     out[:,:,1] = np.nanstd(step1_p1,axis=2)
     return out
+
+def iqrm_power(data, radius, threshold):
+    m = 512 # constant
+    avg_pre = template_averager(np.abs(data)**2,m)
+    data = np.abs(data)**2
+    flag_chunk = np.zeros(data.shape)
+    for i in tqdm(range(data.shape[2])): # iterate through polarizations
+        for j in range(data.shape[0]): # iterate through channels
+            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius, threshold = threshold)[0]
+    
+#     avg_post = 
+    return flag_chunk, avg_pre
+    
+
+
+def iqrm_std(data, radius, threshold, breakdown):
+    """
+    breakdown must be a factor of the time shape data[1].shape()
+    """
+    m = 512 # constant
+    avg_pre = template_averager(np.abs(data)**2, m)
+# 	data_pol0 = stdever(np.abs(data[:,:,0])**2, breakdown) # make it a stdev
+# # 	shape=np.expand_dims(shape, axis=2)
+# 	flag_chunk = np.zeros((*data_pol0.shape[:2], 2))
+# 	print('Data shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
+    
+    data = template_stdever(np.abs(data)**2, breakdown)
+    flag_chunk = np.zeros(data.shape)
+    print('Flag shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
+    for i in tqdm(range(data.shape[2])): # iterate through polarizations
+        for j in range(data.shape[0]): # iterate through channels
+            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius, threshold = threshold)[0]
+            
+            
+            
+            
+# 	for j in range(data_pol0.shape[0]): # iterate through channels
+# 		flag_chunk[j,:,0] = iqrm.iqrm_mask(data_pol0[j,:], radius = radius, threshold = threshold)[0]
+# 	data_pol1 = stdever(np.abs(data[:,:,1])**2, breakdown) # make it a stdev
+# 	for j in range(data_pol1.shape[0]): # iterate through channels
+# 		flag_chunk[j,:,1] = iqrm.iqrm_mask(data_pol1[j,:], radius = radius, threshold = threshold)[0]
+
+    return flag_chunk, avg_pre
+
+def iqrm_avg(data, radius, threshold, breakdown):
+    """
+    breakdown must be a factor of the time shape data[1].shape()
+    """
+    m = 512 # constant
+    avg_pre = template_averager(np.abs(data)**2, m)
+    
+    data = template_averager(np.abs(data)**2, breakdown)
+    flag_chunk = np.zeros(data.shape)
+    print('Flag shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
+    for i in tqdm(range(data.shape[2])): # iterate through polarizations
+        for j in range(data.shape[0]): # iterate through channels
+            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius, threshold = threshold)[0]
+
+    return flag_chunk, avg_pre
 
 

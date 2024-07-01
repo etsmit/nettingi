@@ -110,8 +110,14 @@ class mitigateRFI:
                     self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
 
             elif self.det_method == 'IQRM':
-                pass
-
+                print('IQRM mitigation')
+                flags_block, avg_pre = self.iqrm_detection(data)
+                # if bi == 0:
+                #     self.ss_sk_all = ss_sk_block
+                #     self.ms_sk_all = ms_sk_block
+                # else:
+                #     self.ss_sk_all = np.concatenate((self.ss_sk_all, ss_sk_block),axis=1)
+                #     self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
 
             #***********************************************
             #===============================================
@@ -208,7 +214,7 @@ class mitigateRFI:
             np.save(self._mssk_filname, self.ms_sk)
             #need to add the logging thing
             log = '/data/scratch/SKresults/SK_log.txt'
-            os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ss_sk_filename}','{self._ms_sk_filename}'\n===============================" >> {log}"""
+            # os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ss_sk_filename}','{self._ms_sk_filename}'\n===============================" >> {log}"""
 
         
 
