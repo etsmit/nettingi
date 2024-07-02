@@ -111,7 +111,7 @@ class mitigateRFI:
 
             elif self.det_method == 'IQRM':
                 print('IQRM mitigation')
-                flags_block, avg_pre = self.iqrm_detection(data)
+                flags_block = self.iqrm_detection(data)
                 # if bi == 0:
                 #     self.ss_sk_all = ss_sk_block
                 #     self.ms_sk_all = ms_sk_block
@@ -216,10 +216,10 @@ class mitigateRFI:
             log = '/data/scratch/SKresults/SK_log.txt'
             # os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ss_sk_filename}','{self._ms_sk_filename}'\n===============================" >> {log}"""
 
-        elif self.det_method == 'IQRM':
+        # elif self.det_method == 'IQRM':
             
-            print(f'avg pre: {self._avg_pre_filename}')
-            np.save(self._avg_pre_filename, avg_pre)
+        #     print(f'avg pre: {self._avg_pre_filename}')
+        #     np.save(self._avg_pre_filename, avg_pre)
             # print(f'avg post: {self._avg_post_filename}')
             # np.save(self._avg_post_filename, self.avg_post)
 
