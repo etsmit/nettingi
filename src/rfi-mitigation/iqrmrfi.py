@@ -97,18 +97,21 @@ class rfi_iqrm(mitigateRFI):
                 An array of flags, indicating where the RFI is.
         """
         if self.IQRM_datatype == "std" and data.shape[1] % self.IQRM_breakdown != 0:
-                raise ValueError("IQRM_breakdown must be a factor of %r." % self.shape[1])
-    
+            raise ValueError("IQRM_breakdown must be a factor of %r." % self.shape[1])
+            
+        if data.shape[1] % self.ave_factor != 0:
+            raise ValueError("ave_factor must be a factor of %r." % self.shape[1])
+            
         if self.IQRM_datatype == 'power':
-            flag_chunk, avg_pre = iqrm_power(data, self.IQRM_radius, self.IQRM_threshold)
+            flag_chunk = iqrm_power(data, self.IQRM_radius, self.IQRM_threshold)
     
         elif self.IQRM_datatype == 'avg':
-            flag_chunk, avg_pre = iqrm_avg(data, self.IQRM_radius, self.IQRM_threshold, self.IQRM_breakdown)
+            flag_chunk = iqrm_avg(data, self.IQRM_radius, self.IQRM_threshold, self.IQRM_breakdown)
             # standard dev
         else:# if self.IQRM_datatype == 'std': 
-            flag_chunk, avg_pre = iqrm_std(data, self.IQRM_radius, self.IQRM_threshold, self.IQRM_breakdown)
+            flag_chunk = iqrm_std(data, self.IQRM_radius, self.IQRM_threshold, self.IQRM_breakdown)
     
-        return flag_chunk, avg_pre
+        return flag_chunk
     
     
         # else:

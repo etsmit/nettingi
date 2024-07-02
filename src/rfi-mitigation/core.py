@@ -86,7 +86,7 @@ class mitigateRFI:
             num_coarsechan = data.shape[0]
             num_timesamples= data.shape[1]
             num_pol = data.shape[2]
-            print(f'Data shape: {data.shape} || block size: {data.nbytes}')
+            # print(f'Data shape: {data.shape} || block size: {data.nbytes}')
 
             #save raw data?
             if self.rawdata:
@@ -110,7 +110,7 @@ class mitigateRFI:
                     self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
 
             elif self.det_method == 'IQRM':
-                print('IQRM mitigation')
+                # print('IQRM mitigation')
                 flags_block = self.iqrm_detection(data)
                 # if bi == 0:
                 #     self.ss_sk_all = ss_sk_block
@@ -139,13 +139,13 @@ class mitigateRFI:
 
 
             #track flags
-            print(f'Pol 0: {np.around(np.mean(flags_block[:,:,0]),2)}% flagged')
-            print(f'Pol 1: {np.around(np.mean(flags_block[:,:,1]),2)}% flagged')
+            # print(f'Pol 0: {np.around(np.mean(flags_block[:,:,0]),2)}% flagged')
+            # print(f'Pol 1: {np.around(np.mean(flags_block[:,:,1]),2)}% flagged')
 
             uf = flags_block[:,:,0]
             uf[flags_block[:,:,1] == 1] = 1
 
-            print(f'Union: {np.around(np.mean(uf),2)}% flagged')
+            # print(f'Union: {np.around(np.mean(uf),2)}% flagged')
 
             #now flag shape is (chan,spectra,pol)
             #apply union of flags between the pols
@@ -187,7 +187,7 @@ class mitigateRFI:
 
             #write back raw data
             if self.output_bool:
-                print('Re-formatting data and writing back to file...')
+                # print('Re-formatting data and writing back to file...')
                 for mb_i in range(self.mb):
                     out_rawFile.seek(headersize,1)
                     d1 = template_guppi_format(data[:,d1s*mb_i:d1s*(mb_i+1),:])
@@ -202,9 +202,9 @@ class mitigateRFI:
         print(f'Flags: {self._flags_filename}')
         np.save(self._flags_filename, self.flags_all)
         print(f'Spect: {self._spect_filename}')
-        np.save(self._spect_filname, self.spect_all)
+        np.save(self._spect_filename, self.spect_all)
         print(f'Regen: {self._regen_filename}')
-        np.save(self._regen_filname, self.regen_all)
+        np.save(self._regen_filename, self.regen_all)
 
 
         if self.det_method == 'SK':
