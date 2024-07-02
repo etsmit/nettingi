@@ -14,6 +14,8 @@ from .core import mitigateRFI
 
 from .utils import *
 
+from numba import jit
+
 
 class rfi_sk(mitigateRFI):
     #h
@@ -33,7 +35,7 @@ class rfi_sk(mitigateRFI):
         self.infile = template_infile_mod(infile,self.in_dir)
         self._rawFile = GuppiRaw(self.infile)
 
-
+        #sk related parameters
         self.SK_m = m
         self.mssk = mssk
         self.n = n
@@ -55,9 +57,11 @@ class rfi_sk(mitigateRFI):
 
 
         self._flags_filename = f"{npybase}_flags_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._spect_filename = f"{npybase}_spect_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._regen_filename = f"{npybase}_regen_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
 
-        self._sk_filename = f"{npybase}_skval_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._mssk_filename = f"{npybase}_mssk_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._ss_sk_filename = f"{npybase}_skval_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._ms_sk_filename = f"{npybase}_mssk_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
 
 
         self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self._outfile_pattern}_mb{self.mb}_{self.cust}{infile[-4:]}"
@@ -80,6 +84,7 @@ class rfi_sk(mitigateRFI):
         print(f'MS Lower Threshold: {self._ms_lt}')
 
 
+    #@jit(nopython=True, parallel=True)
     def SK_detection(self,data):
 
         s = np.abs(data)**2
@@ -92,36 +97,27 @@ class rfi_sk(mitigateRFI):
         ms_flags_block = np.zeros((s.shape[0] - (self.ms0-1) , flags_block.shape[1] - (self.ms1-1) , s.shape[2]))
 
         #detect and flag RFI
-        for pol in range(s.shape[2]):
+        #for pol in range(s.shape[2]):
 
 
             #single scale
-            ss_sk_block = self.single_scale_SK_EST(s)
-            flags_block[ss_sk_block < self._lt] = 1
-            flags_block[ss_sk_block > self._ut] = 1
+        ss_sk_block = self.single_scale_SK_EST(s)
+        flags_block[ss_sk_block < self._lt] = 1
+        flags_block[ss_sk_block > self._ut] = 1
 
 
-            #multiscale
-            if (self.mssk != '0,0'):
-                ms_sk_block = self.multi_scale_SK_EST(s)
-                ms_flags_block[ms_sk_block < self._ms_lt] = 1
-                ms_flags_block[ms_sk_block > self._ms_ut] = 1
+        #multiscale
+        if (self.mssk != '1,1'):
+            ms_sk_block = self.multi_scale_SK_EST(s)
+            ms_flags_block[ms_sk_block < self._ms_lt] = 1
+            ms_flags_block[ms_sk_block > self._ms_ut] = 1
 
 
-                for ichan in range(self.ms0):
-                    for itime in range(self.ms1):
-                        flags_block[ichan:ichan+(num_coarsechan-(self.ms0-1)),itime:itime+(num_SKbins-(self.ms1-1)),:][ms_flags_block==1] = 1
-
-        #track intermediate results
-        #if bi == 0:
-        #    self.flags_all = flags_block
-        #    self.ss_sk_all = ss_sk_block
-        #    self.ms_sk_all = ms_sk_block
-        #else:
-        #    self.ss_sk_all = np.concatenate((self.ss_sk_all, flags_block),axis=1)
-        #    self.ss_sk_all = np.concatenate((self.ss_sk_all, ss_sk_block),axis=1)
-        #    self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
-
+            for ichan in range(self.ms0):
+                for itime in range(self.ms1):
+                    flags_block[ichan:ichan+(num_coarsechan-(self.ms0-1)),itime:itime+(num_SKbins-(self.ms1-1)),:][ms_flags_block==1] = 1
+        else:
+            ms_sk_block = np.ones(ms_flags_block.shape)
 
 
         return flags_block,ss_sk_block,ms_sk_block
@@ -129,21 +125,15 @@ class rfi_sk(mitigateRFI):
         #pass
 
 
-
+    #@jit(nopython=True, parallel=True)
     def single_scale_SK_EST(self,s):
         """
         Compute SK on a 2D array of power values.
 
         Parameters
         -----------
-        a : ndarray
-            2-dimensional array of power values. Shape (Num Channels , Num Raw Spectra)
-        n : int
-            integer value of N in the SK function. Inside accumulations of spectra.
-        m : int
-            integer value of M in the SK function. Outside accumulations of spectra.
-        d : float
-            shape parameter d in the SK function. Usually 1 but can be empirically determined.
+        s : ndarray
+            3-dimensional array of power values. Shape (Num Channels , Num Raw Spectra, Num Pols)
     
         Returns
         -----------
@@ -158,28 +148,16 @@ class rfi_sk(mitigateRFI):
         return sk_est
 
 
-
+    #@jit(nopython=True, parallel=True)
     def multi_scale_SK_EST(self,s):
         """
         Multi-scale Variant of SK_EST.
 
         Parameters
         -----------
-        s1 : ndarray
-                2-dimensional array of power values. Shape (Num Channels , Num Raw Spectra)
+        s : ndarray
+            3-dimensional array of power values. Shape (Num Channels , Num Raw Spectra, Num Pols)
 
-        s2 : ndarray
-                2-dimensional array of squared power values. Shape (Num Channels , Num Raw Spectra)
-
-        m : int
-                integer value of M in the SK function. Outside accumulations of spectra.
-
-        ms0 : int
-                axis 0 multiscale
-        
-        ms1 : int
-                axis 1 multiscale
-        
         Returns
         -----------
         out : ndarray
@@ -198,14 +176,11 @@ class rfi_sk(mitigateRFI):
 
 
         #make multiscale S1, S2
-        for ichan in range(self.ms0):
-                for itime in range(self.ms1):
+        for ichan in prange(self.ms0):
+                for itime in prange(self.ms1):
                         ms_s1 += (1./ms_binsize) * (s1[ichan:ichan+(s.shape[0]-(self.ms0-1)),itime:itime+(num_SKbins-(self.ms1-1)),:])
                         ms_s2 += (1./ms_binsize) * (s2[ichan:ichan+(s.shape[0]-(self.ms0-1)),itime:itime+(num_SKbins-(self.ms1-1)),:])
         
-                 #((m*n*d+1)/(m-1))*(((m*sum2)/(sum1**2))-1)
-
-
 
 
         sk_est = ((self.SK_m*nd+1)/(self.SK_m-1))*(((self.SK_m*ms_s2)/(ms_s1**2))-1)

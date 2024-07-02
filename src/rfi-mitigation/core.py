@@ -133,13 +133,7 @@ class mitigateRFI:
 
 
             #track flags
-            print(f'Pol 0: {np.around(np.mean(flags_block[:,:,0]),2)}% flagged')
-            print(f'Pol 1: {np.around(np.mean(flags_block[:,:,1]),2)}% flagged')
-
-            uf = flags_block[:,:,0]
-            uf[flags_block[:,:,1] == 1] = 1
-
-            print(f'Union: {np.around(np.mean(uf),2)}% flagged')
+            template_print_flagstats(flags_block)
 
             #now flag shape is (chan,spectra,pol)
             #apply union of flags between the pols
@@ -181,7 +175,7 @@ class mitigateRFI:
 
             #write back raw data
             if self.output_bool:
-                print('Re-formatting data and writing back to file...')
+                #print('Re-formatting data and writing back to file...')
                 for mb_i in range(self.mb):
                     out_rawFile.seek(headersize,1)
                     d1 = template_guppi_format(data[:,d1s*mb_i:d1s*(mb_i+1),:])
@@ -196,19 +190,19 @@ class mitigateRFI:
         print(f'Flags: {self._flags_filename}')
         np.save(self._flags_filename, self.flags_all)
         print(f'Spect: {self._spect_filename}')
-        np.save(self._spect_filname, self.spect_all)
+        np.save(self._spect_filename, self.spect_all)
         print(f'Regen: {self._regen_filename}')
-        np.save(self._regen_filname, self.regen_all)
+        np.save(self._regen_filename, self.regen_all)
 
 
-        if det_method == 'SK':
+        if self.det_method == 'SK':
             print(f'SS-SK: {self._ss_sk_filename}')
-            np.save(self._sk_filename, self.ss_sk)
+            np.save(self._ss_sk_filename, self.ss_sk_all)
             print(f'MS-SK: {self._ms_sk_filename}')
-            np.save(self._mssk_filname, self.ms_sk)
+            np.save(self._ms_sk_filename, self.ms_sk_all)
             #need to add the logging thing
             log = '/data/scratch/SKresults/SK_log.txt'
-            os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ss_sk_filename}','{self._ms_sk_filename}'\n===============================" >> {log}"""
+            os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ss_sk_filename}','{self._ms_sk_filename}'\n===============================" >> {log}""")
 
         
 
@@ -218,7 +212,7 @@ class mitigateRFI:
 
         
         #flagging stuff
-        template_print_flagstats(flags_all)
+        template_print_flagstats(self.flags_all)
 
 
 
