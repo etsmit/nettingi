@@ -207,7 +207,7 @@ class mitigateRFI:
         np.save(self._regen_filname, self.regen_all)
 
 
-        if det_method == 'SK':
+        if self.det_method == 'SK':
             print(f'SS-SK: {self._ss_sk_filename}')
             np.save(self._sk_filename, self.ss_sk)
             print(f'MS-SK: {self._ms_sk_filename}')
@@ -216,15 +216,12 @@ class mitigateRFI:
             log = '/data/scratch/SKresults/SK_log.txt'
             # os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ss_sk_filename}','{self._ms_sk_filename}'\n===============================" >> {log}"""
 
-        elif det_method == 'IQRM':
+        elif self.det_method == 'IQRM':
+            
             print(f'avg pre: {self._avg_pre_filename}')
-            np.save(self._avg_pre_filename, self.avg_pre)
-            print(f'avg post: {self._avg_post_filename}')
-            np.save(self._avg_post_filename, self.avg_post)
-            print(f'spost: {self._spost_filename}')
-            np.save(self._spost_filename, self.spost)
-            #need to add the logging thing
-            log = '/data/scratch/SKresults/SK_log.txt'
+            np.save(self._avg_pre_filename, avg_pre)
+            # print(f'avg post: {self._avg_post_filename}')
+            # np.save(self._avg_post_filename, self.avg_post)
 
 
         #***********************************************
@@ -232,7 +229,7 @@ class mitigateRFI:
 
         
         #flagging stuff
-        template_print_flagstats(flags_all)
+        template_print_flagstats(self.flags_all)
 
 
 
