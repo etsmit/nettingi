@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from numba import jit,prange
 
 
-from statsmodels.stats.weightstats import DescrStatsW
+#from statsmodels.stats.weightstats import DescrStatsW
 
 
 
@@ -70,7 +70,7 @@ def template_check_outfile(infile,outfile):
     print('Saving replaced data to '+outfile)
     print(infile,outfile)
     if os.path.isfile(outfile):
-        yn = input((f"The output file {outfile} already exists. Press 'y' to start with a fresh copy of the input file, 'n' to continue overwriting what's already there, or ctrl-c to end the script"))
+        yn = input((f"The output file {outfile} already exists. Press 'y' to redo the copy, 'n' to continue without copying, or ctrl-c to end the script"))
         if yn=='y':
             print('Copying infile to outfile...')
             os.system('cp '+infile+' '+outfile)
@@ -133,7 +133,7 @@ def repl_zeros(a,f):
     return a
 
 
-
+@jit(nopython=True, parallel=True)
 def repl_nans(a,f):
     """
     Replace flagged data with nans.
@@ -151,8 +151,15 @@ def repl_nans(a,f):
     out : ndarray
         3-dimensional array of power values with flagged data replaced. Shape (Num Channels , Num Raw Spectra , Npol)
     """
-    #these will get cast to 0 in the next step, the 1e-4 is to stop any possible issues with log10
-    a[f==1]=np.nan
+    ts = a.shape[1] // f.shape[1]
+    if ts != 1:
+        #for i in range(a.shape[1]):
+        #    a[:,i,:][f[:,i//ts,:] == 1] = np.nan
+        i = np.arange(a.shape[1])
+        m = f[:,i//ts,:]
+        a[m==1] = np.nan
+    else:
+        a[f==1]=np.nan
     return a
 
 
@@ -277,7 +284,7 @@ def adj_chan_good_data(a,f,c):
 
 
 
-
+#@jit(nopython=True, parallel=True)
 def noise_filter(ave,std,msk,dec):
     """
     Create gaussian noise filtered by the correct PFB coefficients to mimic the VEGAS coarse channel SEFD
@@ -303,7 +310,7 @@ def noise_filter(ave,std,msk,dec):
     return out_filtered
 
 
-
+#@jit(nopython=True, parallel=True)
 def template_guppi_format(a):
     """
     takes array of np.complex64,ravels it and outputs as 1D array of signed 8 bit integers 
@@ -330,39 +337,19 @@ def template_guppi_format(a):
     return out_arr
 
 
-def template_print_flagstats(flags_all):
+def template_print_flagstats(flags_array):
 
-    tot_points = flags_all[:,:,1].size
-    flagged_pts_p1 = np.count_nonzero(flags_all[:,:,0])
-    flagged_pts_p2 = np.count_nonzero(flags_all[:,:,1])
+    print(f'Pol 0: {np.around(100*np.mean(flags_array[:,:,0]),2)}% flagged')
+    print(f'Pol 1: {np.around(100*np.mean(flags_array[:,:,1]),2)}% flagged')
 
-#print(f'Pol0: {flagged_pts_p2} datapoints were flagged out of {tot_points}')
-    flagged_percent = (float(flagged_pts_p1)/tot_points)*100
-    print(f'Pol0: {flagged_percent}% of data outside acceptable ranges')
+    uf = flags_array[:,:,0]
+    uf[flags_array[:,:,1] == 1] = 1
 
-#print(f'Pol1: {flagged_pts_p2} datapoints were flagged out of {tot_points}') np.mean(flags_all[:,:,0])
-    flagged_percent1 = (float(flagged_pts_p2)/tot_points)*100
-    print(f'Pol1: {flagged_percent1}% of data outside acceptable ranges')
-
-    flags_all[:,:,0][flags_all[:,:,1]==1]=1
-    print(f'Union of flags: {(flagged_percent1+flagged_percent)/2.0}% of data flagged')
+    print(f'Union: {np.around(100*np.mean(uf),2)}% flagged')
 
 
-#     tot_points = flags_all[:,:,1].size
-#     flagged_pts_p1 = np.count_nonzero(flags_all[:,:,0])
-#     flagged_pts_p2 = np.count_nonzero(flags_all[:,:,1])
 
-#     #print(f'Pol0: {flagged_pts_p2} datapoints were flagged out of {tot_points}')
-#     flagged_percent = (float(flagged_pts_p1)/tot_points)*100
-#     print(f'Pol0: {np.mean(flags_all[:,:,0])}% of data outside acceptable ranges')
-
-#     #print(f'Pol1: {flagged_pts_p2} datapoints were flagged out of {tot_points}')
-#     flagged_percent = (float(flagged_pts_p2)/tot_points)*100
-#     print(f'Pol1: {np.mean(flags_all[:,:,0])}% of data outside acceptable ranges')
-
-#     flags_all[:,:,0][flags_all[:,:,1]==1]=1
-#     print(f'Union of flags: {np.mean(flags_all[:,:,0])}% of data flagged')
-
+#@jit(nopython=True, parallel=True)
 def template_averager(data,m):
     out = np.zeros((data.shape[0],data.shape[1]//m,data.shape[2]))
     s = np.abs(data)**2
@@ -371,7 +358,7 @@ def template_averager(data,m):
     step1_p1 = np.reshape(s[:,:,1], (s.shape[0],-1,m))
     out[:,:,0] = np.nanmean(step1_p0,axis=2)
     out[:,:,1] = np.nanmean(step1_p1,axis=2)
-    return step2
+    return out
 
 #test
 
