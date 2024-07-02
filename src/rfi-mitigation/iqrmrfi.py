@@ -68,9 +68,9 @@ class rfi_iqrm(mitigateRFI):
 
         self._flags_filename = f"{npybase}_flags_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
 
-        self.avg_pre_filename = f"{npybase}_avg_pre_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
-        self.avg_post_filename = f"{npybase}_avg_post_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
-        self.spost_filename = f"{npybase}_spost_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
+        self._avg_pre_filename = f"{npybase}_avg_pre_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
+        self._avg_post_filename = f"{npybase}_avg_post_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
+        self._spost_filename = f"{npybase}_spost_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
 
         
     
