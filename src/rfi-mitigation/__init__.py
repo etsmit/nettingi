@@ -16,3 +16,4 @@ def version():
 
 from .core import *
 from .sk import *
+from .iqrmrfi import *

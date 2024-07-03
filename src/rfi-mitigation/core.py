@@ -86,7 +86,7 @@ class mitigateRFI:
             num_coarsechan = data.shape[0]
             num_timesamples= data.shape[1]
             num_pol = data.shape[2]
-            print(f'Data shape: {data.shape} || block size: {data.nbytes}')
+            # print(f'Data shape: {data.shape} || block size: {data.nbytes}')
 
             #save raw data?
             if self.rawdata:
@@ -110,8 +110,14 @@ class mitigateRFI:
                     self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
 
             elif self.det_method == 'IQRM':
-                pass
-
+                # print('IQRM mitigation')
+                flags_block = self.iqrm_detection(data)
+                # if bi == 0:
+                #     self.ss_sk_all = ss_sk_block
+                #     self.ms_sk_all = ms_sk_block
+                # else:
+                #     self.ss_sk_all = np.concatenate((self.ss_sk_all, ss_sk_block),axis=1)
+                #     self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
 
             #***********************************************
             #===============================================
@@ -133,7 +139,10 @@ class mitigateRFI:
 
 
             #track flags
+
+
             template_print_flagstats(flags_block)
+
 
             #now flag shape is (chan,spectra,pol)
             #apply union of flags between the pols
@@ -175,7 +184,9 @@ class mitigateRFI:
 
             #write back raw data
             if self.output_bool:
+
                 #print('Re-formatting data and writing back to file...')
+
                 for mb_i in range(self.mb):
                     out_rawFile.seek(headersize,1)
                     d1 = template_guppi_format(data[:,d1s*mb_i:d1s*(mb_i+1),:])
@@ -199,12 +210,18 @@ class mitigateRFI:
             print(f'SS-SK: {self._ss_sk_filename}')
             np.save(self._ss_sk_filename, self.ss_sk_all)
             print(f'MS-SK: {self._ms_sk_filename}')
+
             np.save(self._ms_sk_filename, self.ms_sk_all)
             #need to add the logging thing
             log = '/data/scratch/SKresults/SK_log.txt'
             os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ss_sk_filename}','{self._ms_sk_filename}'\n===============================" >> {log}""")
 
-        
+        # elif self.det_method == 'IQRM':
+            
+        #     print(f'avg pre: {self._avg_pre_filename}')
+        #     np.save(self._avg_pre_filename, avg_pre)
+            # print(f'avg post: {self._avg_post_filename}')
+            # np.save(self._avg_post_filename, self.avg_post)
 
 
         #***********************************************
