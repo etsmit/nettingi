@@ -70,7 +70,7 @@ def template_check_outfile(infile,outfile):
     print('Saving replaced data to '+outfile)
     print(infile,outfile)
     if os.path.isfile(outfile):
-        yn = input((f"The output file {outfile} already exists. Press 'y' to redo the copy, 'n' to continue without copying, or ctrl-c to end the script"))
+        yn = input((f"The output file {outfile} already exists. Press 'y' to redo the copy, 'n' to continue without copying, or ctrl-c to end the script: "))
         if yn=='y':
             print('Copying infile to outfile...')
             os.system('cp '+infile+' '+outfile)
@@ -110,7 +110,7 @@ def template_save_npy(data,block,npy_base):
 #Replacement
 #=======================
 
-
+@jit
 def repl_zeros(a,f):
     """
     Replace flagged data with 0's.
@@ -128,12 +128,19 @@ def repl_zeros(a,f):
     out : ndarray
         3-dimensional array of power values with flagged data replaced. Shape (Num Channels , Num Raw Spectra , Npol)
     """
-    #these will get cast to 0 in the next step, the 1e-4 is to stop any possible issues with log10
-    a[f==1]=1e-4 + 1e-4*1.j
+    ts = a.shape[1] // f.shape[1]
+    if ts != 1:
+        #for i in range(a.shape[1]):
+        #    a[:,i,:][f[:,i//ts,:] == 1] = np.nan
+        i = np.arange(a.shape[1])
+        m = f[:,i//ts,:]
+        a[m==1] = 0
+    else:
+        a[f==1] = 0
     return a
 
 
-@jit(nopython=True, parallel=True)
+#@jit(nopython=False)
 def repl_nans(a,f):
     """
     Replace flagged data with nans.
@@ -162,12 +169,28 @@ def repl_nans(a,f):
         a[f==1]=np.nan
     return a
 
+@jit
+def repl_nans_jit(a,f):
+    ts = a.shape[1] // f.shape[1]
+    if ts != 1:
+        i = np.arange(a.shape[1])
+        m = f[:,i//ts,:]
+        for pol in prange(a.shape[2]):
+            for chan in prange(a.shape[0]):
+                a[chan,:,pol][m[chan,:,pol]==1] = np.nan
+    else:
+        for pol in prange(a.shape[2]):
+            for chan in prange(a.shape[0]):
+                a[chan,:,pol][f[chan,:,pol]==1] = np.nan
+    return a
+
+
 
 
 
 #replace with statistical noise
-# @jit(parallel=True)
-def statistical_noise_fir(a,f,ts_factor):
+@jit(nopython=False)
+def statistical_noise_fir(a,f,ts_factor,hfile):
     """
     Replace flagged data with statistical noise.
     - fir version that adds a fir in the noise
@@ -184,10 +207,8 @@ def statistical_noise_fir(a,f,ts_factor):
     out : np.random.normal(0,1,size=2048)ndarray
         3-dimensional array of power values with flagged data replaced. Shape (Num Channels , Num Raw Spectra , Npol)
     """
-    print('stats....')
     #find correct PFB coefficents
     nchan = str(f.shape[0]).zfill(4)
-    #print(nchan,type(nchan))    
     hfile = '/users/esmith/RFI_MIT/PFBcoeffs/c0800x'+nchan+'_x14_7_24t_095binw_get_pfb_coeffs_h.npy'
     print(f'loading {hfile} for FIR coefficients')
     h = np.load(hfile)
@@ -222,7 +243,7 @@ def statistical_noise_fir(a,f,ts_factor):
     return a
 
 
-
+@jit
 def adj_chan_good_data(a,f,c):
     """
     Return mean/std derived from unflagged data in adjacent channels 
@@ -284,7 +305,7 @@ def adj_chan_good_data(a,f,c):
 
 
 
-#@jit(nopython=True, parallel=True)
+@jit
 def noise_filter(ave,std,msk,dec):
     """
     Create gaussian noise filtered by the correct PFB coefficients to mimic the VEGAS coarse channel SEFD
@@ -310,7 +331,7 @@ def noise_filter(ave,std,msk,dec):
     return out_filtered
 
 
-#@jit(nopython=True, parallel=True)
+@jit
 def template_guppi_format(a):
     """
     takes array of np.complex64,ravels it and outputs as 1D array of signed 8 bit integers 
@@ -349,15 +370,22 @@ def template_print_flagstats(flags_array):
 
 
 
-#@jit(nopython=True, parallel=True)
+@jit(parallel=True)
 def template_averager(data,m):
-    out = np.zeros((data.shape[0],data.shape[1]//m,data.shape[2]))
+    out = np.zeros((data.shape[0],data.shape[1]//m,data.shape[2]),dtype=np.float64)
     s = np.abs(data)**2
 
-    step1_p0 = np.reshape(s[:,:,0], (s.shape[0],-1,m))
-    step1_p1 = np.reshape(s[:,:,1], (s.shape[0],-1,m))
-    out[:,:,0] = np.nanmean(step1_p0,axis=2)
-    out[:,:,1] = np.nanmean(step1_p1,axis=2)
+    #step1_p0 = np.ascontiguousarray(np.reshape(s[:,:,0], (s.shape[0],-1,m)))
+    #step1_p1 = np.ascontiguousarray(np.reshape(s[:,:,1], (s.shape[0],-1,m)))
+    #out[:,:,0] = np.nanmean(step1_p0,axis=2)
+    #out[:,:,1] = np.nanmean(step1_p1,axis=2)
+
+    a = np.reshape(s,(s.shape[0],-1,m,s.shape[2]))
+    #numba nanmean cannot select by axis
+    for pol in prange(out.shape[2]):
+        for chan in prange(out.shape[0]):
+            for tb in prange(out.shape[1]):
+                out[chan,tb,pol] = np.nanmean(a[chan,:,tb,pol])
     return out
 
 #test
