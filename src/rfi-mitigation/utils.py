@@ -14,6 +14,7 @@ from numba import jit,prange
 
 from tqdm import tqdm
 import iqrm
+import aoflagger
 
 #from statsmodels.stats.weightstats import DescrStatsW
 
@@ -135,7 +136,7 @@ def repl_zeros(a,f):
     return a
 
 
-@jit(nopython=True, parallel=True)
+# @jit(nopython=True, parallel=True)
 def repl_nans(a,f):
     """
     Replace flagged data with nans.
@@ -423,5 +424,88 @@ def iqrm_avg(data, radius, threshold, breakdown):
             flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius, threshold = threshold)[0]
 
     return flag_chunk
+
+
+def aof(data):
+    nch = data.shape[0]
+    ntimes = data.shape[1]
+    count = 2
+    
+    aoflag = aoflagger.AOFlagger()
+    
+    # Load strategy from disk (alternatively use 'make_strategy' to use a default one)
+    path = aoflag.find_strategy_file(aoflagger.TelescopeId.Generic)
+    strategy = aoflag.load_strategy_file(path)
+    
+    aof_data = aoflag.make_image_set(ntimes, nch, count)
+    
+    print("Number of times: " + str(aof_data.width()))
+    print("Number of channels: " + str(aof_data.height()))
+    
+    # When flagging multiple baselines, iterate over the baselines and
+    # call the following code for each baseline
+    # (to use multithreading, make sure to create an imageset for each
+    # thread)
+    flags_block = np.zeros(data.shape)
+    
+    # Make 4 images: real and imaginary for2 pol
+    for pol in range(data.shape[2]):
+        aof_data.set_image_buffer(0, data[:,:,pol].real)
+        aof_data.set_image_buffer(1, data[:,:,pol].imag)
+    
+        flags = strategy.run(aof_data)
+        
+        # flagvalues = flags.get_buffer()
+        # flagcount = sum(sum(flagvalues))
+        # print(
+        #     "Percentage flags on zero data: "
+        #     + str(flagcount * 100.0 / (nch * ntimes))
+        #     + "%"
+        # )
+        flags_block[:,:,pol] = flags.get_buffer()
+    # flags.x = flags
+    # flags = id(flags)
+    # print(flags)
+    # Collect statistics
+    # We create some unrealistic time and frequency arrays to be able
+    # to run these functions. Normally, these should hold the time
+    # and frequency values.
+
+
+
+
+
+
+
+
+    
+    # flagger = aoflagger.AOFlagger()
+    # path = flagger.find_strategy_file(aoflagger.TelescopeId.Generic)
+    # strategy = flagger.load_strategy_file(path)
+    # data1 = flagger.make_image_set(ntimes, nch, 8)
+
+    # aoflagger.FlagMask()
+
+    
+    # ratiosum = 0.0
+    # ratiosumsq = 0.0
+    # for repeat in range(count):
+    #     for imgindex in range(8):
+    #         # Initialize data with random numbers
+    #         values = data
+    #         data1.set_image_buffer(imgindex, values)
+    
+    #     flags = strategy.run(data)
+    #     flagvalues = flags.get_buffer()
+    #     ratio = float(sum(sum(flagvalues))) / (nch*ntimes)
+    #     ratiosum += ratio
+    #     ratiosumsq += ratio*ratio
+    
+    # print("Percentage flags (false-positive rate) on Gaussian data: " +
+    #     str(ratiosum * 100.0 / count) + "% +/- " +
+    #     str(np.sqrt(
+    #         (ratiosumsq/count - ratiosum*ratiosum / (count*count) )
+    #         ) * 100.0) )
+    return flags_block
 
 

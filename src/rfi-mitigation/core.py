@@ -112,12 +112,9 @@ class mitigateRFI:
             elif self.det_method == 'IQRM':
                 # print('IQRM mitigation')
                 flags_block = self.iqrm_detection(data)
-                # if bi == 0:
-                #     self.ss_sk_all = ss_sk_block
-                #     self.ms_sk_all = ms_sk_block
-                # else:
-                #     self.ss_sk_all = np.concatenate((self.ss_sk_all, ss_sk_block),axis=1)
-                #     self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
+
+            elif self.det_method == 'AOF':
+                flags_block = self.aof_detection(data)
 
             #***********************************************
             #===============================================
