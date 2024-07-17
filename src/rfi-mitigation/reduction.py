@@ -176,7 +176,7 @@ def raw2spec(resolution,gr):
     #masked_spectrum = np.ma.masked_array(spectrum,mask)
     out1 = (freqs,spectrum)
     #out2 = (freqs,masked_spectrum)
-    basenm = os.path.basename(rawfile)
+    basenm = os.path.basename(self.infile)
     with open(os.path.join(self._outdir,basenm.replace(".raw",f".{resolution}.spec.pkl")),"wb") as f: 
         pickle.dump(out1,f)
         print(f)
@@ -252,10 +252,11 @@ def raw2spec_mask(resolution,gr,mask):
     #masked_spectrum = np.ma.masked_array(spectrum,mask)
     out1 = (freqs,spectrum)
     #out2 = (freqs,masked_spectrum)
-    basenm = os.path.basename(rawfile)
+    basenm = os.path.basename(self.infile)
     with open(os.path.join(self._outdir,basenm.replace(".raw",f"mask.{resolution}.spec.pkl")),"wb") as f: 
         pickle.dump(out1,f)
         print(f)
+    self._pkl_filename = f
     #with open(os.path.join(args.outdir,basenm.replace(".raw",".20.spec_mask.pkl")), "wb") as f: 
     #    pickle.dump(out2,f)
 
