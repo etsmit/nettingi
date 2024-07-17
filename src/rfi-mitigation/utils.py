@@ -450,8 +450,8 @@ def aof(data):
     
     # Make 4 images: real and imaginary for2 pol
     for pol in range(data.shape[2]):
-        aof_data.set_image_buffer(0, data[:,:,pol].real)
-        aof_data.set_image_buffer(1, data[:,:,pol].imag)
+        aof_data.set_image_buffer(0,(data[:,:,pol].real).astype(np.int8))
+        aof_data.set_image_buffer(1, (data[:,:,pol].imag).astype(np.int8))
     
         flags = strategy.run(aof_data)
         
