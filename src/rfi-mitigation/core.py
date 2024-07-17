@@ -15,6 +15,7 @@ import time
 from blimpy import GuppiRaw
 
 from .utils import *
+from .reduction import *
 #from .sk import rfi_sk
 
 import iqrm
@@ -239,6 +240,21 @@ class mitigateRFI:
 
         print(f'Duration: {dur} minutes')
 
+
+
+
+
+
+    def fine_channelize(self, resolution, mask=False):
+        start_time = time.time()
+        if mask:
+            raw2spec_mask(resolution,self._rawFile,mask)
+        else:
+            raw2spec(resolution,self._rawFile)
+        end_time = time.time()
+        dur = np.around((end_time-start_time)/60, 2)
+
+        print(f'Duration: {dur} minutes')
 
 
 

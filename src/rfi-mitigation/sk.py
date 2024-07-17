@@ -16,6 +16,52 @@ from .utils import *
 
 from numba import jit
 
+spec = [
+ 'SK_detection',
+ 'SK_m',
+ 'SK_thresholds',
+ '_SK_p',
+ '_flags_filename',
+ '_jetstor_dir',
+ '_lt',
+ '_ms_lt',
+ '_ms_sk_filename',
+ '_ms_ut',
+ '_out_dir',
+ '_outfile',
+ '_outfile_pattern',
+ '_rawFile',
+ '_regen_filename',
+ '_spect_filename',
+ '_ss_sk_filename',
+ '_ut',
+ 'ave_factor',
+ 'cust',
+ 'd',
+ 'det_method',
+ 'flags_all',
+ 'in_dir',
+ 'infile',
+ 'lowerRoot',
+ 'mb',
+ 'ms0',
+ 'ms1',
+ 'ms_sk_all',
+ 'mssk',
+ 'multi_scale_SK_EST',
+ 'n',
+ 'output_bool',
+ 'rawdata',
+ 'regen_all',
+ 'repl_method',
+ 'run_all',
+ 'sigma',
+ 'single_scale_SK_EST',
+ 'spect_all',
+ 'ss_sk_all',
+ 'upperRoot']
+
+
 
 class rfi_sk(mitigateRFI):
     #h
@@ -56,15 +102,15 @@ class rfi_sk(mitigateRFI):
         npybase = self._out_dir+'npy_results/'+infile[len(self.in_dir):-4]
 
 
-        self._flags_filename = f"{npybase}_flags_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._spect_filename = f"{npybase}_spect_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._regen_filename = f"{npybase}_regen_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._flags_filename = f"{npybase}_flags_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._spect_filename = f"{npybase}_spect_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._regen_filename = f"{npybase}_regen_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
-        self._ss_sk_filename = f"{npybase}_skval_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._ms_sk_filename = f"{npybase}_mssk_{self.det_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._ss_sk_filename = f"{npybase}_skval_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._ms_sk_filename = f"{npybase}_mssk_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
 
-        self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self._outfile_pattern}_mb{self.mb}_{self.cust}{infile[-4:]}"
+        self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_mb{self.mb}_{self.cust}{infile[-4:]}"
         
         
 
@@ -240,7 +286,6 @@ class rfi_sk(mitigateRFI):
         kappa = float( beta_one*(beta_two+3)**2 ) / ( 4*(4*beta_two-3*beta_one)*(2*beta_two-3*beta_one-6) )
         print('kappa: {}'.format(kappa))
         x = [1]
-        print(x, moment_2, moment_3, p)
         upperThreshold = sp.optimize.newton(self.upperRoot, x[0], args = (moment_2, moment_3, p))
         lowerThreshold = sp.optimize.newton(self.lowerRoot, x[0], args = (moment_2, moment_3, p))
         return lowerThreshold, upperThreshold

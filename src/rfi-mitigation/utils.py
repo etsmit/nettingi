@@ -341,7 +341,7 @@ def template_guppi_format(a):
     Parameters
     -----------
     a : ndarray
-        3-dimensional array of original power values. Shape (Num Channels , Num Raw Spectra , Npol)
+        3-dimensional array of mitigated power values. Shape (Num Channels , Num Raw Spectra , Npol)
     Returns
     -----------
     out_arr : ndarray
