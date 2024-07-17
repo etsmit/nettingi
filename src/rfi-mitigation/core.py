@@ -15,6 +15,7 @@ import time
 from blimpy import GuppiRaw
 
 from .utils import *
+from .reduction import *
 #from .sk import rfi_sk
 
 import iqrm
@@ -66,6 +67,7 @@ class mitigateRFI:
             print('------------------------------------------')
             print(f'Block: {(bi*self.mb)+1}/{numblocks}')
 
+            bstart = time.time()
 
             #print header for the first block
             if bi == 0:
@@ -81,6 +83,7 @@ class mitigateRFI:
                 else:
                     h2,d2 = self._rawFile.read_next_data_block()
                     data = np.append(data,np.copy(d2),axis=1)
+            #data = np.ascontiguousarray(data)
 
             #find data shape
             num_coarsechan = data.shape[0]
@@ -92,7 +95,7 @@ class mitigateRFI:
             if self.rawdata:
                 template_save_npy(data,bi,npy_base)    
        
-
+            #dumb_thing = self.ave_factor
             spect_block = template_averager(data, self.ave_factor)
 
 
@@ -131,10 +134,6 @@ class mitigateRFI:
 
 
 
-            
-
-
-
             #track flags
 
 
@@ -155,7 +154,7 @@ class mitigateRFI:
                 
 
             if self.repl_method == 'nans':
-                data = repl_nans(data,flags_block)
+                data = repl_nans_jit(data,flags_block)
 
             if self.repl_method == 'zeros':
                 #replace data with zeros
@@ -189,6 +188,8 @@ class mitigateRFI:
                     d1 = template_guppi_format(data[:,d1s*mb_i:d1s*(mb_i+1),:])
                     out_rawFile.write(d1.tostring())
 
+            bend = time.time()
+            print(f'block duration: {(bend-bstart)/60}')
 
         #===============================================
         #***********************************************
@@ -236,6 +237,21 @@ class mitigateRFI:
 
         print(f'Duration: {dur} minutes')
 
+
+
+
+
+
+    def fine_channelize(self, resolution, mask=False):
+        start_time = time.time()
+        if mask:
+            raw2spec_mask(resolution,self._rawFile,mask)
+        else:
+            raw2spec(resolution,self._rawFile)
+        end_time = time.time()
+        dur = np.around((end_time-start_time)/60, 2)
+
+        print(f'Duration: {dur} minutes')
 
 
 
