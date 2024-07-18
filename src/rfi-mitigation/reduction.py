@@ -262,7 +262,14 @@ def raw2spec_mask(resolution,gr,mask):
 
 
 
+def reduce_pulsar_data():
+    #need to do lots of bookkeeping to put stuff in the right directories
 
+    self.pulsar_output_dir = 
+
+
+
+    pass
 
 
 
