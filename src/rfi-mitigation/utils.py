@@ -68,6 +68,37 @@ def template_infile_mod(infile,in_dir):
     return infile
 
 
+#set up all the input and output directories correctly
+#set up all the input and output directories correctly
+def template_bookkeeping(infile):
+
+    #== input stuff ==
+    #these paths should all exist, so no mkdirs needed
+    #if they don't exist, 
+    input_raw_dir_base = '/jetstor/scratch/rfimit/unmitigated/rawdata'
+    infile_base = self.infile[:self.infile.find('.')]
+    
+    #find input directory and file
+    in_dir = f'{input_raw_dir_base}/{infile_base}/'
+    infile_raw_full = in_dir+self.infile
+
+    #== output stuff ==
+    output_raw_dir_base = '/jetstor/scratch/rfimit/mitigated/rawdata'
+    output_base = f'{infile_base}_{self._output_pattern}'
+    output_raw_dir = f'{output_raw_dir_base}/{output_base}/'
+    if !os.path.exists(output_raw_dir):
+        os.system(f'mkdir {output_raw_dir}')
+    output_raw_full = f'{output_raw_dir}{infile[:-4]}_{self._output_pattern}.raw'
+
+
+    output_srdp_dir_base = 'jetstor/scratch/rfimit/mitigated/reduced'
+    output_srdp_dir = f'{output_srdp_dir_base}/{output_base}/{infile[:-4]}_{self._output_pattern}/'
+    if !os.path.exists(output_srdp_dir):
+        os.system(f'mkdir {output_srdp_dir}')
+    return infile_raw_full, output_raw_full, output_srdp_full
+
+
+
 #check that the outfile doesn't already exist, ask for overwrite confirmation 
 def template_check_outfile(infile,outfile):
     print('Saving replaced data to '+outfile)

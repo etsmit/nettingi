@@ -77,9 +77,8 @@ class rfi_sk(mitigateRFI):
         self.ave_factor = ave_factor 
 
         #default/hardcoded attributes
-        self.in_dir = '/data/rfimit/unmitigated/rawdata/'#move to actual data dir
-        self.infile = template_infile_mod(infile,self.in_dir)
         self._rawFile = GuppiRaw(self.infile)
+        self.infile_raw_full, self.output_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile)
 
         #sk related parameters
         self.SK_m = m
@@ -110,7 +109,7 @@ class rfi_sk(mitigateRFI):
         self._ms_sk_filename = f"{npybase}_mssk_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
 
-        self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_mb{self.mb}_{self.cust}{infile[-4:]}"
+        #self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_mb{self.mb}_{self.cust}{infile[-4:]}"
         
         
 
