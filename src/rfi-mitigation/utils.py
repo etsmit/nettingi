@@ -506,14 +506,20 @@ def aof(data):
     # call the following code for each baseline
     # (to use multithreading, make sure to create an imageset for each
     # thread)
-    flags_block = np.zeros(data.shape)
+    flags_block = np.zeros(data.shape,dtype = np.int8)
     
-    # Make 4 images: real and imaginary for2 pol
-    for pol in range(data.shape[2]):
-        aof_data.set_image_buffer(0,(data[:,:,pol].real).astype(np.int8))
-        aof_data.set_image_buffer(1, (data[:,:,pol].imag).astype(np.int8))
+    # Divide up the block into 32 time chunks for lighter RAM usage
+    tb_size = data.shape[1]//32    
+
+    for tb in range(32):
+        tstart = tb*tb_size
+        tend = (tb+1)*tb_size
+        # Make 4 images: real and imaginary for2 pol
+        for pol in range(data.shape[2]):
+            aof_data.set_image_buffer(0,(data[:,tstart:tend,pol].real).astype(np.int8))
+            aof_data.set_image_buffer(1, (data[:,tstart:tend,pol].imag).astype(np.int8))
     
-        flags = strategy.run(aof_data)
+            flags = strategy.run(aof_data)
         
         # flagvalues = flags.get_buffer()
         # flagcount = sum(sum(flagvalues))
@@ -522,7 +528,7 @@ def aof(data):
         #     + str(flagcount * 100.0 / (nch * ntimes))
         #     + "%"
         # )
-        flags_block[:,:,pol] = flags.get_buffer()
+            flags_block[:,tstart:tend,pol] = flags.get_buffer()
     # flags.x = flags
     # flags = id(flags)
     # print(flags)

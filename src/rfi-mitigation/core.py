@@ -267,7 +267,18 @@ class mitigateRFI:
                 raw2spec_mask(resolution,GuppiRaw(self._outfile,mask),self.infile[self.infile.rfind('/')])
             else:
                 raw2spec(resolution,GuppiRaw(self._outfile),self.infile[self.infile.rfind('/')])
-                
+        else:        
+            if mask:
+                raw2spec_mask(resolution,self._rawFile,mask)
+            else:
+                raw2spec(resolution,self._rawFile)
+        end_time = time.time()
+        dur = np.around((end_time-start_time)/60, 2)
+
+        print(f'Duration: {dur} minutes')
+
+
+
 
 
 

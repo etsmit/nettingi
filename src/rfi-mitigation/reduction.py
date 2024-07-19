@@ -140,7 +140,9 @@ def pfb(x, nchan, ntap, window="hann", fs=1.0, return_freqs=False,
 
 
 #fine channelize the data, when no nans have been injected
-def raw2spec(resolution,gr, infile):
+
+def raw2spec(resolution,gr,infile):
+
 
     hdr0 = gr.read_first_header()
     fctr = float(hdr0["OBSFREQ"])
