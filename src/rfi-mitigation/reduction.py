@@ -140,7 +140,7 @@ def pfb(x, nchan, ntap, window="hann", fs=1.0, return_freqs=False,
 
 
 #fine channelize the data, when no nans have been injected
-def raw2spec(resolution,gr):
+def raw2spec(resolution,gr, infile):
 
     hdr0 = gr.read_first_header()
     fctr = float(hdr0["OBSFREQ"])
@@ -176,7 +176,7 @@ def raw2spec(resolution,gr):
     #masked_spectrum = np.ma.masked_array(spectrum,mask)
     out1 = (freqs,spectrum)
     #out2 = (freqs,masked_spectrum)
-    basenm = os.path.basename(self.infile)
+    basenm = os.path.basename(infile)
     with open(os.path.join(self._outdir,basenm.replace(".raw",f".{resolution}.spec.pkl")),"wb") as f: 
         pickle.dump(out1,f)
         print(f)
@@ -185,7 +185,7 @@ def raw2spec(resolution,gr):
 
 
 #do fine channelization using a mask
-def raw2spec_mask(resolution,gr,mask):
+def raw2spec_mask(resolution,gr,mask, infile):
 
     hdr0 = gr.read_first_header()
     fctr = float(hdr0["OBSFREQ"])
@@ -252,7 +252,7 @@ def raw2spec_mask(resolution,gr,mask):
     #masked_spectrum = np.ma.masked_array(spectrum,mask)
     out1 = (freqs,spectrum)
     #out2 = (freqs,masked_spectrum)
-    basenm = os.path.basename(self.infile)
+    basenm = os.path.basename(infile)
     with open(os.path.join(self._outdir,basenm.replace(".raw",f"mask.{resolution}.spec.pkl")),"wb") as f: 
         pickle.dump(out1,f)
         print(f)

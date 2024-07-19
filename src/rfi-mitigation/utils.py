@@ -193,8 +193,8 @@ def repl_nans_jit(a,f):
 
 
 #replace with statistical noise
-@jit(nopython=False)
-def statistical_noise_fir(a,f,ts_factor,hfile):
+# @jit(nopython=False)
+def statistical_noise_fir(a,f,ts_factor):
     """
     Replace flagged data with statistical noise.
     - fir version that adds a fir in the noise
@@ -247,7 +247,7 @@ def statistical_noise_fir(a,f,ts_factor,hfile):
     return a
 
 
-@jit
+# @jit
 def adj_chan_good_data(a,f,c):
     """
     Return mean/std derived from unflagged data in adjacent channels 

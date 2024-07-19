@@ -14,8 +14,8 @@ import time
 
 from blimpy import GuppiRaw
 
-from .utils import *
-from .reduction import *
+from utils import *
+from reduction import *
 #from .sk import rfi_sk
 
 import iqrm
@@ -241,24 +241,33 @@ class mitigateRFI:
     #resolution: output frequency resolution in kHz
     #mit: run on the mitigated or unmitigated data
     #mask: use the mask to skip over flagged bits when fine channelizing (not done)
+#     def fine_channelize(self, resolution, mit=False, mask=False):
+        
+#         start_time = time.time()
+#         if mit:
+#             if mask:
+#                 raw2spec_mask(resolution,self._outfile,mask)
+#             else:
+#                 raw2spec(resolution,self._outfile)
+#         else:        
+#             if mask:
+#                 raw2spec_mask(resolution,self._rawFile,mask)
+#             else:
+#                 raw2spec(resolution,self._rawFile)
+#         end_time = time.time()
+#         dur = np.around((end_time-start_time)/60, 2)
+
+#         print(f'Duration: {dur} minutes')
+
     def fine_channelize(self, resolution, mit=False, mask=False):
         start_time = time.time()
+        print(self._outfile)
         if mit:
             if mask:
-                raw2spec_mask(resolution,self._outfile,mask)
+                raw2spec_mask(resolution,GuppiRaw(self._outfile,mask),self.infile[self.infile.rfind('/')])
             else:
-                raw2spec(resolution,self._outfile)
-        else:        
-            if mask:
-                raw2spec_mask(resolution,self._rawFile,mask)
-            else:
-                raw2spec(resolution,self._rawFile)
-        end_time = time.time()
-        dur = np.around((end_time-start_time)/60, 2)
-
-        print(f'Duration: {dur} minutes')
-
-
+                raw2spec(resolution,GuppiRaw(self._outfile),self.infile[self.infile.rfind('/')])
+                
 
 
 
