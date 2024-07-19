@@ -250,7 +250,7 @@ class mitigateRFI:
             if mask:
                 raw2spec_mask(resolution,self._outfile,mask)
             else:
-                raw2spec(resolution,self._outfile)
+                raw2spec(resolution,self._outfile,self.infile[self.infile.rfind('/')])
         else:        
             if mask:
                 raw2spec_mask(resolution,self._rawFile,mask)
