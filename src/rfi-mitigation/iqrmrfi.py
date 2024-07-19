@@ -75,7 +75,7 @@ class rfi_iqrm(mitigateRFI):
         
     
 
-        self._outfile = f"{self._jetstor_dir}{infile[len(self.in_dir):-4]}_{self.det_method}_{self._outfile_pattern}_mb{mb}_{cust}{infile[-4:]}"
+        self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_mb{mb}_{cust}{infile[-4:]}"
         #threshold calc from sigma
         IQRM_lag = iqrm.core.genlags(IQRM_radius, geofactor=1.5)
   
