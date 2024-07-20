@@ -70,32 +70,33 @@ def template_infile_mod(infile,in_dir):
 
 #set up all the input and output directories correctly
 #set up all the input and output directories correctly
-def template_bookkeeping(infile):
+# def template_bookkeeping(infile):
 
-    #== input stuff ==
-    #these paths should all exist, so no mkdirs needed
-    #if they don't exist, 
-    input_raw_dir_base = '/jetstor/scratch/rfimit/unmitigated/rawdata'
-    infile_base = self.infile[:self.infile.find('.')]
+#     #== input stuff ==
+#     #these paths should all exist, so no mkdirs needed
+#     #if they don't exist, 
+#     input_raw_dir_base = '/jetstor/scratch/rfimit/unmitigated/rawdata'
+#     infile_base = self.infile[:self.infile.find('.')]
     
-    #find input directory and file
-    in_dir = f'{input_raw_dir_base}/{infile_base}/'
-    infile_raw_full = in_dir+self.infile
+#     #find input directory and file
+#     in_dir = f'{input_raw_dir_base}/{infile_base}/'
+#     infile_raw_full = in_dir+self.infile
 
-    #== output stuff ==
-    output_raw_dir_base = '/jetstor/scratch/rfimit/mitigated/rawdata'
-    output_base = f'{infile_base}_{self._output_pattern}'
-    output_raw_dir = f'{output_raw_dir_base}/{output_base}/'
-    if !os.path.exists(output_raw_dir):
-        os.system(f'mkdir {output_raw_dir}')
-    output_raw_full = f'{output_raw_dir}{infile[:-4]}_{self._output_pattern}.raw'
+#     #== output stuff ==
+#     output_raw_dir_base = '/jetstor/scratch/rfimit/mitigated/rawdata'
+#     output_base = f'{infile_base}_{self._output_pattern}'
+#     output_raw_dir = f'{output_raw_dir_base}/{output_base}/'
+#     if !os.path.exists(output_raw_dir):
+#         os.system(f'mkdir {output_raw_dir}')
+#     output_raw_full = f'{output_raw_dir}{infile[:-4]}_{self._output_pattern}.raw'
 
 
-    output_srdp_dir_base = 'jetstor/scratch/rfimit/mitigated/reduced'
-    output_srdp_dir = f'{output_srdp_dir_base}/{output_base}/{infile[:-4]}_{self._output_pattern}/'
-    if !os.path.exists(output_srdp_dir):
-        os.system(f'mkdir {output_srdp_dir}')
-    return infile_raw_full, output_raw_full, output_srdp_full
+#     output_srdp_dir_base = 'jetstor/scratch/rfimit/mitigated/reduced'
+#     output_srdp_dir = f'{output_srdp_dir_base}/{output_base}/{infile[:-4]}_{self._output_pattern}/'
+    
+#     if !os.path.exists(output_srdp_dir):
+#         os.system(f'mkdir {output_srdp_dir}')
+#     return infile_raw_full, output_raw_full, output_srdp_full
 
 
 
@@ -488,7 +489,7 @@ def iqrm_avg(data, radius, threshold, breakdown):
 
 def aof(data):
     nch = data.shape[0]
-    ntimes = data.shape[1]
+    ntimes = data.shape[1]//32
     count = 2
     
     aoflag = aoflagger.AOFlagger()
@@ -511,7 +512,7 @@ def aof(data):
     # Divide up the block into 32 time chunks for lighter RAM usage
     tb_size = data.shape[1]//32    
 
-    for tb in range(32):
+    for tb in tqdm(range(32)):
         tstart = tb*tb_size
         tend = (tb+1)*tb_size
         # Make 4 images: real and imaginary for2 pol
