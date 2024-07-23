@@ -60,7 +60,7 @@ class rfi_aof(mitigateRFI):
 
 
         # any separate results filenames you need, in addition to the flags filename, put them here
-        npybase = self._out_dir+'npy_results/'+infile[len(self.in_dir):-4]
+        npybase = self._out_dir+'npy_results/'+infile[:-4]
 
 
         self._flags_filename = f"{npybase}_flags_{self.det_method}_{self._outfile_pattern}_{cust}.npy"

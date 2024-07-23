@@ -264,14 +264,14 @@ class mitigateRFI:
         print(self._outfile)
         if mit:
             if mask:
-                raw2spec_mask(resolution,GuppiRaw(self._outfile,mask),self.infile[self.infile.rfind('/')])
+                raw2spec_mask(resolution,GuppiRaw(self._outfile), mask, self.infile[self.infile.rfind('/'):])
             else:
-                raw2spec(resolution,GuppiRaw(self._outfile),self.infile[self.infile.rfind('/')])
+                raw2spec(resolution,GuppiRaw(self._outfile),self.infile[self.infile.rfind('/'):])
         else:        
             if mask:
-                raw2spec_mask(resolution,self._rawFile,mask)
+                raw2spec_mask(resolution,self._rawFile,mask, self.infile[self.infile.rfind('/'):])
             else:
-                raw2spec(resolution,self._rawFile)
+                raw2spec(resolution,self._rawFile, self.infile[self.infile.rfind('/'):])
         end_time = time.time()
         dur = np.around((end_time-start_time)/60, 2)
 

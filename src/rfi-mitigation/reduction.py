@@ -142,8 +142,13 @@ def pfb(x, nchan, ntap, window="hann", fs=1.0, return_freqs=False,
 #fine channelize the data, when no nans have been injected
 
 def raw2spec(resolution,gr,infile):
-
-
+    basenm = os.path.basename(infile)
+    print(basenm)
+    outfile_test = os.path.join('/data/scratch/IQRMresults',basenm.replace(".raw",f".{resolution}.spec.pkl"))
+    print("hi")
+   
+    print(outfile_test)
+    print("hi2")
     hdr0 = gr.read_first_header()
     fctr = float(hdr0["OBSFREQ"])
     bw = float(hdr0["OBSBW"])
@@ -177,9 +182,10 @@ def raw2spec(resolution,gr,infile):
     #mask[bad_chans] = 1
     #masked_spectrum = np.ma.masked_array(spectrum,mask)
     out1 = (freqs,spectrum)
-    #out2 = (freqs,masked_spectrum)
-    basenm = os.path.basename(infile)
-    with open(os.path.join(self._outdir,basenm.replace(".raw",f".{resolution}.spec.pkl")),"wb") as f: 
+#     #out2 = (freqs,masked_spectrum)
+#     basenm = os.path.basename(infile)
+    
+    with open(os.path.join('/data/scratch/IQRMresults',basenm.replace(".raw",f".{resolution}.spec.pkl")),"wb") as f: 
         pickle.dump(out1,f)
         print(f)
     #with open(os.path.join(args.outdir,basenm.replace(".raw",".20.spec_mask.pkl")), "wb") as f: 
@@ -188,7 +194,12 @@ def raw2spec(resolution,gr,infile):
 
 #do fine channelization using a mask
 def raw2spec_mask(resolution,gr,mask, infile):
-
+    basenm = os.path.basename(infile)
+    outfile_test = os.path.join('/data/scratch/IQRMresults',basenm.replace(".raw",f".{resolution}.spec.pkl"))
+    print("hi")
+   
+    print(outfile_test)
+    print("hi2")
     hdr0 = gr.read_first_header()
     fctr = float(hdr0["OBSFREQ"])
     bw = float(hdr0["OBSBW"])
@@ -254,8 +265,8 @@ def raw2spec_mask(resolution,gr,mask, infile):
     #masked_spectrum = np.ma.masked_array(spectrum,mask)
     out1 = (freqs,spectrum)
     #out2 = (freqs,masked_spectrum)
-    basenm = os.path.basename(infile)
-    with open(os.path.join(self._outdir,basenm.replace(".raw",f"mask.{resolution}.spec.pkl")),"wb") as f: 
+#     basenm = os.path.basename(infile)
+    with open(os.path.join('/data/scratch/IQRMresults',basenm.replace(".raw",f"mask.{resolution}.spec.pkl")),"wb") as f: 
         pickle.dump(out1,f)
         print(f)
     self._pkl_filename = f
