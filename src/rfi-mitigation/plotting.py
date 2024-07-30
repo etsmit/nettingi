@@ -59,11 +59,11 @@ def pkl_plot(infiles, labels, ps=False):
             spectra.append(data)
             
     else:
-        for i in range(len(infiles):
+        for i in range(len(infiles)):
             freqs, data = load_tp(infiles[i])
-
+            spectra.append(data)
     for i in range(len(spectra)):
-        plt.plot(freqs, spectra[i], alpha=0.7, c=ten_clrs[i], label=labels=[i])
+        plt.plot(freqs, spectra[i], alpha=0.7, c=ten_clrs[i], label=labels[i])
 
     plt.legend()
     plt.show()
