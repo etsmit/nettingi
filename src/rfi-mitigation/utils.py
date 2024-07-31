@@ -489,7 +489,7 @@ def iqrm_avg(data, radius, threshold, breakdown):
 
 def aof(data):
     nch = data.shape[0]
-    ntimes = data.shape[1]//32
+    ntimes = data.shape[1]//8
     count = 2
     
     aoflag = aoflagger.AOFlagger()
@@ -510,9 +510,9 @@ def aof(data):
     flags_block = np.zeros(data.shape,dtype = np.int8)
     
     # Divide up the block into 32 time chunks for lighter RAM usage
-    tb_size = data.shape[1]//32    
+    tb_size = data.shape[1]//8    
 
-    for tb in tqdm(range(32)):
+    for tb in tqdm(range(8)):
         tstart = tb*tb_size
         tend = (tb+1)*tb_size
         # Make 4 images: real and imaginary for2 pol

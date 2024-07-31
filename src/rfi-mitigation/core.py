@@ -1,6 +1,7 @@
 
 import numpy as np
 import os,sys
+import psutil
 import matplotlib.pyplot as plt
 
 import scipy as sp
@@ -14,8 +15,8 @@ import time
 
 from blimpy import GuppiRaw
 
-from utils import *
-from reduction import *
+from .utils import *
+from .reduction import *
 #from .sk import rfi_sk
 
 import iqrm
@@ -53,6 +54,9 @@ class mitigateRFI:
 
     def run_all(self):
         #do all the rfi mitigation steps
+
+
+        pp = psutil.Process(os.getpid())
 
         start_time = time.time()
         if self.output_bool:
@@ -132,8 +136,15 @@ class mitigateRFI:
                 self.flags_all = np.concatenate((self.flags_all, flags_block),axis=1)
                 self.spect_all = np.concatenate((self.spect_all, spect_block),axis=1)
 
+            if self.det_method == 'AOF':
+                block_fname = str(bi).zfill(3)
+                save_fname = self.npybase+'_flags_block'+block_fname+'.npy'
+                np.save(save_fname,flags_block)
+                self.flags_all = np.empty((data.shape[0],1,data.shape[2]))
 
-
+            print(f'MEM: spect: {self.spect_all.nbytes/1e9} // flags: {self.flags_all.nbytes/1e9}')
+            mu = pp.memory_info()
+            print(f'Total RAM usage: {mu[0]/2.**30} GB')
             #track flags
 
 

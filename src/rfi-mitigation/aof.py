@@ -49,8 +49,8 @@ class rfi_aof(mitigateRFI):
         # self.IQRM_datatype = IQRM_datatype
         # self.IQRM_breakdown = IQRM_breakdown
 
-        self._out_dir = '/data/scratch/AOFresults/'
-        self._jetstor_dir = '/jetstor/scratch/AOF_rawdata_results/'
+        self._out_dir = '/data/scratch/SKresults/'
+        self._jetstor_dir = '/jetstor/scratch/SK_rawdata_results/'
 
 
         # if IQRM_datatype == 'std':
@@ -60,15 +60,15 @@ class rfi_aof(mitigateRFI):
 
 
         # any separate results filenames you need, in addition to the flags filename, put them here
-        npybase = self._out_dir+'npy_results/'+infile[:-4]
+        self.npybase = self._out_dir+'npy_results/'+infile[:-4]
 
 
-        self._flags_filename = f"{npybase}_flags_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
+        self._flags_filename = f"{self.npybase}_flags_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
 
         # self._avg_pre_filename = f"{npybase}_avg_pre_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
         # self._avg_post_filename = f"{npybase}_avg_post_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
-        self._regen_filename = f"{npybase}_regen_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
-        self._spect_filename = f"{npybase}_spect_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
+        self._regen_filename = f"{self.npybase}_regen_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
+        self._spect_filename = f"{self.npybase}_spect_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
         
     
 
