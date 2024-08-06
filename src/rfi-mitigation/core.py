@@ -1,6 +1,7 @@
 
 import numpy as np
 import os,sys
+import psutil
 import matplotlib.pyplot as plt
 
 import scipy as sp
@@ -15,6 +16,7 @@ import time
 from blimpy import GuppiRaw
 
 from .utils import *
+from .reduction import *
 #from .sk import rfi_sk
 
 import iqrm
@@ -53,6 +55,9 @@ class mitigateRFI:
     def run_all(self):
         #do all the rfi mitigation steps
 
+
+        pp = psutil.Process(os.getpid())
+
         start_time = time.time()
         if self.output_bool:
             template_check_outfile(self.infile,self._outfile)
@@ -66,6 +71,7 @@ class mitigateRFI:
             print('------------------------------------------')
             print(f'Block: {(bi*self.mb)+1}/{numblocks}')
 
+            bstart = time.time()
 
             #print header for the first block
             if bi == 0:
@@ -81,6 +87,7 @@ class mitigateRFI:
                 else:
                     h2,d2 = self._rawFile.read_next_data_block()
                     data = np.append(data,np.copy(d2),axis=1)
+            #data = np.ascontiguousarray(data)
 
             #find data shape
             num_coarsechan = data.shape[0]
@@ -92,7 +99,7 @@ class mitigateRFI:
             if self.rawdata:
                 template_save_npy(data,bi,npy_base)    
        
-
+            #dumb_thing = self.ave_factor
             spect_block = template_averager(data, self.ave_factor)
 
 
@@ -112,12 +119,9 @@ class mitigateRFI:
             elif self.det_method == 'IQRM':
                 # print('IQRM mitigation')
                 flags_block = self.iqrm_detection(data)
-                # if bi == 0:
-                #     self.ss_sk_all = ss_sk_block
-                #     self.ms_sk_all = ms_sk_block
-                # else:
-                #     self.ss_sk_all = np.concatenate((self.ss_sk_all, ss_sk_block),axis=1)
-                #     self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
+
+            elif self.det_method == 'AOF':
+                flags_block = self.aof_detection(data)
 
             #***********************************************
             #===============================================
@@ -132,12 +136,15 @@ class mitigateRFI:
                 self.flags_all = np.concatenate((self.flags_all, flags_block),axis=1)
                 self.spect_all = np.concatenate((self.spect_all, spect_block),axis=1)
 
+            if self.det_method == 'AOF':
+                block_fname = str(bi).zfill(3)
+                save_fname = self.npybase+'_flags_block'+block_fname+'.npy'
+                np.save(save_fname,flags_block)
+                self.flags_all = np.empty((data.shape[0],1,data.shape[2]))
 
-
-            
-
-
-
+            print(f'MEM: spect: {self.spect_all.nbytes/1e9} // flags: {self.flags_all.nbytes/1e9}')
+            mu = pp.memory_info()
+            print(f'Total RAM usage: {mu[0]/2.**30} GB')
             #track flags
 
 
@@ -158,7 +165,7 @@ class mitigateRFI:
                 
 
             if self.repl_method == 'nans':
-                data = repl_nans(data,flags_block)
+                data = repl_nans_jit(data,flags_block)
 
             if self.repl_method == 'zeros':
                 #replace data with zeros
@@ -192,6 +199,8 @@ class mitigateRFI:
                     d1 = template_guppi_format(data[:,d1s*mb_i:d1s*(mb_i+1),:])
                     out_rawFile.write(d1.tostring())
 
+            bend = time.time()
+            print(f'block duration: {(bend-bstart)/60}')
 
         #===============================================
         #***********************************************
@@ -234,6 +243,46 @@ class mitigateRFI:
 
 
         #umm... done?
+        end_time = time.time()
+        dur = np.around((end_time-start_time)/60, 2)
+
+        print(f'Duration: {dur} minutes')
+
+
+    #resolution: output frequency resolution in kHz
+    #mit: run on the mitigated or unmitigated data
+    #mask: use the mask to skip over flagged bits when fine channelizing (not done)
+#     def fine_channelize(self, resolution, mit=False, mask=False):
+        
+#         start_time = time.time()
+#         if mit:
+#             if mask:
+#                 raw2spec_mask(resolution,self._outfile,mask)
+#             else:
+#                 raw2spec(resolution,self._outfile)
+#         else:        
+#             if mask:
+#                 raw2spec_mask(resolution,self._rawFile,mask)
+#             else:
+#                 raw2spec(resolution,self._rawFile)
+#         end_time = time.time()
+#         dur = np.around((end_time-start_time)/60, 2)
+
+#         print(f'Duration: {dur} minutes')
+
+    def fine_channelize(self, resolution, mit=False, mask=False):
+        start_time = time.time()
+        print(self._outfile)
+        if mit:
+            if mask:
+                raw2spec_mask(resolution,GuppiRaw(self._outfile), mask, self.infile[self.infile.rfind('/'):])
+            else:
+                raw2spec(resolution,GuppiRaw(self._outfile),self.infile[self.infile.rfind('/'):])
+        else:        
+            if mask:
+                raw2spec_mask(resolution,self._rawFile,mask, self.infile[self.infile.rfind('/'):])
+            else:
+                raw2spec(resolution,self._rawFile, self.infile[self.infile.rfind('/'):])
         end_time = time.time()
         dur = np.around((end_time-start_time)/60, 2)
 

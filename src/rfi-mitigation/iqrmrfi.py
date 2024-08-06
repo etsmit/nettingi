@@ -63,7 +63,7 @@ class rfi_iqrm(mitigateRFI):
 
 
         # any separate results filenames you need, in addition to the flags filename, put them here
-        npybase = self._out_dir+'npy_results/'+infile[len(self.in_dir):-4]
+        npybase = self._out_dir+'npy_results/'+infile[:-4]
 
 
         self._flags_filename = f"{npybase}_flags_{self.det_method}_{self._outfile_pattern}_{cust}.npy"
@@ -75,7 +75,7 @@ class rfi_iqrm(mitigateRFI):
         
     
 
-        self._outfile = f"{self._jetstor_dir}{infile[len(self.in_dir):-4]}_{self.det_method}_{self._outfile_pattern}_mb{mb}_{cust}{infile[-4:]}"
+        self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_mb{mb}_{cust}{infile[-4:]}"
         #threshold calc from sigma
         IQRM_lag = iqrm.core.genlags(IQRM_radius, geofactor=1.5)
   
