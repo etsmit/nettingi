@@ -3,14 +3,7 @@
 
 ``nettingi`` works with Python 3.9.
 
-### `pip` installation
 
-``nettingi`` can be installed with ``pip``.  The packaged code is hosted on [PyPi](https://pypi.org/user/kaitlynchen).
-
-
-```bash
-    $ pip install nettingi
-```
 
 
 ### From GitHub

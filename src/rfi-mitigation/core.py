@@ -60,7 +60,7 @@ class mitigateRFI:
 
         start_time = time.time()
         if self.output_bool:
-            template_check_outfile(self.infile,self._outfile)
+            template_check_outfile(self.infile_raw_full,self.outfile_raw_full)
             out_rawFile = open(self._outfile,'rb+')
 
         

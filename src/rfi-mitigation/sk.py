@@ -67,18 +67,18 @@ class rfi_sk(mitigateRFI):
     #h
     def __init__(self, infile, repl_method, m, mssk, n, d, s, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         #user-given attributes
-        self.det_method = 'SK'       
-        #self.infile = template_infile_mod(infile,self.in_dir)[0]
+        self.det_method = 'SK'
         self.repl_method = repl_method
         self.cust = cust
         self.output_bool = output_bool 
         self.mb = mb
         self.rawdata = rawdata
-        self.ave_factor = ave_factor 
+        self.ave_factor = ave_factor
+        self.infile = infile 
 
         #default/hardcoded attributes
-        self._rawFile = GuppiRaw(self.infile)
-        self.infile_raw_full, self.output_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile)
+        #self._rawFile = GuppiRaw(self.infile)
+        #self.infile_raw_full, self.output_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile)
 
         #sk related parameters
         self.SK_m = m
@@ -86,27 +86,23 @@ class rfi_sk(mitigateRFI):
         self.n = n
         self.d = d
         self.sigma = s
-
-        self._out_dir = '/data/scratch/SKresults/'
-        self._jetstor_dir = '/jetstor/scratch/SK_rawdata_results/'
-
         self.ms0 = int(mssk.split(',')[0])
         self.ms1 = int(mssk.split(',')[1])
 
-        
-        self._outfile_pattern = f"m{self.SK_m}_s{self.sigma}_ms{self.ms0}-{self.ms1}"
+        self._outfile_pattern = f"m{self.SK_m}_s{self.sigma}_ms{self.ms0}-{self.ms1}"    
 
-
+        self.infile_raw_full, self.outfile_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern)
+        self._rawFile = GuppiRaw(self.infile_raw_full)
         # any separate results filenames you need, in addition to the flags filename, put them here
-        npybase = self._out_dir+'npy_results/'+infile[len(self.in_dir):-4]
+        npybase = self.infile[:-4]
+        
 
+        self._flags_filename = f"{self.output_srdp_dir}{npybase}_flags_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._spect_filename = f"{self.output_srdp_dir}{npybase}_spect_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._regen_filename = f"{self.output_srdp_dir}{npybase}_regen_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
-        self._flags_filename = f"{npybase}_flags_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._spect_filename = f"{npybase}_spect_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._regen_filename = f"{npybase}_regen_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-
-        self._ss_sk_filename = f"{npybase}_skval_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._ms_sk_filename = f"{npybase}_mssk_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._ss_sk_filename = f"{self.output_srdp_dir}{npybase}_skval_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._ms_sk_filename = f"{self.output_srdp_dir}{npybase}_mssk_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
 
         #self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_mb{self.mb}_{self.cust}{infile[-4:]}"
@@ -127,6 +123,11 @@ class rfi_sk(mitigateRFI):
         self._ms_lt, self._ms_ut = self.SK_thresholds(self.SK_m*self.ms0*self.ms1)
         print(f'MS Upper Threshold: {self._ms_ut}')
         print(f'MS Lower Threshold: {self._ms_lt}')
+
+        out = f"""input: {self.infile_raw_full}\noutput: {self.outfile_raw_full}\nspect: {self._spect_filename}"""
+        print(out)
+
+       
 
 
     #@jit(nopython=True, parallel=True)
