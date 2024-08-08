@@ -102,3 +102,94 @@ class rfi_aof(mitigateRFI):
         flag_chunk = aof(data)
     
         return flag_chunk
+
+
+
+def aof(data):
+    nch = data.shape[0]
+    ntimes = data.shape[1]//1
+    count = 2
+    
+    aoflag = aoflagger.AOFlagger()
+    
+    # Load strategy from disk (alternatively use 'make_strategy' to use a default one)
+    path = aoflag.find_strategy_file(aoflagger.TelescopeId.Generic)
+    strategy = aoflag.load_strategy_file(path)
+    
+    aof_data = aoflag.make_image_set(ntimes, nch, count)
+    
+    print("Number of times: " + str(aof_data.width()))
+    print("Number of channels: " + str(aof_data.height()))
+    
+    # When flagging multiple baselines, iterate over the baselines and
+    # call the following code for each baseline
+    # (to use multithreading, make sure to create an imageset for each
+    # thread)
+    flags_block = np.zeros(data.shape,dtype = np.int8)
+    
+    # Divide up the block into 32 time chunks for lighter RAM usage
+    tb_size = data.shape[1]//1    
+
+    for tb in tqdm(range(1)):
+        tstart = tb*tb_size
+        tend = (tb+1)*tb_size
+        # Make 4 images: real and imaginary for2 pol
+        for pol in range(data.shape[2]):
+            aof_data.set_image_buffer(0,(data[:,tstart:tend,pol].real).astype(np.int8))
+            aof_data.set_image_buffer(1, (data[:,tstart:tend,pol].imag).astype(np.int8))
+    
+            flags = strategy.run(aof_data)
+        
+        # flagvalues = flags.get_buffer()
+        # flagcount = sum(sum(flagvalues))
+        # print(
+        #     "Percentage flags on zero data: "
+        #     + str(flagcount * 100.0 / (nch * ntimes))
+        #     + "%"
+        # )
+            flags_block[:,tstart:tend,pol] = flags.get_buffer()
+    # flags.x = flags
+    # flags = id(flags)
+    # print(flags)
+    # Collect statistics
+    # We create some unrealistic time and frequency arrays to be able
+    # to run these functions. Normally, these should hold the time
+    # and frequency values.
+
+
+    # flagger = aoflagger.AOFlagger()
+    # path = flagger.find_strategy_file(aoflagger.TelescopeId.Generic)
+    # strategy = flagger.load_strategy_file(path)
+    # data1 = flagger.make_image_set(ntimes, nch, 8)
+
+    # aoflagger.FlagMask()
+
+    
+    # ratiosum = 0.0
+    # ratiosumsq = 0.0
+    # for repeat in range(count):
+    #     for imgindex in range(8):
+    #         # Initialize data with random numbers
+    #         values = data
+    #         data1.set_image_buffer(imgindex, values)
+    
+    #     flags = strategy.run(data)
+    #     flagvalues = flags.get_buffer()
+    #     ratio = float(sum(sum(flagvalues))) / (nch*ntimes)
+    #     ratiosum += ratio
+    #     ratiosumsq += ratio*ratio
+    
+    # print("Percentage flags (false-positive rate) on Gaussian data: " +
+    #     str(ratiosum * 100.0 / count) + "% +/- " +
+    #     str(np.sqrt(
+    #         (ratiosumsq/count - ratiosum*ratiosum / (count*count) )
+    #         ) * 100.0) )
+    return flags_block
+
+
+
+
+
+
+
+

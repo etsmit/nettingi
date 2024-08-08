@@ -61,7 +61,7 @@ class mitigateRFI:
         start_time = time.time()
         if self.output_bool:
             template_check_outfile(self.infile_raw_full,self.outfile_raw_full)
-            out_rawFile = open(self._outfile,'rb+')
+            out_rawFile = open(self.outfile_raw_full,'rb+')
 
         
         template_check_nblocks(self._rawFile,self.mb)
