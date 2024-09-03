@@ -117,7 +117,8 @@ def template_check_outfile(infile,outfile):
     print('Saving replaced data to '+outfile)
     print(infile,outfile)
     if os.path.isfile(outfile):
-        yn = input((f"The output file {outfile} already exists. Press 'y' to redo the copy, 'n' to continue without copying, or ctrl-c to end the script: "))
+        #yn = input((f"The output file {outfile} already exists. Press 'y' to redo the copy, 'n' to continue without copying, or ctrl-c to end the script: "))
+        yn='n'
         if yn=='y':
             print('Copying infile to outfile...')
             os.system('cp '+infile+' '+outfile)

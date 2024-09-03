@@ -13,6 +13,25 @@ import pickle
 from blimpy.guppi import GuppiRaw
 
 
+
+
+
+def load_srdps():
+    pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def pfb_mask(x, nchan, ntap, window="hann", fs=1.0, return_freqs=False, 
         force_complex=False):
     """

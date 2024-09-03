@@ -101,30 +101,29 @@ class rfi_aof(mitigateRFI):
         #     flag_chunk = iqrm_avg(data, self.IQRM_radius, self.IQRM_threshold, self.IQRM_breakdown)
         #     # standard dev
         # else:# if self.IQRM_datatype == 'std': 
-        flag_chunk = aof(data)
+        flag_chunk = aof(data,self.num_images,self.strategy)
     
         return flag_chunk
 
 
 
-def aof(data):
+def aof(data,count,strategy):
     nch = data.shape[0]
     ntimes = data.shape[1]
-    count = self.num_images
+    #count = self.num_images
     
     aoflag = aoflagger.AOFlagger()
     
     # Load strategy from disk (alternatively use 'make_strategy' to use a default one)
-    if self.strategy == 'generic':
+    if strategy == 'generic':
         path = aoflag.find_strategy_file(aoflagger.TelescopeId.Generic)
-    elif self.strategy == 'arecibo':
+    elif strategy == 'arecibo':
         path = aoflag.find_strategy_file(aoflagger.TelescopeId.Arecibo)
-    elif self.strategy == 'parkes':
+    elif strategy == 'parkes':
         path = aoflag.find_strategy_file(aoflagger.TelescopeId.Parkes)
     #print(path)
     strategy = aoflag.load_strategy_file(path)
     
-    aof_data = aoflag.make_image_set(ntimes, nch, count)
     
     #print("Number of times: " + str(aof_data.width()))
     #print("Number of channels: " + str(aof_data.height()))
@@ -135,35 +134,47 @@ def aof(data):
     # thread)
     flags_block = np.zeros(data.shape,dtype = np.int8)
     
-    aof_data = make_aof_data(ntimes,nch,count)
+    if count==2:
+
+        aof_data = aoflag.make_image_set(ntimes, nch, count)
+
+
+        for pol in range(data.shape[2]):
+            aof_data.set_image_buffer(0,(data[:,:,pol].real).astype(np.int8))
+            aof_data.set_image_buffer(1,(data[:,:,pol].imag).astype(np.int8))
+            #aof_data = make_aof_data(data[:,:,pol],aoflag,ntimes,nch,count)
     
-    flags = strategy.run(aof_data)
+            flags_block[:,:,pol] = (strategy.run(aof_data)).get_buffer()
+
+    else:
+        aof_data = make_aof_data(data,aoflag,ntimes,nch,count)
+    
+        flags_block = strategy.run(aof_data)
         
 
     #flags_block = flags.get_buffer()
     # flags.x = flags
 
-    return flags.get_buffer()
+    return flags_block
 
-def make_aof_data(ntimes,nch,count):
+def make_aof_data(data,aoflag,ntimes,nch,count):
 
     aof_data = aoflag.make_image_set(ntimes, nch, count)
 
     if count==1:
         aof_data.set_image_buffer(0,np.abs(data))
         
-    if count==2:
-        for pol in range(data.shape[2]):
-            aof_data.set_image_buffer(0,(data[:,tstart:tend,pol].real).astype(np.int8))
-            aof_data.set_image_buffer(1, (data[:,tstart:tend,pol].imag).astype(np.int8))
+    elif count==2:
+        aof_data.set_image_buffer(0,(data.real).astype(np.int8))
+        aof_data.set_image_buffer(1, (data.imag).astype(np.int8))
 
 
-    if count==4:
+    elif count==4:
         
-        aof_data.set_image_buffer(0,(data[:,tstart:tend,0].real).astype(np.int8))
-        aof_data.set_image_buffer(1, (data[:,tstart:tend,0].imag).astype(np.int8))
-        aof_data.set_image_buffer(2,(data[:,tstart:tend,1].real).astype(np.int8))
-        aof_data.set_image_buffer(3, (data[:,tstart:tend,1].imag).astype(np.int8))
+        aof_data.set_image_buffer(0,(data[:,:,0].real).astype(np.int8))
+        aof_data.set_image_buffer(1, (data[:,:,0].imag).astype(np.int8))
+        aof_data.set_image_buffer(2,(data[:,:,1].real).astype(np.int8))
+        aof_data.set_image_buffer(3, (data[:,:,1].imag).astype(np.int8))
 
 
 

@@ -225,6 +225,13 @@ class mitigateRFI:
             log = '/data/scratch/SKresults/SK_log.txt'
             os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ss_sk_filename}','{self._ms_sk_filename}'\n===============================" >> {log}""")
 
+        if self.det_method == 'AOF':
+            #need to add the logging thing
+            log = '/data/scratch/AOFresults/AOF_log.txt'
+            os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}'\n===============================" >> {log}""")
+
+        
+
         # elif self.det_method == 'IQRM':
             
         #     print(f'avg pre: {self._avg_pre_filename}')
