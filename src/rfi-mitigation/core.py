@@ -60,8 +60,8 @@ class mitigateRFI:
 
         start_time = time.time()
         if self.output_bool:
-            template_check_outfile(self.infile,self._outfile)
-            out_rawFile = open(self._outfile,'rb+')
+            template_check_outfile(self.infile_raw_full,self.outfile_raw_full)
+            out_rawFile = open(self.outfile_raw_full,'rb+')
 
         
         template_check_nblocks(self._rawFile,self.mb)
@@ -138,7 +138,7 @@ class mitigateRFI:
 
             if self.det_method == 'AOF':
                 block_fname = str(bi).zfill(3)
-                save_fname = self.npybase+'_flags_block'+block_fname+'.npy'
+                save_fname = self.output_srdp_dir+self.npybase+'_flags_block'+block_fname+'.npy'
                 np.save(save_fname,flags_block)
                 self.flags_all = np.empty((data.shape[0],1,data.shape[2]))
 
@@ -225,6 +225,13 @@ class mitigateRFI:
             log = '/data/scratch/SKresults/SK_log.txt'
             os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ss_sk_filename}','{self._ms_sk_filename}'\n===============================" >> {log}""")
 
+        if self.det_method == 'AOF':
+            #need to add the logging thing
+            log = '/data/scratch/AOFresults/AOF_log.txt'
+            os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}'\n===============================" >> {log}""")
+
+        
+
         # elif self.det_method == 'IQRM':
             
         #     print(f'avg pre: {self._avg_pre_filename}')
@@ -283,6 +290,22 @@ class mitigateRFI:
                 raw2spec_mask(resolution,self._rawFile,mask, self.infile[self.infile.rfind('/'):])
             else:
                 raw2spec(resolution,self._rawFile, self.infile[self.infile.rfind('/'):])
+        end_time = time.time()
+        dur = np.around((end_time-start_time)/60, 2)
+
+        print(f'Duration: {dur} minutes')
+
+
+
+    def pulsar_reduction(self):
+        start_time = time.time()
+
+
+        #reduce_pulsar_data(self.outfile_raw_full, self.output_srdp_dir)
+
+
+
+
         end_time = time.time()
         dur = np.around((end_time-start_time)/60, 2)
 

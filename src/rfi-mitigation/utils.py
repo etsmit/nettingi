@@ -69,34 +69,46 @@ def template_infile_mod(infile,in_dir):
 
 
 #set up all the input and output directories correctly
-#set up all the input and output directories correctly
-# def template_bookkeeping(infile):
+def template_bookkeeping(infile,out_patt,det):
+    #outputs:
+    # infile_raw_full  : full path and filename to input raw filename
+    # output_raw_full  : full path and filename to output raw filename
+    #                     makes output directory if needed
+    # output_srdp_full : full path to SRDP files
+    #                     makes the directory if needed
+    #                     includes intermediate numpy files
 
 #     #== input stuff ==
 #     #these paths should all exist, so no mkdirs needed
 #     #if they don't exist, 
-#     input_raw_dir_base = '/jetstor/scratch/rfimit/unmitigated/rawdata'
-#     infile_base = self.infile[:self.infile.find('.')]
+    input_raw_dir_base = '/jetstor/scratch/rfimit/unmitigated/rawdata'
+    infile_base = infile[:infile.find('.')]
+    print(infile,infile_base)
     
-#     #find input directory and file
-#     in_dir = f'{input_raw_dir_base}/{infile_base}/'
-#     infile_raw_full = in_dir+self.infile
+    #find input directory and file
+    in_dir = f'{input_raw_dir_base}/{infile_base}/'
+    infile_raw_full = in_dir+infile
 
 #     #== output stuff ==
-#     output_raw_dir_base = '/jetstor/scratch/rfimit/mitigated/rawdata'
-#     output_base = f'{infile_base}_{self._output_pattern}'
-#     output_raw_dir = f'{output_raw_dir_base}/{output_base}/'
-#     if !os.path.exists(output_raw_dir):
-#         os.system(f'mkdir {output_raw_dir}')
-#     output_raw_full = f'{output_raw_dir}{infile[:-4]}_{self._output_pattern}.raw'
+    output_raw_dir_base = '/jetstor/scratch/rfimit/mitigated/rawdata'
+    output_base = f'{infile_base}_{det}_{out_patt}'
+    output_raw_dir = f'{output_raw_dir_base}/{output_base}/'
+    if not os.path.exists(output_raw_dir):
+        os.system(f'mkdir {output_raw_dir}')
+    outfile_raw_full = f'{output_raw_dir}{infile[:-4]}_{det}_{out_patt}.raw'
 
 
-#     output_srdp_dir_base = 'jetstor/scratch/rfimit/mitigated/reduced'
-#     output_srdp_dir = f'{output_srdp_dir_base}/{output_base}/{infile[:-4]}_{self._output_pattern}/'
+    output_srdp_dir_base = '/jetstor/scratch/rfimit/mitigated/reduced'
+    if not os.path.exists(f'{output_srdp_dir_base}/{output_base}'):
+        os.system(f'mkdir {output_srdp_dir_base}/{output_base}')
+    output_srdp_dir = f'{output_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
     
-#     if !os.path.exists(output_srdp_dir):
-#         os.system(f'mkdir {output_srdp_dir}')
-#     return infile_raw_full, output_raw_full, output_srdp_full
+    if not os.path.exists(output_srdp_dir):
+        os.system(f'mkdir {output_srdp_dir}')
+    print(infile_raw_full)
+    print(outfile_raw_full)
+    print(output_srdp_dir)
+    return infile_raw_full, outfile_raw_full, output_srdp_dir
 
 
 
@@ -105,7 +117,8 @@ def template_check_outfile(infile,outfile):
     print('Saving replaced data to '+outfile)
     print(infile,outfile)
     if os.path.isfile(outfile):
-        yn = input((f"The output file {outfile} already exists. Press 'y' to redo the copy, 'n' to continue without copying, or ctrl-c to end the script: "))
+        #yn = input((f"The output file {outfile} already exists. Press 'y' to redo the copy, 'n' to continue without copying, or ctrl-c to end the script: "))
+        yn='n'
         if yn=='y':
             print('Copying infile to outfile...')
             os.system('cp '+infile+' '+outfile)
@@ -246,7 +259,7 @@ def statistical_noise_fir(a,f,ts_factor):
     #find correct PFB coefficents
     nchan = str(f.shape[0]).zfill(4)
     hfile = '/users/esmith/RFI_MIT/PFBcoeffs/c0800x'+nchan+'_x14_7_24t_095binw_get_pfb_coeffs_h.npy'
-    print(f'loading {hfile} for FIR coefficients')
+    #print(f'loading {hfile} for FIR coefficients')
     h = np.load(hfile)
     dec = h[::2*f.shape[0]]
     if ts_factor!=1:
@@ -254,19 +267,19 @@ def statistical_noise_fir(a,f,ts_factor):
         f = np.kron(f,pulse)
     for pol in prange(f.shape[2]):
         for i in prange(f.shape[0]):
+            #if ts_factor!=1:
+            #    for tb in prange(f.shape[1]):
+            #        if f[i,tb,pol] == 1:
 
-                #for tb in prange(f.shape[1]):
-                #    if f[i,tb,pol] == 1:
-
-                #        SK_M = ts_factor
-                #        pulse = np.ones(ts_factor)
+                        #SK_M = ts_factor
+                        #pulse = np.ones(ts_factor)
                         
  
-                #        std_real,std_imag = adj_chan_good_data(a[:,tb*SK_M:(tb+1)*SK_M,pol],f[:,tb,pol],i)
+            #            std_real,std_imag = adj_chan_good_data(a[:,tb*ts_factor:(tb+1)*ts_factor,pol],f[:,tb,pol],i)
                         
-                #        (a[i,tb*SK_M:(tb+1)*SK_M,pol].real) = noise_filter(0,std_real,SK_M,dec)
+            #            (a[i,tb*SK_M:(tb+1)*SK_M,pol].real) = noise_filter(0,std_real,SK_M,dec)
                     
-                #        (a[i,tb*SK_M:(tb+1)*SK_M,pol].imag) = noise_filter(0,std_imag,SK_M,dec)
+            #            (a[i,tb*SK_M:(tb+1)*SK_M,pol].imag) = noise_filter(0,std_imag,SK_M,dec)
 
 
             #else:
@@ -313,6 +326,7 @@ def adj_chan_good_data(a,f,c):
 
     #set up array of unflagged data and populate it with any unflagged data from adj_chans channels
     good_data=np.empty(0,dtype=np.complex64)
+    #print(a.shape,f.shape)
     good_data = np.append(good_data,a[adj_chans,:][f[adj_chans,:] == 0])
 
     adj=1
@@ -337,7 +351,112 @@ def adj_chan_good_data(a,f,c):
 
 
 
+def statistical_noise_alt_fir(a,f,SK_M):
+	"""
+	Replace flagged data with statistical noise.
+	- alt version that only takes the same time bin at adjacent-ish freq channels
+	- fir version that filters noise by pfb coefficients to get desired spectral response
+	Parameters
+	-----------
+	a : ndarray
+		3-dimensional array of power values. Shape (Num Channels , Num Raw Spectra , Npol)
+	f : ndarray
+		3-dimensional array of flags. 1=RFI detected, 0 no RFI. Shape (Num Channels , Num Raw Spectra , Npol), should be same shape as a.
 
+	Returns
+	-----------
+	out : ndarray
+		3-dimensional array of power values with flagged data replaced. Shape (Num Channels , Num Raw Spectra , Npol)
+	"""
+	print('stats....')
+	print('fshape',f.shape)
+	#find correct PFB coefficents
+	#nchan = str(f.shape[0]*4).zfill(4)
+	nchan = str(f.shape[0]).zfill(4)
+	#print(nchan,type(nchan))	
+	hfile = '/users/esmith/RFI_MIT/PFBcoeffs/c0800x'+nchan+'_x14_7_24t_095binw_get_pfb_coeffs_h.npy'
+	h = np.load(hfile)
+	dec = h[::2*f.shape[0]]
+	orig = np.copy(a)
+
+	for pol in prange(f.shape[2]):
+		for i in prange(f.shape[0]):
+			for tb in prange(f.shape[1]//SK_M):
+				if f[i,SK_M*tb,pol] == 1:
+			#find clean data points from same channel and polarization
+			#good_data = a[i,:,pol][f[i,:,pol] == 0]
+			#how many data points do we need to replace
+					bad_data_size = SK_M
+ 
+			#print(a[:,:,pol].shape,f[:,:,pol].shape)
+					ave_real,ave_imag,std_real,std_imag = adj_chan_good_data_alt(a[:,tb*SK_M:(tb+1)*SK_M,pol],f[:,tb*SK_M:(tb+1)*SK_M,pol],i,SK_M,tb)
+					#print('generating representative awgn..')
+					(a[i,tb*SK_M:(tb+1)*SK_M,pol].real)[f[i,tb*SK_M:(tb+1)*SK_M,pol] == 1] = noise_filter(ave_real,std_real,SK_M,dec)
+					
+					(a[i,tb*SK_M:(tb+1)*SK_M,pol].imag)[f[i,tb*SK_M:(tb+1)*SK_M,pol] == 1] = noise_filter(ave_imag,std_imag,SK_M,dec)
+	return a
+
+
+def adj_chan_good_data_alt(a,f,c,SK_M,tb):
+	"""
+	Return mean/std derived from unflagged data in adjacent channels
+	- alt version that only takes from adjacent channel at the SAME TIME BIN
+	Parameters
+	-----------
+	a : ndarray
+		3-dimensional array of original power values. Shape (Num Channels , Num Raw Spectra , Npol)
+	f : ndarray
+		3-dimensional array of flags. 1=RFI detected, 0 no RFI. Shape (Num Channels , Num Raw Spectra , Npol), should be same shape as a.
+	c : int
+		Channel of interest
+	SK_M : int
+		M parameter from SK equation
+	tb : int
+		time bin of interest
+	
+	Returns
+	-----------
+	ave_real : float
+		average value of unflagged real data
+	ave_imag : float
+		average value of unflagged imaginary data
+	std_real : float		
+		standard deviation of unflagged real data
+	std_imag : float
+		standard deviation of unflagged imaginary data
+	"""
+	#define adjacent channels and clear ones that don't exist (neg chans, too high)
+	#adj_chans = [c-3,c-2,c-1,c,c+1,c+2,c+3]
+	adj_chans = [c-1,c,c+1]
+	adj_chans = [i for i in adj_chans if i>=0]
+	adj_chans = [i for i in adj_chans if i<a.shape[0]]
+
+	adj_chans = np.array(adj_chans,dtype=np.uint32)
+
+	#set up array of unflagged data and populate it with any unflagged data from adj_chans channels
+	good_data=np.empty(0,dtype=np.complex64)
+	good_data = np.append(good_data,a[adj_chans,:][f[adj_chans,:] == 0])
+
+	adj=1
+	#keep looking for data in adjacent channels if good_data empty
+	while (good_data.size==0):
+		adj += 1
+		if (c-adj >= 0):
+			good_data = np.append(good_data,a[c-adj,:][f[c-adj,:] == 0])
+		if (c+adj < a.shape[0]):
+			good_data = np.append(good_data,a[c+adj,:][f[c+adj,:] == 0])
+		#we gotta quit at some point, just give it flagged data from same channel
+		#if we go 8% of the spectrum away
+		if adj == int(a.shape[0]*0.08):
+			good_data = a[c,:]
+			break
+
+	ave_real = np.mean(good_data.real)
+	ave_imag = np.mean(good_data.imag)
+	std_real = np.std(good_data.real)
+	std_imag = np.std(good_data.imag)
+
+	return ave_real, ave_imag, std_real,std_imag
 
 
 
@@ -446,133 +565,7 @@ def iqrm_power(data, radius, threshold):
     
 
 
-def iqrm_std(data, radius, threshold, breakdown):
-    """
-    breakdown must be a factor of the time shape data[1].shape()
-    """
-# 	data_pol0 = stdever(np.abs(data[:,:,0])**2, breakdown) # make it a stdev
-# # 	shape=np.expand_dims(shape, axis=2)
-# 	flag_chunk = np.zeros((*data_pol0.shape[:2], 2))
-# 	print('Data shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
-    
-    data = template_stdever(np.abs(data)**2, breakdown)
-    flag_chunk = np.zeros(data.shape)
-    print('Flag shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
-    for i in tqdm(range(data.shape[2])): # iterate through polarizations
-        for j in range(data.shape[0]): # iterate through channels
-            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius, threshold = threshold)[0]
-            
-            
-            
-            
-# 	for j in range(data_pol0.shape[0]): # iterate through channels
-# 		flag_chunk[j,:,0] = iqrm.iqrm_mask(data_pol0[j,:], radius = radius, threshold = threshold)[0]
-# 	data_pol1 = stdever(np.abs(data[:,:,1])**2, breakdown) # make it a stdev
-# 	for j in range(data_pol1.shape[0]): # iterate through channels
-# 		flag_chunk[j,:,1] = iqrm.iqrm_mask(data_pol1[j,:], radius = radius, threshold = threshold)[0]
-
-    return flag_chunk
-
-def iqrm_avg(data, radius, threshold, breakdown):
-    """
-    breakdown must be a factor of the time shape data[1].shape()
-    """
-    data = template_averager(np.abs(data)**2, breakdown)
-    flag_chunk = np.zeros(data.shape)
-    print('Flag shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
-    for i in tqdm(range(data.shape[2])): # iterate through polarizations
-        for j in range(data.shape[0]): # iterate through channels
-            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius, threshold = threshold)[0]
-
-    return flag_chunk
 
 
-def aof(data):
-    nch = data.shape[0]
-    ntimes = data.shape[1]//8
-    count = 2
-    
-    aoflag = aoflagger.AOFlagger()
-    
-    # Load strategy from disk (alternatively use 'make_strategy' to use a default one)
-    path = aoflag.find_strategy_file(aoflagger.TelescopeId.Generic)
-    strategy = aoflag.load_strategy_file(path)
-    
-    aof_data = aoflag.make_image_set(ntimes, nch, count)
-    
-    print("Number of times: " + str(aof_data.width()))
-    print("Number of channels: " + str(aof_data.height()))
-    
-    # When flagging multiple baselines, iterate over the baselines and
-    # call the following code for each baseline
-    # (to use multithreading, make sure to create an imageset for each
-    # thread)
-    flags_block = np.zeros(data.shape,dtype = np.int8)
-    
-    # Divide up the block into 32 time chunks for lighter RAM usage
-    tb_size = data.shape[1]//8    
-
-    for tb in tqdm(range(8)):
-        tstart = tb*tb_size
-        tend = (tb+1)*tb_size
-        # Make 4 images: real and imaginary for2 pol
-        for pol in range(data.shape[2]):
-            aof_data.set_image_buffer(0,(data[:,tstart:tend,pol].real).astype(np.int8))
-            aof_data.set_image_buffer(1, (data[:,tstart:tend,pol].imag).astype(np.int8))
-    
-            flags = strategy.run(aof_data)
-        
-        # flagvalues = flags.get_buffer()
-        # flagcount = sum(sum(flagvalues))
-        # print(
-        #     "Percentage flags on zero data: "
-        #     + str(flagcount * 100.0 / (nch * ntimes))
-        #     + "%"
-        # )
-            flags_block[:,tstart:tend,pol] = flags.get_buffer()
-    # flags.x = flags
-    # flags = id(flags)
-    # print(flags)
-    # Collect statistics
-    # We create some unrealistic time and frequency arrays to be able
-    # to run these functions. Normally, these should hold the time
-    # and frequency values.
-
-
-
-
-
-
-
-
-    
-    # flagger = aoflagger.AOFlagger()
-    # path = flagger.find_strategy_file(aoflagger.TelescopeId.Generic)
-    # strategy = flagger.load_strategy_file(path)
-    # data1 = flagger.make_image_set(ntimes, nch, 8)
-
-    # aoflagger.FlagMask()
-
-    
-    # ratiosum = 0.0
-    # ratiosumsq = 0.0
-    # for repeat in range(count):
-    #     for imgindex in range(8):
-    #         # Initialize data with random numbers
-    #         values = data
-    #         data1.set_image_buffer(imgindex, values)
-    
-    #     flags = strategy.run(data)
-    #     flagvalues = flags.get_buffer()
-    #     ratio = float(sum(sum(flagvalues))) / (nch*ntimes)
-    #     ratiosum += ratio
-    #     ratiosumsq += ratio*ratio
-    
-    # print("Percentage flags (false-positive rate) on Gaussian data: " +
-    #     str(ratiosum * 100.0 / count) + "% +/- " +
-    #     str(np.sqrt(
-    #         (ratiosumsq/count - ratiosum*ratiosum / (count*count) )
-    #         ) * 100.0) )
-    return flags_block
 
 

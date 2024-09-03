@@ -13,6 +13,25 @@ import pickle
 from blimpy.guppi import GuppiRaw
 
 
+
+
+
+def load_srdps():
+    pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def pfb_mask(x, nchan, ntap, window="hann", fs=1.0, return_freqs=False, 
         force_complex=False):
     """
@@ -275,14 +294,14 @@ def raw2spec_mask(resolution,gr,mask, infile):
 
 
 
-# def reduce_pulsar_data():
+def reduce_pulsar_data(raw_file, output_dir):
 #     #need to do lots of bookkeeping to put stuff in the right directories
 
-#     self.pulsar_output_dir = 
+
+#not sure if this is worth doing. requires psrenv and then copying the right par files, dm/period etc.
 
 
-
-#     pass
+    pass
 
 
 
