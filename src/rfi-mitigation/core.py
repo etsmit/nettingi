@@ -138,7 +138,7 @@ class mitigateRFI:
 
             if self.det_method == 'AOF':
                 block_fname = str(bi).zfill(3)
-                save_fname = self.npybase+'_flags_block'+block_fname+'.npy'
+                save_fname = self.output_srdp_dir+self.npybase+'_flags_block'+block_fname+'.npy'
                 np.save(save_fname,flags_block)
                 self.flags_all = np.empty((data.shape[0],1,data.shape[2]))
 
@@ -283,6 +283,22 @@ class mitigateRFI:
                 raw2spec_mask(resolution,self._rawFile,mask, self.infile[self.infile.rfind('/'):])
             else:
                 raw2spec(resolution,self._rawFile, self.infile[self.infile.rfind('/'):])
+        end_time = time.time()
+        dur = np.around((end_time-start_time)/60, 2)
+
+        print(f'Duration: {dur} minutes')
+
+
+
+    def pulsar_reduction(self):
+        start_time = time.time()
+
+
+        #reduce_pulsar_data(self.outfile_raw_full, self.output_srdp_dir)
+
+
+
+
         end_time = time.time()
         dur = np.around((end_time-start_time)/60, 2)
 

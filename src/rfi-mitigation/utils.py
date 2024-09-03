@@ -69,7 +69,7 @@ def template_infile_mod(infile,in_dir):
 
 
 #set up all the input and output directories correctly
-def template_bookkeeping(infile,out_patt):
+def template_bookkeeping(infile,out_patt,det):
     #outputs:
     # infile_raw_full  : full path and filename to input raw filename
     # output_raw_full  : full path and filename to output raw filename
@@ -83,6 +83,7 @@ def template_bookkeeping(infile,out_patt):
 #     #if they don't exist, 
     input_raw_dir_base = '/jetstor/scratch/rfimit/unmitigated/rawdata'
     infile_base = infile[:infile.find('.')]
+    print(infile,infile_base)
     
     #find input directory and file
     in_dir = f'{input_raw_dir_base}/{infile_base}/'
@@ -90,20 +91,23 @@ def template_bookkeeping(infile,out_patt):
 
 #     #== output stuff ==
     output_raw_dir_base = '/jetstor/scratch/rfimit/mitigated/rawdata'
-    output_base = f'{infile_base}_{out_patt}'
+    output_base = f'{infile_base}_{det}_{out_patt}'
     output_raw_dir = f'{output_raw_dir_base}/{output_base}/'
     if not os.path.exists(output_raw_dir):
         os.system(f'mkdir {output_raw_dir}')
-    outfile_raw_full = f'{output_raw_dir}{infile[:-4]}_{out_patt}.raw'
+    outfile_raw_full = f'{output_raw_dir}{infile[:-4]}_{det}_{out_patt}.raw'
 
 
     output_srdp_dir_base = '/jetstor/scratch/rfimit/mitigated/reduced'
     if not os.path.exists(f'{output_srdp_dir_base}/{output_base}'):
         os.system(f'mkdir {output_srdp_dir_base}/{output_base}')
-    output_srdp_dir = f'{output_srdp_dir_base}/{output_base}/{infile[:-4]}_{out_patt}/'
+    output_srdp_dir = f'{output_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
     
     if not os.path.exists(output_srdp_dir):
         os.system(f'mkdir {output_srdp_dir}')
+    print(infile_raw_full)
+    print(outfile_raw_full)
+    print(output_srdp_dir)
     return infile_raw_full, outfile_raw_full, output_srdp_dir
 
 
@@ -254,7 +258,7 @@ def statistical_noise_fir(a,f,ts_factor):
     #find correct PFB coefficents
     nchan = str(f.shape[0]).zfill(4)
     hfile = '/users/esmith/RFI_MIT/PFBcoeffs/c0800x'+nchan+'_x14_7_24t_095binw_get_pfb_coeffs_h.npy'
-    print(f'loading {hfile} for FIR coefficients')
+    #print(f'loading {hfile} for FIR coefficients')
     h = np.load(hfile)
     dec = h[::2*f.shape[0]]
     if ts_factor!=1:
@@ -321,7 +325,7 @@ def adj_chan_good_data(a,f,c):
 
     #set up array of unflagged data and populate it with any unflagged data from adj_chans channels
     good_data=np.empty(0,dtype=np.complex64)
-    print(a.shape,f.shape)
+    #print(a.shape,f.shape)
     good_data = np.append(good_data,a[adj_chans,:][f[adj_chans,:] == 0])
 
     adj=1
