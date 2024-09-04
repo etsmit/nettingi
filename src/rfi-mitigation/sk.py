@@ -91,7 +91,7 @@ class rfi_sk(mitigateRFI):
 
         self._outfile_pattern = f"m{self.SK_m}_s{self.sigma}_ms{self.ms0}-{self.ms1}"    
 
-        self.infile_raw_full, self.outfile_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern)
+        self.infile_raw_full, self.outfile_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
         self._rawFile = GuppiRaw(self.infile_raw_full)
         # any separate results filenames you need, in addition to the flags filename, put them here
         self.npybase = self.infile[:-4]
