@@ -123,6 +123,9 @@ class mitigateRFI:
             elif self.det_method == 'AOF':
                 flags_block = self.aof_detection(data)
 
+            elif self.det_method == 'MAD':
+                flags_block = self.mad_detection(data)
+
             #***********************************************
             #===============================================
 
@@ -136,13 +139,16 @@ class mitigateRFI:
                 self.flags_all = np.concatenate((self.flags_all, flags_block),axis=1)
                 self.spect_all = np.concatenate((self.spect_all, spect_block),axis=1)
 
-            if self.det_method == 'AOF':
+            if (self.det_method == 'AOF') or (self.det_method == 'MAD'):
                 block_fname = str(bi).zfill(3)
                 save_fname = self.output_srdp_dir+self.npybase+'_flags_block'+block_fname+'.npy'
                 np.save(save_fname,flags_block)
                 self.flags_all = np.empty((data.shape[0],1,data.shape[2]))
 
-            print(f'MEM: spect: {self.spect_all.nbytes/1e9} // flags: {self.flags_all.nbytes/1e9}')
+
+
+
+            #print(f'MEM: spect: {self.spect_all.nbytes/1e9} // flags: {self.flags_all.nbytes/1e9}')
             mu = pp.memory_info()
             print(f'Total RAM usage: {mu[0]/2.**30} GB')
             #track flags
@@ -230,6 +236,9 @@ class mitigateRFI:
             log = '/data/scratch/AOFresults/AOF_log.txt'
             os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}'\n===============================" >> {log}""")
 
+        if self.det_method == 'AOF':
+            log = '/data/scratch/MADresults/MAD_log.txt'
+            os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}'\n===============================" >> {log}""")
         
 
         # elif self.det_method == 'IQRM':

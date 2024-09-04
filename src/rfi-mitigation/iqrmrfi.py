@@ -27,7 +27,7 @@ import iqrm
 class rfi_iqrm(mitigateRFI):
 
 
-    def __init__(self, infile, repl_method, IQRM_radius=5, IQRM_threshold=3.0, IQRM_datatype='std', IQRM_breakdown=512, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
+    def __init__(self, infile, repl_method, IQRM_radius_time=5, IQRM_threshold_time=3.0, IQRM_radius_freq=5, IQRM_threshold_freq=3.0, IQRM_datatype='std', two_d = True, IQRM_breakdown=512, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
 
 
         valid = ["std", "power", "avg", "mad", "sk"] # valid inputs for IQRM_datatype
@@ -51,8 +51,13 @@ class rfi_iqrm(mitigateRFI):
         self._rawFile = GuppiRaw(self.infile)
 
 
-        self.IQRM_radius = IQRM_radius
-        self.IQRM_threshold = IQRM_threshold
+        self.IQRM_radius = IQRM_radius_time
+        self.IQRM_threshold = IQRM_threshold_time
+        self.IQRM_radius = IQRM_radius_freq
+        self.IQRM_threshold = IQRM_threshold_freq
+
+        self.two_d = two_d
+
         self.IQRM_datatype = IQRM_datatype
         self.IQRM_breakdown = IQRM_breakdown
 
@@ -113,11 +118,11 @@ class rfi_iqrm(mitigateRFI):
         if self.IQRM_datatype == 'power':
             flag_chunk = iqrm_power(data, self.IQRM_radius, self.IQRM_threshold)
     
-        elif self.IQRM_datatype == 'avg':
-            flag_chunk = iqrm_avg(data, self.IQRM_radius, self.IQRM_threshold, self.IQRM_breakdown)
-            # standard dev
+        elif self.IQRM_datatype == 'avgpwr':
+            flag_chunk = iqrm_avgpwr(data, self.IQRM_radius_time, self.IQRM_threshold_time, self.IQRM_radius_freq, self.IQRM_threshold_freq, self.IQRM_breakdown, self.two_d)
+
         elif self.IQRM_datatype == 'std': 
-            flag_chunk = iqrm_std(data, self.IQRM_radius, self.IQRM_threshold, self.IQRM_breakdown)
+            flag_chunk = iqrm_std(data, self.IQRM_radius_time, self.IQRM_threshold_time, self.IQRM_radius_freq, self.IQRM_threshold_freq, self.IQRM_breakdown, self.two_d)
     
         return flag_chunk
     
@@ -127,7 +132,7 @@ class rfi_iqrm(mitigateRFI):
    
 
 
-def iqrm_std(data, radius, threshold, breakdown):
+def iqrm_std(data, radius_time, threshold_time, radius_freq, threshold_freq, breakdown, two_d):
     """
     breakdown must be a factor of the time shape data[1].shape()
     """
@@ -141,20 +146,17 @@ def iqrm_std(data, radius, threshold, breakdown):
     print('Flag shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
     for i in tqdm(range(data.shape[2])): # iterate through polarizations
         for j in range(data.shape[0]): # iterate through channels
-            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius, threshold = threshold)[0]
+            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius_time, threshold = threshold_time)[0]
+
+        if two_d:
+            for j in range(data.shape[1]):
+                flag_chunk_chan[:,j,i] = iqrm.iqrm_mask(data[:,j,i], radius = radius_freq, threshold = threshold_freq)[0]
+                flag_chunk[flag_chunk_freq == 1] = 1
             
-            
-            
-            
-# 	for j in range(data_pol0.shape[0]): # iterate through channels
-# 		flag_chunk[j,:,0] = iqrm.iqrm_mask(data_pol0[j,:], radius = radius, threshold = threshold)[0]
-# 	data_pol1 = stdever(np.abs(data[:,:,1])**2, breakdown) # make it a stdev
-# 	for j in range(data_pol1.shape[0]): # iterate through channels
-# 		flag_chunk[j,:,1] = iqrm.iqrm_mask(data_pol1[j,:], radius = radius, threshold = threshold)[0]
 
     return flag_chunk
 
-def iqrm_avg(data, radius, threshold, breakdown):
+def iqrm_avgpwr(data, radius, threshold, breakdown):
     """
     breakdown must be a factor of the time shape data[1].shape()
     """
@@ -168,8 +170,8 @@ def iqrm_avg(data, radius, threshold, breakdown):
     return flag_chunk
 
 
-
-
+def iqrm_power(data, radius, threshold, breakdown):
+    pass
 
 
     

@@ -35,9 +35,9 @@ class rfi_mad(mitigateRFI):
         self.sigma = s
         self.MAD_m = m
 
-        self._outfile_pattern = f"m{self.mad_m}_s{self.sigma}"    
+        self._outfile_pattern = f"m{self.MAD_m}_s{self.sigma}"    
 
-        self.infile_raw_full, self.outfile_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern)
+        self.infile_raw_full, self.outfile_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
         self._rawFile = GuppiRaw(self.infile_raw_full)
         # any separate results filenames you need, in addition to the flags filename, put them here
         self.npybase = self.infile[:-4]
@@ -66,18 +66,23 @@ class rfi_mad(mitigateRFI):
         s = np.abs(data)**2
         a = np.reshape(s,(s.shape[0],-1,self.MAD_m,s.shape[2]))
 
-        median = np.median(a,axis=2)
-        mad = np.median(np.abs(a-median))
-
         pulse = np.ones((1,self.MAD_m,1))
 
-        sigma_r = np.kron( 1.4826 * mad, pulse )
-        
+        median = np.kron( np.median(a,axis=2), pulse )
+        mad = np.median(np.abs(s-median))
+
+        sigma_r = 1.4826 * mad
+        ut = median + sigma_r
+        lt = median - sigma_r
 
         f = np.zeros(s.shape,dtype=np.int8)
         
+        f[s > ut] = 1
+        f[s < lt] = 1
 
-    
+
+        return f
+
 
 
 
