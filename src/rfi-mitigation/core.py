@@ -117,7 +117,6 @@ class mitigateRFI:
                     self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
 
             elif self.det_method == 'IQRM':
-                # print('IQRM mitigation')
                 flags_block = self.iqrm_detection(data)
 
             elif self.det_method == 'AOF':
@@ -125,6 +124,13 @@ class mitigateRFI:
 
             elif self.det_method == 'MAD':
                 flags_block = self.mad_detection(data)
+        
+            elif self.det_method == 'SE':
+                flags_block, zsc_block = self.se_detection(data)
+                if bi == 0:
+                    self.zsc_all = zsc_block
+                else:
+                    self.zsc_all = np.concatenate((self.zsc_all, zsc_block),axis=1)
 
             #***********************************************
             #===============================================
@@ -231,14 +237,20 @@ class mitigateRFI:
             log = '/data/scratch/SKresults/SK_log.txt'
             os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ss_sk_filename}','{self._ms_sk_filename}'\n===============================" >> {log}""")
 
-        if self.det_method == 'AOF':
+        elif self.det_method == 'AOF':
             #need to add the logging thing
             log = '/data/scratch/AOFresults/AOF_log.txt'
             os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}'\n===============================" >> {log}""")
 
-        if self.det_method == 'AOF':
+        elif self.det_method == 'MAD':
             log = '/data/scratch/MADresults/MAD_log.txt'
             os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}'\n===============================" >> {log}""")
+
+        elif self.det_method == 'SE':
+            print(f'mod Z-score: {self._zsc_filename}')
+            np.save(self._zsc_filename, self.zsc_all)
+            log = '/data/scratch/SEresults/SE_log.txt'
+            os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._zsc_filename}'\n===============================" >> {log}""")
         
 
         # elif self.det_method == 'IQRM':
