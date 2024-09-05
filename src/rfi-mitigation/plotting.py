@@ -9,6 +9,7 @@ matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 
 import pickle
+import glob
 
 
 ten_clrs = ["#3f90da", "#ffa90e", "#bd1f01", "#94a4a2", "#832db6", "#a96b59", "#e76300", "#b9ac70", "#717581", "#92dadd"]
@@ -104,6 +105,48 @@ def implot(s,rf,bw,M,vmin=2.2,vmax=3.2):
 		t.set_fontsize(20)
 	plt.tight_layout()
 	plt.show()
+
+
+
+def load_raw_flags(pattern,M):
+    infiles = glob.glob(pattern)
+    infiles.sort()
+
+    for i,ff in enumerate(infiles):
+	    #print(ff, inflags[i])
+	    print(ff)
+    print(f'{len(infiles)} files found')
+    print('------------------------')
+
+    input('Good?')
+
+
+    init_f = np.load(infiles[0])
+    out_f = np.empty((f.shape[0],f.shape[1]*len(infiles)/M,f.shape[2])
+
+
+    for i in range(len(infiles)):
+
+        tf = np.load(infiles[i])
+        a = np.reshape(tf,(tf.shape[0],-1,M,tf.shape[2]))
+
+        nbins = tf.shape[1]//M
+        start = i*nbins
+        end = (i+1)*nbins
+
+        out_f[:,start:end,:] = np.mean(a,axis=2)
+
+    return out_f
+
+
+
+
+
+
+
+
+
+
 
 
 
