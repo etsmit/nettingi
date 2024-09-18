@@ -303,10 +303,10 @@ def raw2spec_god(resolution,gr, outfile,det,mask=None):
     nchan = int(hdr0["OBSNCHAN"])
     chanbw = bw/nchan
     chanfreqs = fctr - 0.5*bw + chanbw*(np.arange(nchan)+0.5)
-    nchan_pfb = 2**int(np.round(np.log2(np.abs(chanbw/(args.resolution/1e3)))))
+    nchan_pfb = 2**int(np.round(np.log2(np.abs(chanbw/(resolution/1e3)))))
     print(f'given output res is {resolution} kHz, actual will be {np.abs(chanbw/nchan_pfb)*1e3} khz')
 
-    if (det = 'AOF') or (det = 'MAD'):
+    if (det == 'AOF') or (det == 'MAD'):
         f = glob.glob(self.output_srdp_dir+self.npybase+'_flags_block*.npy')
         f.sort()
         if len(f) != gr.n_blocks:
@@ -331,7 +331,7 @@ def raw2spec_god(resolution,gr, outfile,det,mask=None):
         #pulse = np.ones((1,M,1))
         num_fbins = f.shape[1]//gr.n_blocks
 
-        if (det = 'AOF') or (det = 'MAD'):
+        if (det == 'AOF') or (det == 'MAD'):
             mask = np.load(f[bb])
         else:
             mask = f[:,bb*num_fbins:(bb+1)*num_fbins,:]
@@ -366,7 +366,7 @@ def raw2spec_god(resolution,gr, outfile,det,mask=None):
 
                 spectrum[nn*nchan_pfb:(nn+1)*nchan_pfb] += np.flip(spec[::-1])
 
-    if (det = 'AOF') or (det = 'MAD'):
+    if (det == 'AOF') or (det == 'MAD'):
         spectrum /= unflagged_blocks
     else:
         spectrum /= gr.n_blocks

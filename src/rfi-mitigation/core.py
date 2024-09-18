@@ -18,6 +18,7 @@ from blimpy import GuppiRaw
 from .utils import *
 from .reduction import *
 #from .sk import rfi_sk
+from .plotting import load_raw_flags
 
 import iqrm
 
@@ -147,7 +148,7 @@ class mitigateRFI:
 
             if (self.det_method == 'AOF') or (self.det_method == 'MAD'):
                 block_fname = str(bi).zfill(3)
-                save_fname = self.output_srdp_dir+self.npybase+'_flags_block'+block_fname+'.npy'
+                save_fname = self.output_mit_srdp_dir+self.npybase+'_flags_block'+block_fname+'.npy'
                 np.save(save_fname,flags_block)
                 self.flags_all = np.empty((data.shape[0],1,data.shape[2]))
 
@@ -298,22 +299,22 @@ class mitigateRFI:
 
 #         print(f'Duration: {dur} minutes')
 
-    def fine_channelize(self, resolution, mit=False, mask=False):
+    def fine_channelize(self, resolution, mit=False, mask=None):
         start_time = time.time()
         if mit:
             if mask:
                 out_fc_fname = f"{self.output_mit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
-                raw2spec_mask(resolution,GuppiRaw(self._outfile),self.det_method, out_fc, mask)
+                raw2spec_god(resolution,GuppiRaw(self.outfile_raw_full),self.det_method, out_fc_fname, mask)
             else:
                 out_fc_fname = f"{self.output_mit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_nomask.spec.pkl"
-                raw2spec(resolution,GuppiRaw(self._outfile),self.det_method, out_fc)
+                raw2spec_god(resolution,GuppiRaw(self.outfile_raw_full),self.det_method, out_fc_fname)
         else:
             if mask:
                 out_fc_fname = f"{self.output_unmit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
-                raw2spec_mask(resolution,self._rawFile,self.det_method, out_fc, mask)
+                raw2spec_god(resolution,self._rawFile,self.det_method, out_fc_fname, mask)
             else:
                 out_fc_fname = f"{self.output_unmit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
-                raw2spec(resolution,self._rawFile,self.det_method, out_fc)
+                raw2spec_god(resolution,self._rawFile,self.det_method, out_fc_fname)
         end_time = time.time()
         dur = np.around((end_time-start_time)/60, 2)
 
@@ -337,7 +338,32 @@ class mitigateRFI:
 
 
 
+    def load_basic_srdps(self):
+        
 
+        # need to output: logs, (logsf or ave_f), logsm
+        # for sk: sk, mssk
+
+        #these are np.loads because you can do this function without first doing self.run_all()
+        
+
+        s = np.load(self._spect_filename)
+        sm = np.load(self._regen_filename)
+
+        logs = np.log10(s)
+        logsm = np.log10(sm)
+
+        out = (s,sm)
+        
+        if (self.det_method == 'AOF') or (self.det_method == 'MAD'):
+            f = load_raw_flags(self.output_srdp_dir+self.npybase+'_flags_block*.npy',self.ave_factor)
+            out = out + (f,)
+        else:
+            f = np.load(self._flags_filename)
+            out = out + (f,)
+
+        return out
+            
 
 
 
