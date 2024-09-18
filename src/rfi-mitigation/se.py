@@ -14,7 +14,7 @@ from .utils import *
 
 from numba import jit
 
-
+import tqdm
 
 
 class rfi_se(mitigateRFI):
@@ -71,18 +71,20 @@ class rfi_se(mitigateRFI):
         Hbase = np.empty((a.shape[0],a.shape[1],a.shape[3]),dtype=np.complex64)
 
 
-
+        print('starting H...')
         for pol in range(a.shape[3]):
-            for chan in range(a.shape[0]):
+            for chan in tqdm(range(a.shape[0])):
                 for tb in range(a.shape[1]):
                     H[chan,tb,pol], Hbase[chan,tb,pol] = getHs(a[chan,tb,:,pol], nbit_range)
-
+        print('sre')
         #calculate relative spectral entropy
         sre = np.abs(H - Hbase)
 
+        print('zscore...')
         #calculate significance of outliers
         modZscore = get_modZscore(sre)
-
+        
+        print('flagging')
         #flag
         flags_block = np.zeros(sre.shape,dtype=np.int8)
         flags_block[np.isnan(sre)] = 1

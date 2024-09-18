@@ -59,7 +59,7 @@ class rfi_aof(mitigateRFI):
         #     self._outfile_pattern = f'r{IQRM_radius}_t{IQRM_threshold}_{IQRM_datatype}_b{IQRM_breakdown}'
         # else:
         self._outfile_pattern = f'{self.strategy}_{self.num_images}images'
-        self.infile_raw_full, self.outfile_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
+        self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir, self.output_unmit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
         self._rawFile = GuppiRaw(self.infile_raw_full)
 
 

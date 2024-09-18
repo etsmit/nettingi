@@ -300,17 +300,20 @@ class mitigateRFI:
 
     def fine_channelize(self, resolution, mit=False, mask=False):
         start_time = time.time()
-        print(self._outfile)
         if mit:
             if mask:
-                raw2spec_mask(resolution,GuppiRaw(self._outfile), mask, self.infile[self.infile.rfind('/'):])
+                out_fc_fname = f"{self.output_mit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
+                raw2spec_mask(resolution,GuppiRaw(self._outfile),self.det_method, out_fc, mask)
             else:
-                raw2spec(resolution,GuppiRaw(self._outfile),self.infile[self.infile.rfind('/'):])
-        else:        
+                out_fc_fname = f"{self.output_mit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_nomask.spec.pkl"
+                raw2spec(resolution,GuppiRaw(self._outfile),self.det_method, out_fc)
+        else:
             if mask:
-                raw2spec_mask(resolution,self._rawFile,mask, self.infile[self.infile.rfind('/'):])
+                out_fc_fname = f"{self.output_unmit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
+                raw2spec_mask(resolution,self._rawFile,self.det_method, out_fc, mask)
             else:
-                raw2spec(resolution,self._rawFile, self.infile[self.infile.rfind('/'):])
+                out_fc_fname = f"{self.output_unmit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
+                raw2spec(resolution,self._rawFile,self.det_method, out_fc)
         end_time = time.time()
         dur = np.around((end_time-start_time)/60, 2)
 

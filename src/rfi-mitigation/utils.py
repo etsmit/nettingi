@@ -90,6 +90,8 @@ def template_bookkeeping(infile,out_patt,det):
     infile_raw_full = in_dir+infile
 
 #     #== output stuff ==
+
+    #get output raw data file
     output_raw_dir_base = '/jetstor/scratch/rfimit/mitigated/rawdata'
     output_base = f'{infile_base}_{det}_{out_patt}'
     output_raw_dir = f'{output_raw_dir_base}/{output_base}/'
@@ -97,18 +99,28 @@ def template_bookkeeping(infile,out_patt,det):
         os.system(f'mkdir {output_raw_dir}')
     outfile_raw_full = f'{output_raw_dir}{infile[:-4]}_{det}_{out_patt}.raw'
 
-
-    output_srdp_dir_base = '/jetstor/scratch/rfimit/mitigated/reduced'
-    if not os.path.exists(f'{output_srdp_dir_base}/{output_base}'):
-        os.system(f'mkdir {output_srdp_dir_base}/{output_base}')
-    output_srdp_dir = f'{output_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
-    
+    #get srdp results directory for mitigated file
+    output_mit_srdp_dir_base = '/jetstor/scratch/rfimit/mitigated/reduced'
+    if not os.path.exists(f'{output_mit_srdp_dir_base}/{output_base}'):
+        os.system(f'mkdir {output_mit_srdp_dir_base}/{output_base}')
+    output_mit_srdp_dir = f'{output_mit_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
     if not os.path.exists(output_srdp_dir):
-        os.system(f'mkdir {output_srdp_dir}')
+        os.system(f'mkdir {output_mit_srdp_dir}')
+
+    #get srdp results directory for unmitigated file
+    output_unmit_srdp_dir_base = '/jetstor/scratch/rfimit/unmitigated/reduced'
+    if not os.path.exists(f'{output_unmit_srdp_dir_base}/{output_base}'):
+        os.system(f'mkdir {output_unmit_srdp_dir_base}/{output_base}')
+    output_unmit_srdp_dir = f'{output_unmit_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
+    if not os.path.exists(output_srdp_dir):
+        os.system(f'mkdir {output_unmit_srdp_dir}')
+
+
     print(infile_raw_full)
     print(outfile_raw_full)
-    print(output_srdp_dir)
-    return infile_raw_full, outfile_raw_full, output_srdp_dir
+    print(output_mit_srdp_dir)
+    print(output_unmit_srdp_dir)
+    return infile_raw_full, outfile_raw_full, output_mit_srdp_dir, output_unmit_srdp_dir
 
 
 
