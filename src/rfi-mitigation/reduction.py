@@ -25,13 +25,6 @@ def load_srdps():
 
 
 
-
-
-
-
-
-
-
 def pfb_mask(x, nchan, ntap, window="hann", fs=1.0, return_freqs=False, 
         force_complex=False):
     """
@@ -295,7 +288,7 @@ def raw2spec_mask(resolution,gr,mask, infile, outfile):
 
 
 #do fine channelization using a mask
-def raw2spec_god(resolution,gr, outfile,det,mask=None):
+def raw2spec_god(resolution,gr, det,outfile,mask=None):
 
     hdr0 = gr.read_first_header()
     fctr = float(hdr0["OBSFREQ"])
@@ -306,14 +299,16 @@ def raw2spec_god(resolution,gr, outfile,det,mask=None):
     nchan_pfb = 2**int(np.round(np.log2(np.abs(chanbw/(resolution/1e3)))))
     print(f'given output res is {resolution} kHz, actual will be {np.abs(chanbw/nchan_pfb)*1e3} khz')
 
-    if (det == 'AOF') or (det == 'MAD'):
-        f = glob.glob(self.output_srdp_dir+self.npybase+'_flags_block*.npy')
-        f.sort()
-        if len(f) != gr.n_blocks:
-            print(f'There are {numblocks} blocks and you set -mb {mb}, pick a divisible integer')
-            sys.exit()
-    else:
-        f = np.load(self._flags_filename)
+    print(det)
+    if mask is not None:
+        if (det == 'AOF') or (det == 'MAD'):
+            f = glob.glob(mask)
+            f.sort()
+            if len(f) != gr.n_blocks:
+                print(f'There are {numblocks} blocks and you set -mb {mb}, pick a divisible integer')
+                sys.exit()
+        else:
+            f = np.load(mask)
 
     spectrum = np.zeros(nchan_pfb*nchan)
     unflagged_blocks = np.zeros(nchan_pfb*nchan)
@@ -329,11 +324,12 @@ def raw2spec_god(resolution,gr, outfile,det,mask=None):
         #find M
         #M = int((x.shape[1]*gr.n_blocks) / SKf.shape[1])
         #pulse = np.ones((1,M,1))
-        num_fbins = f.shape[1]//gr.n_blocks
+        #num_fbins = f.shape[1]//gr.n_blocks
 
         if (det == 'AOF') or (det == 'MAD'):
             mask = np.load(f[bb])
         else:
+            num_fbins = f.shape[1]//gr.n_blocks
             mask = f[:,bb*num_fbins:(bb+1)*num_fbins,:]
 
         #mask = np.kron(this_f,pulse)
@@ -341,15 +337,14 @@ def raw2spec_god(resolution,gr, outfile,det,mask=None):
         union_mask = np.copy(mask[:,:,0])
         union_mask[mask[:,:,1]==1] = 1
 
-        #xma = np.ma.masked_array(x,union_mask)
-        #yma = np.ma.masked_array(y,union_mask)
+        xma = np.ma.masked_array(x,union_mask)
+        yma = np.ma.masked_array(y,union_mask)
 
         for nn in range(data.shape[0]):
 
             if mask is not None:
-
-                xpfb = np.fft.fftshift(pfb_mask(x[nn],nchan_pfb,12, union_mask[nn], SKM, force_complex=True),axes=-1)
-                ypfb = np.fft.fftshift(pfb_mask(y[nn],nchan_pfb,12, union_mask[nn], SKM, force_complex=True),axes=-1)
+                xpfb = np.fft.fftshift(pfb_mask(xma[nn],nchan_pfb,12, force_complex=True),axes=-1)
+                ypfb = np.fft.fftshift(pfb_mask(yma[nn],nchan_pfb,12, force_complex=True),axes=-1)
 
                 spec = (np.nanmean(np.abs(xpfb)**2,axis=0)\
                     +np.nanmean(np.abs(ypfb)**2,axis=0))/2
@@ -376,10 +371,10 @@ def raw2spec_god(resolution,gr, outfile,det,mask=None):
     freqs = fctr - 0.5*bw + bw/(nchan*nchan_pfb)*np.arange(nchan*nchan_pfb)
 
     out1 = (freqs,spectrum)
-    with open(out_file,"wb") as outf: 
+    with open(outfile,"wb") as outf: 
         pickle.dump(out1,f)
         print(outf)
-    self._pkl_filename = outf
+    #self._pkl_filename = outf
 
 
 

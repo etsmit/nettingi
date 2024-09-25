@@ -299,19 +299,24 @@ class mitigateRFI:
 
 #         print(f'Duration: {dur} minutes')
 
-    def fine_channelize(self, resolution, mit=False, mask=None):
+    def fine_channelize(self, resolution, mit=False, mask=False):
         start_time = time.time()
+        if mask:
+            if self.det_method=='AOF':
+                in_mask = self.output_mit_srdp_dir+'*flags_block*.npy'
+            else:
+                in_mask = self._flags_filename
         if mit:
             if mask:
                 out_fc_fname = f"{self.output_mit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
-                raw2spec_god(resolution,GuppiRaw(self.outfile_raw_full),self.det_method, out_fc_fname, mask)
+                raw2spec_god(resolution,GuppiRaw(self.outfile_raw_full),self.det_method, out_fc_fname, in_mask)
             else:
                 out_fc_fname = f"{self.output_mit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_nomask.spec.pkl"
                 raw2spec_god(resolution,GuppiRaw(self.outfile_raw_full),self.det_method, out_fc_fname)
         else:
             if mask:
                 out_fc_fname = f"{self.output_unmit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
-                raw2spec_god(resolution,self._rawFile,self.det_method, out_fc_fname, mask)
+                raw2spec_god(resolution,self._rawFile,self.det_method, out_fc_fname, in_mask)
             else:
                 out_fc_fname = f"{self.output_unmit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
                 raw2spec_god(resolution,self._rawFile,self.det_method, out_fc_fname)
