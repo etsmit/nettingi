@@ -486,8 +486,45 @@ def iqrm_avg(data, radius, threshold, breakdown):
 
     return flag_chunk
 
+def iqrm_sk(data, radius, threshold, IQRM_flags):
+    """
+    iqrm for sk input
+    
+    Parameters
+        -----------
+        data : ndarray
+            file name of the data that needs rfi mitigation
+        radius : int
+            the number of points to consider around a value when calculating outlier
+        threshold : double
+            the # of stdevs away from the mean to be considered an outlier
+        Returns
+        -----------
+        out : ndarray
+                An array of flags, indicating where the RFI is.
+    """
+#     data = template_averager(np.abs(data)**2, breakdown)
+    data = np.load(IQRM_flags)
+    flag_chunk = np.zeros(data.shape)
+    print('Flag shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
+    for i in tqdm(range(data.shape[2])): # iterate through polarizations
+        for j in range(data.shape[0]): # iterate through channels
+            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius, threshold = threshold)[0]
+
+    return flag_chunk
 
 def aof(data):
+    """
+    AOFlagger finding flags
+    
+    Parameters
+        -----------
+        data : ndarray
+            file name of the data that needs rfi mitigation
+        Returns
+        -----------
+        out : ndarray
+    """
     nch = data.shape[0]
     ntimes = data.shape[1]//1024
     count = 2

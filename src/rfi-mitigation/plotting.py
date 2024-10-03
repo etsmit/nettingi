@@ -64,8 +64,11 @@ def pkl_plot(infiles, labels, ps=False):
             spectra.append(data)
     for i in range(len(spectra)):
         plt.plot(freqs, spectra[i], alpha=0.7, c=ten_clrs[i], label=labels[i])
-
-    plt.legend()
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
+    plt.xlabel('Frequency (MHz)',fontsize=20)
+    plt.ylabel('Power',fontsize=20)
+    plt.legend(fontsize=20)
     plt.show()
 
 

@@ -14,8 +14,8 @@ import time
 
 from blimpy import GuppiRaw
 
-from utils import *
-from reduction import *
+from .utils import *
+from .reduction import *
 #from .sk import rfi_sk
 
 import iqrm

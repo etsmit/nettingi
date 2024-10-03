@@ -25,7 +25,7 @@ from .utils import *
 import iqrm
 
 class rfi_iqrm(mitigateRFI):
-    def __init__(self, infile, repl_method, IQRM_radius=5, IQRM_threshold=3.0, IQRM_datatype='std', IQRM_breakdown=512, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
+    def __init__(self, infile, repl_method, IQRM_radius=5, IQRM_threshold=3.0, IQRM_datatype='std', IQRM_breakdown=512, IQRM_flags='', cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         valid = ["std", "power", "avg", "mad", "sk"] # valid inputs for IQRM_datatype
         if IQRM_datatype not in valid:
             raise ValueError("IQRM_datatype must be one of %r." % valid)
@@ -51,6 +51,7 @@ class rfi_iqrm(mitigateRFI):
         self.IQRM_threshold = IQRM_threshold
         self.IQRM_datatype = IQRM_datatype
         self.IQRM_breakdown = IQRM_breakdown
+        self.IQRM_flags = IQRM_flags
 
         self._out_dir = '/data/scratch/IQRMresults/'
         self._jetstor_dir = '/jetstor/scratch/IQRM_rawdata_results/'
@@ -104,40 +105,24 @@ class rfi_iqrm(mitigateRFI):
         if data.shape[1] % self.ave_factor != 0:
             raise ValueError("ave_factor must be a factor of %r." % self.shape[1])
             
+            
         if self.IQRM_datatype == 'power':
             flag_chunk = iqrm_power(data, self.IQRM_radius, self.IQRM_threshold)
     
         elif self.IQRM_datatype == 'avg':
             flag_chunk = iqrm_avg(data, self.IQRM_radius, self.IQRM_threshold, self.IQRM_breakdown)
             # standard dev
-        else:# if self.IQRM_datatype == 'std': 
+        elif self.IQRM_datatype == 'std': 
             flag_chunk = iqrm_std(data, self.IQRM_radius, self.IQRM_threshold, self.IQRM_breakdown)
+        
+        else: #sk
+            flag_chunk = iqrm_sk(data, self.IQRM_radius, self.IQRM_threshold, self.IQRM_flags)
+
+#             flag_chunk = np.load(self.IQRM_flags)
+#             ave = self.IQRM_flags.split('m')[1].split('_')
+#             print(int(ave[0]))
+#             data = template_averager(data, int(ave[0]))
+            
     
         return flag_chunk
-    
-    
-        # else:
-        #     return #throw some error?
-    
-    # def averager(data,m):
-    # 	"""
-    # 	average of data
-    # 	"""
-    # 	step1_p0 = np.reshape(data[:,:,0], (data.shape[0],-1,m)) # polarization 1
-    # 	step1_p1 = np.reshape(data[:,:,1], (data.shape[0],-1,m)) # 2
-    # 	step2_p0 = np.expand_dims(np.mean(step1_p0,axis=2),axis=2)
-    # 	step2_p1 = np.expand_dims(np.mean(step1_p1,axis=2),axis=2)
-    # 	return np.concatenate((step2_p0,step2_p1),axis=2) 
-                      
-    
-    # def stdever(data,m):
-    # 	"""
-    # 	standard deviation of data
-    # 	"""
-    # 	step1_p0 = np.reshape(data[:,:,0], (data.shape[0],-1,m)) # polarization 1
-    # 	step1_p1 = np.reshape(data[:,:,1], (data.shape[0],-1,m)) # 2
-    # 	step2_p0 = np.expand_dims(np.std(step1_p0,axis=2),axis=2)
-    # 	step2_p1 = np.expand_dims(np.std(step1_p1,axis=2),axis=2)
-    # 	return np.concatenate((step2_p0,step2_p1),axis=2)    
-    
     
