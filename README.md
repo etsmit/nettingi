@@ -37,7 +37,7 @@ To install from github:
 ```
 
 ## Quickstart
-After installation, ``nettingi`` can be used in a python environment. The most basic use has default settings for RFI mitigation. There are more complex example uses in the [notebooks folder](https://github.com/kaitlynchen1/nettingi/notebooks/running.ipynb).
+After installation, ``nettingi`` can be used in a python environment. The most basic use has default settings for RFI mitigation. There are more complex example uses in the [notebooks folder](https://github.com/kaitlynchen1/nettingi/blob/kait-dev/notebooks/running.ipynb).
 
 ### In Jupyter Notebooks
 Note that ``filename`` is the file path to the data with RFI you want to mitigate and ``replacement`` is either ``nans`` or ``noise`` depending on what the RFI should be replaced with.
