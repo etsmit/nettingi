@@ -89,20 +89,19 @@ class rfi_sk(mitigateRFI):
         self.ms0 = int(mssk.split(',')[0])
         self.ms1 = int(mssk.split(',')[1])
 
-        self._outfile_pattern = f"m{self.SK_m}_s{self.sigma}_ms{self.ms0}-{self.ms1}"    
-
-        self.infile_raw_full, self.outfile_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
+        self._outfile_pattern = f"m{self.SK_m}_s{self.sigma}_ms{self.ms0}-{self.ms1}_{self.repl_method}_{self.cust}"    
+        self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir, self.output_unmit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
         self._rawFile = GuppiRaw(self.infile_raw_full)
         # any separate results filenames you need, in addition to the flags filename, put them here
         self.npybase = self.infile[:-4]
         
 
-        self._flags_filename = f"{self.output_srdp_dir}{self.npybase}_flags_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._spect_filename = f"{self.output_srdp_dir}{self.npybase}_spect_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._regen_filename = f"{self.output_srdp_dir}{self.npybase}_regen_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._flags_filename = f"{self.output_mit_srdp_dir}{self.npybase}_flags_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._spect_filename = f"{self.output_mit_srdp_dir}{self.npybase}_spect_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._regen_filename = f"{self.output_mit_srdp_dir}{self.npybase}_regen_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
-        self._ss_sk_filename = f"{self.output_srdp_dir}{self.npybase}_skval_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._ms_sk_filename = f"{self.output_srdp_dir}{self.npybase}_mssk_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._ss_sk_filename = f"{self.output_mit_srdp_dir}{self.npybase}_skval_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._ms_sk_filename = f"{self.output_mit_srdp_dir}{self.npybase}_mssk_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
 
         #self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_mb{self.mb}_{self.cust}{infile[-4:]}"

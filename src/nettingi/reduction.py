@@ -372,7 +372,7 @@ def raw2spec_god(resolution,gr, det,outfile,mask=None):
 
     out1 = (freqs,spectrum)
     with open(outfile,"wb") as outf: 
-        pickle.dump(out1,f)
+        pickle.dump(out1,outf)
         print(outf)
     #self._pkl_filename = outf
 

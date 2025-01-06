@@ -100,7 +100,7 @@ class mitigateRFI:
             if self.rawdata:
                 template_save_npy(data,bi,npy_base)    
        
-            #dumb_thing = self.ave_factor
+
             spect_block = template_averager(data, self.ave_factor)
 
 
@@ -161,7 +161,7 @@ class mitigateRFI:
             #track flags
 
 
-            template_print_flagstats(flags_block)
+            template_print_flagstats(flags_block, False)
 
 
             #now flag shape is (chan,spectra,pol)
@@ -267,7 +267,7 @@ class mitigateRFI:
 
         
         #flagging stuff
-        template_print_flagstats(self.flags_all)
+        template_print_flagstats(self.flags_all, True)
 
 
 
@@ -318,7 +318,7 @@ class mitigateRFI:
                 out_fc_fname = f"{self.output_unmit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
                 raw2spec_god(resolution,self._rawFile,self.det_method, out_fc_fname, in_mask)
             else:
-                out_fc_fname = f"{self.output_unmit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
+                out_fc_fname = f"{self.output_unmit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_nomask.spec.pkl"
                 raw2spec_god(resolution,self._rawFile,self.det_method, out_fc_fname)
         end_time = time.time()
         dur = np.around((end_time-start_time)/60, 2)
