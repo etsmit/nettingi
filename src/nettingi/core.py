@@ -172,25 +172,23 @@ class mitigateRFI:
 
 
             ts_factor = data.shape[1] // flags_block.shape[1]
-            if (data.shape[1] % flags_block.shape[1] != 0):
-                print('Flag chunk size is incompatible with block size')
-                sys.exit()
+            rlen = flags_block.shape[1] * ts_factor
                 
 
             if self.repl_method == 'nans':
-                data = repl_nans_jit(data,flags_block)
+                data[:,:rlen,:] = repl_nans_jit(data[:,:rlen,:],flags_block)
 
             if self.repl_method == 'zeros':
                 #replace data with zeros
-                data = repl_zeros(data,flags_block)
+                data[:,:rlen,:] = repl_zeros(data[:,:rlen,:],flags_block)
 
             if self.repl_method == 'previousgood':
                 #replace data with previous (or next) good
-                data = previous_good(data,flags_block,ts_factor)
+                data[:,:rlen,:] = previous_good(data[:,:rlen,:],flags_block,ts_factor)
 
             if self.repl_method == 'stats':
                 #replace data with statistical noise derived from good datapoints
-                data = statistical_noise_fir(data,flags_block,ts_factor)
+                data[:,:rlen,:] = statistical_noise_fir(data[:,:rlen,:],flags_block,ts_factor)
 
 
             #save the regenerated spectra
