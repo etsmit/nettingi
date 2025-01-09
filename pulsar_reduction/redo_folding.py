@@ -511,12 +511,12 @@ def do_fold(infiles,basenm,parfile,dm,nbin=2048,nbits=8,nchan=None,cal_psr=None,
 
     # Fold the raw data using dspsr
     if nchan is not None:
-        cmd = ("dspsr -t 8 -O {basenm}_fold -a psrfits -e fits -F {nchan}:D "
-               "-D {dm} -d 4 -b {nbin} -E {t2parfile} -A -nsub 42 -L 1.0 "
+        cmd = ("dspsr -t 1 -O {basenm}_fold -a psrfits -e fits -F {nchan}:D "
+               "-D {dm} -d 4 -b {nbin} -E {t2parfile} -A -nsub 30 -L 1.0 "
                "-U 8192 {infiles}".format(**kwargs))
     else:
-        cmd = ("dspsr -t 8 -O {basenm}_fold -a psrfits -e fits "
-               "-D {dm} -d 4 -b {nbin} -E {t2parfile} -A -nsub 42 -L 1.0 "
+        cmd = ("dspsr -t 1 -O {basenm}_fold -a psrfits -e fits "
+               "-D {dm} -d 4 -b {nbin} -E {t2parfile} -A -nsub 30 -L 1.0 "
                "-U 8192 {infiles}".format(**kwargs))
     print(cmd)
     ret = execute(cmd, out=outfile, err=errfile)

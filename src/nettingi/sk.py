@@ -138,6 +138,8 @@ class rfi_sk(mitigateRFI):
         num_timesamples = s.shape[1]
         num_SKbins = num_timesamples // self.SK_m
 
+        check_m(self.SK_m,data.shape[1])
+
         flags_block = np.zeros((s.shape[0], s.shape[1]//self.SK_m, s.shape[2]),dtype=np.int8)
         ms_flags_block = np.zeros((s.shape[0] - (self.ms0-1) , flags_block.shape[1] - (self.ms1-1) , s.shape[2]))
 
@@ -146,14 +148,14 @@ class rfi_sk(mitigateRFI):
 
 
             #single scale
-        ss_sk_block = self.single_scale_SK_EST(s)
+        ss_sk_block = self.single_scale_SK_EST(s[:,num_SKbins*self.SK_m,:])
         flags_block[ss_sk_block < self._lt] = 1
         flags_block[ss_sk_block > self._ut] = 1
 
 
         #multiscale
         if (self.mssk != '1,1'):
-            ms_sk_block = self.multi_scale_SK_EST(s)
+            ms_sk_block = self.multi_scale_SK_EST(s[:,num_SKbins*self.SK_m,:])
             ms_flags_block[ms_sk_block < self._ms_lt] = 1
             ms_flags_block[ms_sk_block > self._ms_ut] = 1
 
@@ -288,6 +290,16 @@ class rfi_sk(mitigateRFI):
         upperThreshold = sp.optimize.newton(self.upperRoot, x[0], args = (moment_2, moment_3, p))
         lowerThreshold = sp.optimize.newton(self.lowerRoot, x[0], args = (moment_2, moment_3, p))
         return lowerThreshold, upperThreshold
+
+
+
+    def check_m(m,tlen):
+        mismatch = tlen % m
+
+        if mismatch != 0:
+            print(f'There are {tlen} time samples and you set M = {m}, you will miss {mismatch} time samples at the end of each block')
+            print(f'This corresponds to {np.around(100*mismatch/tlen,4)% of your data.}
+      
 
 
 

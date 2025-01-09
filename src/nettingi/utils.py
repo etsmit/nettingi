@@ -146,6 +146,7 @@ def template_check_nblocks(rawFile,mb):
         print(f'There are {numblocks} blocks and you set -mb {mb}, pick a divisible integer')
         sys.exit()
 
+
 #read the first block's header
 def template_print_header(rawFile):
     header,headersize = rawFile.read_header()
@@ -547,23 +548,18 @@ def template_print_flagstats(flags_array,end):
 
 #@jit(parallel=True)
 def template_averager(data,m):
-    print(f"nan count: {np.count_nonzero(np.isnan(data))}/{data.size}")
     out = np.zeros((data.shape[0],data.shape[1]//m,data.shape[2]),dtype=np.float64)
     s = np.abs(data)**2
-    print(f"nan count: {np.count_nonzero(np.isnan(s))}/{s.size}")
     #step1_p0 = np.ascontiguousarray(np.reshape(s[:,:,0], (s.shape[0],-1,m)))
     #step1_p1 = np.ascontiguousarray(np.reshape(s[:,:,1], (s.shape[0],-1,m)))
     #out[:,:,0] = np.nanmean(step1_p0,axis=2)
     #out[:,:,1] = np.nanmean(step1_p1,axis=2)
-    print(s.shape, m)
     a = np.reshape(s,(s.shape[0],-1,m,s.shape[2]))
-    print(f"nan count: {np.count_nonzero(np.isnan(a))}/{a.size}")
     #numba nanmean cannot select by axis
     for pol in range(out.shape[2]):
         for chan in range(out.shape[0]):
             for tb in range(out.shape[1]):
                 out[chan,tb,pol] = np.nanmean(a[chan,tb,:,pol])
-    print(f"nan count: {np.count_nonzero(np.isnan(a))}/{a.size}")
     return out
 
 def template_stdever(data,m):
