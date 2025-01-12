@@ -90,6 +90,8 @@ def template_bookkeeping(infile,out_patt,det):
     infile_raw_full = in_dir+infile
 
 #     #== output stuff ==
+
+    #get output raw data file
     output_raw_dir_base = '/jetstor/scratch/rfimit/mitigated/rawdata'
     output_base = f'{infile_base}_{det}_{out_patt}'
     output_raw_dir = f'{output_raw_dir_base}/{output_base}/'
@@ -97,18 +99,27 @@ def template_bookkeeping(infile,out_patt,det):
         os.system(f'mkdir {output_raw_dir}')
     outfile_raw_full = f'{output_raw_dir}{infile[:-4]}_{det}_{out_patt}.raw'
 
+    #get srdp results directory for mitigated file
+    output_mit_srdp_dir_base = '/jetstor/scratch/rfimit/mitigated/reduced'
+    if not os.path.exists(f'{output_mit_srdp_dir_base}/{output_base}'):
+        os.system(f'mkdir {output_mit_srdp_dir_base}/{output_base}')
+    output_mit_srdp_dir = f'{output_mit_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
+    if not os.path.exists(output_mit_srdp_dir):
+        os.system(f'mkdir {output_mit_srdp_dir}')
 
-    output_srdp_dir_base = '/jetstor/scratch/rfimit/mitigated/reduced'
-    if not os.path.exists(f'{output_srdp_dir_base}/{output_base}'):
-        os.system(f'mkdir {output_srdp_dir_base}/{output_base}')
-    output_srdp_dir = f'{output_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
-    
-    if not os.path.exists(output_srdp_dir):
-        os.system(f'mkdir {output_srdp_dir}')
+    #get srdp results directory for unmitigated file
+    output_unmit_srdp_dir_base = '/jetstor/scratch/rfimit/unmitigated/reduced'
+    if not os.path.exists(f'{output_unmit_srdp_dir_base}/{output_base}'):
+        os.system(f'mkdir {output_unmit_srdp_dir_base}/{output_base}')
+    output_unmit_srdp_dir = f'{output_unmit_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
+    if not os.path.exists(output_unmit_srdp_dir):
+        os.system(f'mkdir {output_unmit_srdp_dir}')
+
     print(infile_raw_full)
     print(outfile_raw_full)
-    print(output_srdp_dir)
-    return infile_raw_full, outfile_raw_full, output_srdp_dir
+    print(output_mit_srdp_dir)
+    print(output_unmit_srdp_dir)
+    return infile_raw_full, outfile_raw_full, output_mit_srdp_dir, output_unmit_srdp_dir
 
 
 
@@ -134,6 +145,7 @@ def template_check_nblocks(rawFile,mb):
     if (mismatch != 0):
         print(f'There are {numblocks} blocks and you set -mb {mb}, pick a divisible integer')
         sys.exit()
+
 
 #read the first block's header
 def template_print_header(rawFile):
@@ -516,34 +528,38 @@ def template_guppi_format(a):
     return out_arr
 
 
-def template_print_flagstats(flags_array):
+def template_print_flagstats(flags_array,end):
 
-    print(f'Pol 0: {np.around(100*np.mean(flags_array[:,:,0]),2)}% flagged')
-    print(f'Pol 1: {np.around(100*np.mean(flags_array[:,:,1]),2)}% flagged')
+    if end:
+        add = '--Final--\n'
+    else:
+        add = ''
+    print(f'{add}Pol 0: {np.around(100*np.mean(flags_array[:,:,0]),2)}% flagged')
+    print(f'{add}Pol 1: {np.around(100*np.mean(flags_array[:,:,1]),2)}% flagged')
 
     uf = flags_array[:,:,0]
     uf[flags_array[:,:,1] == 1] = 1
 
     print(f'Union: {np.around(100*np.mean(uf),2)}% flagged')
+    if end:
+        print('--Final--')
 
 
 
-@jit(parallel=True)
+#@jit(parallel=True)
 def template_averager(data,m):
     out = np.zeros((data.shape[0],data.shape[1]//m,data.shape[2]),dtype=np.float64)
     s = np.abs(data)**2
-
     #step1_p0 = np.ascontiguousarray(np.reshape(s[:,:,0], (s.shape[0],-1,m)))
     #step1_p1 = np.ascontiguousarray(np.reshape(s[:,:,1], (s.shape[0],-1,m)))
     #out[:,:,0] = np.nanmean(step1_p0,axis=2)
     #out[:,:,1] = np.nanmean(step1_p1,axis=2)
-
     a = np.reshape(s,(s.shape[0],-1,m,s.shape[2]))
     #numba nanmean cannot select by axis
-    for pol in prange(out.shape[2]):
-        for chan in prange(out.shape[0]):
-            for tb in prange(out.shape[1]):
-                out[chan,tb,pol] = np.nanmean(a[chan,:,tb,pol])
+    for pol in range(out.shape[2]):
+        for chan in range(out.shape[0]):
+            for tb in range(out.shape[1]):
+                out[chan,tb,pol] = np.nanmean(a[chan,tb,:,pol])
     return out
 
 def template_stdever(data,m):

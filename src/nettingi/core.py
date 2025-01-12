@@ -18,6 +18,7 @@ from blimpy import GuppiRaw
 from .utils import *
 from .reduction import *
 #from .sk import rfi_sk
+from .plotting import load_raw_flags
 
 import iqrm
 
@@ -99,7 +100,7 @@ class mitigateRFI:
             if self.rawdata:
                 template_save_npy(data,bi,npy_base)    
        
-            #dumb_thing = self.ave_factor
+
             spect_block = template_averager(data, self.ave_factor)
 
 
@@ -117,7 +118,6 @@ class mitigateRFI:
                     self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
 
             elif self.det_method == 'IQRM':
-                # print('IQRM mitigation')
                 flags_block = self.iqrm_detection(data)
 
             elif self.det_method == 'AOF':
@@ -125,6 +125,13 @@ class mitigateRFI:
 
             elif self.det_method == 'MAD':
                 flags_block = self.mad_detection(data)
+        
+            elif self.det_method == 'SE':
+                flags_block, zsc_block = self.se_detection(data)
+                if bi == 0:
+                    self.zsc_all = zsc_block
+                else:
+                    self.zsc_all = np.concatenate((self.zsc_all, zsc_block),axis=1)
 
             #***********************************************
             #===============================================
@@ -141,7 +148,7 @@ class mitigateRFI:
 
             if (self.det_method == 'AOF') or (self.det_method == 'MAD'):
                 block_fname = str(bi).zfill(3)
-                save_fname = self.output_srdp_dir+self.npybase+'_flags_block'+block_fname+'.npy'
+                save_fname = self.output_mit_srdp_dir+self.npybase+'_flags_block'+block_fname+'.npy'
                 np.save(save_fname,flags_block)
                 self.flags_all = np.empty((data.shape[0],1,data.shape[2]))
 
@@ -154,7 +161,7 @@ class mitigateRFI:
             #track flags
 
 
-            template_print_flagstats(flags_block)
+            template_print_flagstats(flags_block, False)
 
 
             #now flag shape is (chan,spectra,pol)
@@ -165,25 +172,23 @@ class mitigateRFI:
 
 
             ts_factor = data.shape[1] // flags_block.shape[1]
-            if (data.shape[1] % flags_block.shape[1] != 0):
-                print('Flag chunk size is incompatible with block size')
-                sys.exit()
+            rlen = flags_block.shape[1] * ts_factor
                 
 
             if self.repl_method == 'nans':
-                data = repl_nans_jit(data,flags_block)
+                data[:,:rlen,:] = repl_nans_jit(data[:,:rlen,:],flags_block)
 
             if self.repl_method == 'zeros':
                 #replace data with zeros
-                data = repl_zeros(data,flags_block)
+                data[:,:rlen,:] = repl_zeros(data[:,:rlen,:],flags_block)
 
             if self.repl_method == 'previousgood':
                 #replace data with previous (or next) good
-                data = previous_good(data,flags_block,ts_factor)
+                data[:,:rlen,:] = previous_good(data[:,:rlen,:],flags_block,ts_factor)
 
             if self.repl_method == 'stats':
                 #replace data with statistical noise derived from good datapoints
-                data = statistical_noise_fir(data,flags_block,ts_factor)
+                data[:,:rlen,:] = statistical_noise_fir(data[:,:rlen,:],flags_block,ts_factor)
 
 
             #save the regenerated spectra
@@ -231,14 +236,20 @@ class mitigateRFI:
             log = '/data/scratch/SKresults/SK_log.txt'
             os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ss_sk_filename}','{self._ms_sk_filename}'\n===============================" >> {log}""")
 
-        if self.det_method == 'AOF':
+        elif self.det_method == 'AOF':
             #need to add the logging thing
             log = '/data/scratch/AOFresults/AOF_log.txt'
             os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}'\n===============================" >> {log}""")
 
-        if self.det_method == 'AOF':
+        elif self.det_method == 'MAD':
             log = '/data/scratch/MADresults/MAD_log.txt'
             os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}'\n===============================" >> {log}""")
+
+        elif self.det_method == 'SE':
+            print(f'mod Z-score: {self._zsc_filename}')
+            np.save(self._zsc_filename, self.zsc_all)
+            log = '/data/scratch/SEresults/SE_log.txt'
+            os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._zsc_filename}'\n===============================" >> {log}""")
         
 
         # elif self.det_method == 'IQRM':
@@ -254,7 +265,7 @@ class mitigateRFI:
 
         
         #flagging stuff
-        template_print_flagstats(self.flags_all)
+        template_print_flagstats(self.flags_all, True)
 
 
 
@@ -288,17 +299,25 @@ class mitigateRFI:
 
     def fine_channelize(self, resolution, mit=False, mask=False):
         start_time = time.time()
-        print(self._outfile)
+        if mask:
+            if self.det_method=='AOF':
+                in_mask = self.output_mit_srdp_dir+'*flags_block*.npy'
+            else:
+                in_mask = self._flags_filename
         if mit:
             if mask:
-                raw2spec_mask(resolution,GuppiRaw(self._outfile), mask, self.infile[self.infile.rfind('/'):])
+                out_fc_fname = f"{self.output_mit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
+                raw2spec_god(resolution,GuppiRaw(self.outfile_raw_full),self.det_method, out_fc_fname, in_mask)
             else:
-                raw2spec(resolution,GuppiRaw(self._outfile),self.infile[self.infile.rfind('/'):])
-        else:        
+                out_fc_fname = f"{self.output_mit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_nomask.spec.pkl"
+                raw2spec_god(resolution,GuppiRaw(self.outfile_raw_full),self.det_method, out_fc_fname)
+        else:
             if mask:
-                raw2spec_mask(resolution,self._rawFile,mask, self.infile[self.infile.rfind('/'):])
+                out_fc_fname = f"{self.output_unmit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_mask.spec.pkl"
+                raw2spec_god(resolution,self._rawFile,self.det_method, out_fc_fname, in_mask)
             else:
-                raw2spec(resolution,self._rawFile, self.infile[self.infile.rfind('/'):])
+                out_fc_fname = f"{self.output_unmit_srdp_dir}{self.npybase}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}_{resolution}_nomask.spec.pkl"
+                raw2spec_god(resolution,self._rawFile,self.det_method, out_fc_fname)
         end_time = time.time()
         dur = np.around((end_time-start_time)/60, 2)
 
@@ -322,7 +341,32 @@ class mitigateRFI:
 
 
 
+    def load_basic_srdps(self):
+        
 
+        # need to output: logs, (logsf or ave_f), logsm
+        # for sk: sk, mssk
+
+        #these are np.loads because you can do this function without first doing self.run_all()
+        
+
+        s = np.load(self._spect_filename)
+        sm = np.load(self._regen_filename)
+
+        logs = np.log10(s)
+        logsm = np.log10(sm)
+
+        out = (s,sm)
+        
+        if (self.det_method == 'AOF') or (self.det_method == 'MAD'):
+            f = load_raw_flags(self.output_srdp_dir+self.npybase+'_flags_block*.npy',self.ave_factor)
+            out = out + (f,)
+        else:
+            f = np.load(self._flags_filename)
+            out = out + (f,)
+
+        return out
+            
 
 
 

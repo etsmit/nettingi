@@ -89,20 +89,19 @@ class rfi_sk(mitigateRFI):
         self.ms0 = int(mssk.split(',')[0])
         self.ms1 = int(mssk.split(',')[1])
 
-        self._outfile_pattern = f"m{self.SK_m}_s{self.sigma}_ms{self.ms0}-{self.ms1}"    
-
-        self.infile_raw_full, self.outfile_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
+        self._outfile_pattern = f"m{self.SK_m}_s{self.sigma}_ms{self.ms0}-{self.ms1}_{self.repl_method}_{self.cust}"    
+        self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir, self.output_unmit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
         self._rawFile = GuppiRaw(self.infile_raw_full)
         # any separate results filenames you need, in addition to the flags filename, put them here
         self.npybase = self.infile[:-4]
         
 
-        self._flags_filename = f"{self.output_srdp_dir}{self.npybase}_flags_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._spect_filename = f"{self.output_srdp_dir}{self.npybase}_spect_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._regen_filename = f"{self.output_srdp_dir}{self.npybase}_regen_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._flags_filename = f"{self.output_mit_srdp_dir}{self.npybase}_flags_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._spect_filename = f"{self.output_mit_srdp_dir}{self.npybase}_spect_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._regen_filename = f"{self.output_mit_srdp_dir}{self.npybase}_regen_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
-        self._ss_sk_filename = f"{self.output_srdp_dir}{self.npybase}_skval_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._ms_sk_filename = f"{self.output_srdp_dir}{self.npybase}_mssk_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._ss_sk_filename = f"{self.output_mit_srdp_dir}{self.npybase}_skval_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._ms_sk_filename = f"{self.output_mit_srdp_dir}{self.npybase}_mssk_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
 
         #self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_mb{self.mb}_{self.cust}{infile[-4:]}"
@@ -139,6 +138,8 @@ class rfi_sk(mitigateRFI):
         num_timesamples = s.shape[1]
         num_SKbins = num_timesamples // self.SK_m
 
+        self.check_m(self.SK_m,data.shape[1])
+
         flags_block = np.zeros((s.shape[0], s.shape[1]//self.SK_m, s.shape[2]),dtype=np.int8)
         ms_flags_block = np.zeros((s.shape[0] - (self.ms0-1) , flags_block.shape[1] - (self.ms1-1) , s.shape[2]))
 
@@ -147,14 +148,14 @@ class rfi_sk(mitigateRFI):
 
 
             #single scale
-        ss_sk_block = self.single_scale_SK_EST(s)
+        ss_sk_block = self.single_scale_SK_EST(s[:,:num_SKbins*self.SK_m,:])
         flags_block[ss_sk_block < self._lt] = 1
         flags_block[ss_sk_block > self._ut] = 1
 
 
         #multiscale
         if (self.mssk != '1,1'):
-            ms_sk_block = self.multi_scale_SK_EST(s)
+            ms_sk_block = self.multi_scale_SK_EST(s[:,:num_SKbins*self.SK_m,:])
             ms_flags_block[ms_sk_block < self._ms_lt] = 1
             ms_flags_block[ms_sk_block > self._ms_ut] = 1
 
@@ -289,6 +290,16 @@ class rfi_sk(mitigateRFI):
         upperThreshold = sp.optimize.newton(self.upperRoot, x[0], args = (moment_2, moment_3, p))
         lowerThreshold = sp.optimize.newton(self.lowerRoot, x[0], args = (moment_2, moment_3, p))
         return lowerThreshold, upperThreshold
+
+
+
+    def check_m(self,m,tlen):
+        mismatch = tlen % m
+
+        if mismatch != 0:
+            print(f'There are {tlen} time samples and you set M = {m}, you will miss {mismatch} time samples at the end of each block')
+            print(f'This corresponds to {np.around(100*mismatch/tlen,4)}% of your data.')
+      
 
 
 
