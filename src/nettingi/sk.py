@@ -14,7 +14,6 @@ from .core import mitigateRFI
 
 from .utils import *
 
-from numba import jit
 
 spec = [
  'SK_detection',
@@ -76,9 +75,6 @@ class rfi_sk(mitigateRFI):
         self.ave_factor = ave_factor
         self.infile = infile 
 
-        #default/hardcoded attributes
-        #self._rawFile = GuppiRaw(self.infile)
-        #self.infile_raw_full, self.output_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile)
 
         #sk related parameters
         self.SK_m = m

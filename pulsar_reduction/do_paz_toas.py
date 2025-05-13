@@ -1,4 +1,5 @@
-import os,sys
+import os
+import sys
 import numpy as np
 
 
@@ -16,11 +17,19 @@ print(arg)
 os.system(arg)
 
 
-arg1 = f"pat -F -f princeton -s {basenm}_fold_sum.std {basenm}_fold_sum.zap.fscr > toas_new.zap.tim"
+arg1 = f"pat -F -f princeton -s {basenm}_fold_sum.std {basenm}_fold_sum.zap.fscr > toas.zap.tim"
 #arg1 = "pat -F -f princeton -s vegas_58966_24098_J1713+0747_0072.0000_fold_sum.std vegas_58966_24098_J1713+0747_0072.0000_fold_sum.fscr > toas_new.tim"
 print(arg1)
 os.system(arg1)
 
+#have to remove the last TOA, it is not calculated correctly in some cases.
+f = open("toas.zap.tim",'r')
+t = open('toas_new.zap.tim','x')
+lines = f.readlines()
+for line in lines[:-1]:
+    t.write(line)
+f.close()
+t.close()
 
 arg2 = f"tempo -f {parfile} toas_new.zap.tim"
 print(arg2)

@@ -82,7 +82,7 @@ def template_bookkeeping(infile,out_patt,det):
 #     #these paths should all exist, so no mkdirs needed
 #     #if they don't exist, 
     input_raw_dir_base = '/jetstor/scratch/rfimit/unmitigated/rawdata'
-    infile_base = infile[:infile.find('.')]
+    infile_base = infile[infile.rfind('/')+1:infile.find('.')]
     print(infile,infile_base)
     
     #find input directory and file
@@ -97,13 +97,13 @@ def template_bookkeeping(infile,out_patt,det):
     output_raw_dir = f'{output_raw_dir_base}/{output_base}/'
     if not os.path.exists(output_raw_dir):
         os.system(f'mkdir {output_raw_dir}')
-    outfile_raw_full = f'{output_raw_dir}{infile[:-4]}_{det}_{out_patt}.raw'
+    outfile_raw_full = f'{output_raw_dir}{infile_base[:-4]}_{det}_{out_patt}.raw'
 
     #get srdp results directory for mitigated file
     output_mit_srdp_dir_base = '/jetstor/scratch/rfimit/mitigated/reduced'
     if not os.path.exists(f'{output_mit_srdp_dir_base}/{output_base}'):
         os.system(f'mkdir {output_mit_srdp_dir_base}/{output_base}')
-    output_mit_srdp_dir = f'{output_mit_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
+    output_mit_srdp_dir = f'{output_mit_srdp_dir_base}/{output_base}/{infile_base[:-4]}_{det}_{out_patt}/'
     if not os.path.exists(output_mit_srdp_dir):
         os.system(f'mkdir {output_mit_srdp_dir}')
 
@@ -111,7 +111,7 @@ def template_bookkeeping(infile,out_patt,det):
     output_unmit_srdp_dir_base = '/jetstor/scratch/rfimit/unmitigated/reduced'
     if not os.path.exists(f'{output_unmit_srdp_dir_base}/{output_base}'):
         os.system(f'mkdir {output_unmit_srdp_dir_base}/{output_base}')
-    output_unmit_srdp_dir = f'{output_unmit_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
+    output_unmit_srdp_dir = f'{output_unmit_srdp_dir_base}/{output_base}/{infile_base[:-4]}_{det}_{out_patt}/'
     if not os.path.exists(output_unmit_srdp_dir):
         os.system(f'mkdir {output_unmit_srdp_dir}')
 
@@ -158,7 +158,7 @@ def template_print_header(rawFile):
 #save numpy files
 def template_save_npy(data,block,npy_base):
     block_fname = str(block).zfill(3)
-    save_fname = npybase+'_block'+block_fname+'.npy'
+    save_fname = npy_base+'_block'+block_fname+'.npy'
     np.save(save_fname,data)
 
 
@@ -547,7 +547,7 @@ def template_print_flagstats(flags_array,end):
 
 
 #@jit(parallel=True)
-def template_averager(data,m):
+def template_calc_ave(data,m):
     out = np.zeros((data.shape[0],data.shape[1]//m,data.shape[2]),dtype=np.float64)
     s = np.abs(data)**2
     #step1_p0 = np.ascontiguousarray(np.reshape(s[:,:,0], (s.shape[0],-1,m)))
@@ -562,7 +562,7 @@ def template_averager(data,m):
                 out[chan,tb,pol] = np.nanmean(a[chan,tb,:,pol])
     return out
 
-def template_stdever(data,m):
+def template_calc_std(data,m):
     out = np.zeros((data.shape[0],data.shape[1]//m,data.shape[2]))
     s = np.abs(data)**2
 

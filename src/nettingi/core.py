@@ -101,7 +101,7 @@ class mitigateRFI:
                 template_save_npy(data,bi,npy_base)    
        
 
-            spect_block = template_averager(data, self.ave_factor)
+            spect_block = template_calc_ave(data, self.ave_factor)
 
 
             #===============================================
@@ -192,7 +192,7 @@ class mitigateRFI:
 
 
             #save the regenerated spectra
-            regen_block = template_averager(data, self.ave_factor)
+            regen_block = template_calc_ave(data, self.ave_factor)
 
             if bi == 0:
                 self.regen_all = regen_block
