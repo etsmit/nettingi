@@ -1,17 +1,8 @@
 
 
 import numpy as np
-import os,sys
-import matplotlib.pyplot as plt
 
-import scipy as sp
-import scipy.optimize
-import scipy.special
 import math as math
-
-import argparse
-
-import time
 
 from blimpy import GuppiRaw
 
@@ -20,7 +11,11 @@ import iqrm
 from tqdm import tqdm
 from .core import mitigateRFI
 
-from .utils import *
+from .utils import (
+    template_bookkeeping,
+    template_calc_ave,
+    template_calc_std,
+)
 
 class rfi_iqrm(mitigateRFI):
 
@@ -63,7 +58,7 @@ class rfi_iqrm(mitigateRFI):
         if self.two_d:
             self._outfile_pattern = f'rt{IQRM_radius_time}_tt{IQRM_threshold_time}_rf{IQRM_radius_freq}_tf{IQRM_threshold_freq}_'
         else:
-            self._outfile_pattern = f'r{IQRM_radius}_t{IQRM_threshold}_{IQRM_datatype}'
+            self._outfile_pattern = f'r{IQRM_radius_time}_t{IQRM_threshold_time}_{IQRM_datatype}'
         if self.IQRM_datatype == 'std':
             self._outfile_pattern += f'_b{IQRM_breakdown}'
         self._outfile_pattern += f'_{IQRM_datatype}'
@@ -91,7 +86,8 @@ class rfi_iqrm(mitigateRFI):
         IQRM_lag_time = iqrm.core.genlags(IQRM_radius_time, geofactor=1.5)
         IQRM_lag_freq = iqrm.core.genlags(IQRM_radius_freq, geofactor=1.5)
   
-        print('integer lags, k: {}'.format(IQRM_lag_time))
+        print('integer time lags, k: {}'.format(IQRM_lag_time))
+        print('integer freq lags, k: {}'.format(IQRM_lag_freq))
 
 
         
@@ -164,7 +160,7 @@ def iqrm_avgpwr(data, radius, threshold, breakdown):
     """
     breakdown must be a factor of the time shape data[1].shape()
     """
-    data = template_averager(np.abs(data)**2, breakdown)
+    data = template_calc_ave(np.abs(data)**2, breakdown)
     flag_chunk = np.zeros(data.shape)
     print('Flag shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
     for i in tqdm(range(data.shape[2])): # iterate through polarizations

@@ -1,32 +1,29 @@
 
 import numpy as np
-import os,sys
+import os
 import psutil
-import matplotlib.pyplot as plt
 
-import scipy as sp
-import scipy.optimize
-import scipy.special
 import math as math
-
-
 
 import time
 
 from blimpy import GuppiRaw
 
-from .utils import *
-from .reduction import *
-#from .sk import rfi_sk
+from .utils import (
+    template_check_outfile,
+    template_check_nblocks,
+    template_print_header,
+    template_save_npy,
+    template_calc_ave,
+    template_print_flagstats,
+    repl_nans_jit,
+    repl_zeros,
+    previous_good,
+    statistical_noise_fir,
+    template_guppi_format,
+)
+from .reduction import raw2spec_god
 from .plotting import load_raw_flags
-
-import iqrm
-
-#from tqdm import tqdm
-
-
-
-
 
 
 class mitigateRFI:
@@ -49,8 +46,7 @@ class mitigateRFI:
 
 
         #default/hardcoded attributes
-        self.in_dir = '/data/rfimit/unmitigated/rawdata/'#move to actual data dir
-        self._rawFile = GuppiRaw(infile)
+        self.in_dir = '/jetstor/scratch/rfimit/unmitigated/rawdata/'
 
 
     def run_all(self):
@@ -91,14 +87,11 @@ class mitigateRFI:
             #data = np.ascontiguousarray(data)
 
             #find data shape
-            num_coarsechan = data.shape[0]
-            num_timesamples= data.shape[1]
-            num_pol = data.shape[2]
             # print(f'Data shape: {data.shape} || block size: {data.nbytes}')
 
             #save raw data?
             if self.rawdata:
-                template_save_npy(data,bi,npy_base)    
+                template_save_npy(data,bi,self.npybase)    
        
 
             spect_block = template_calc_ave(data, self.ave_factor)
@@ -356,7 +349,7 @@ class mitigateRFI:
         logs = np.log10(s)
         logsm = np.log10(sm)
 
-        out = (s,sm)
+        out = (logs,logsm)
         
         if (self.det_method == 'AOF') or (self.det_method == 'MAD'):
             f = load_raw_flags(self.output_srdp_dir+self.npybase+'_flags_block*.npy',self.ave_factor)

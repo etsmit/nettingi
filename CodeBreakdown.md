@@ -29,7 +29,7 @@ The input data will be taken from `/jetstor/scratch/rfimit/unmitigated/rawdata/`
                     self.ms_sk_all = np.concatenate((self.ms_sk_all, ms_sk_block),axis=1)
 ```
 
-At this point in the code, you have the raw channelized voltages corresponding to one block of data, called `data`. If you want SK detection, this code will run `self.SK_detection()` and collect the flags corresponding to that block, as well as two intermediate arrays for the single- and multi-scale SK. Since we make no assumptions about how many blocks there are, we concatenate the results time-wise for all blocks after the first one. The minimum end result of this code is the flagging array, which will be used to perform data replacement/mitigation.
+At this point in the code, you have the raw channelized voltages corresponding to one block of data, called `data`. If you want SK detection, this code will run `self.SK_detection()` and collect the flags corresponding to that block, as well as two intermediate arrays for the single- and multi-scale SK. Since we make no assumptions about how many blocks there are, we concatenate the results time-wise for all blocks after the first one. The minimum end result of this code is the flagging array `flags_block`, which will be used to perform data replacement/mitigation.
 
 After flagging and mitigation, you do need to add any extra `numpy.save` statements starting on line 216. The code will already save the pre- and post- mitigation averaged spectra and the flagging data, but any intermediate arrays should also be added. For example, SK has to save the single- and multi-scale SK results. There is also a printout to a logfile, which details the output SRDP filenames and serves as an extra log of what parameters have been used.
 
