@@ -18,7 +18,6 @@ from .utils import (
     template_print_flagstats,
     repl_nans_jit,
     repl_zeros,
-    previous_good,
     statistical_noise_fir,
     template_guppi_format,
 )
@@ -177,7 +176,8 @@ class mitigateRFI:
 
             if self.repl_method == 'previousgood':
                 #replace data with previous (or next) good
-                data[:,:rlen,:] = previous_good(data[:,:rlen,:],flags_block,ts_factor)
+                print('Cannot replace with previous good data currently, switching to statistical noise')
+                data[:,:rlen,:] = statistical_noise_fir(data[:,:rlen,:],flags_block,ts_factor)
 
             if self.repl_method == 'stats':
                 #replace data with statistical noise derived from good datapoints
