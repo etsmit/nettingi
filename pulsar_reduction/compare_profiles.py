@@ -96,15 +96,15 @@ mit_n = np.std(mitigated_data_tp[nx_start:nx_end])
 print(unmit_n)
 print(mit_n)
 
-peak_diff = np.around( np.max(mitigated_data_tp) / np.max(unmitigated_data_tp), 2)
+peak_diff = int(100.*np.around( np.max(mitigated_data_tp) / np.max(unmitigated_data_tp), 2))
 
 mit_sn = np.max(mitigated_data_tp) / mit_n
 unmit_sn = np.max(unmitigated_data_tp) / unmit_n
 
-sn_diff = np.around(mit_sn / unmit_sn,2)
+sn_diff = int(100.*np.around(mit_sn / unmit_sn,2))
 
-print(f'Difference in peak power: {peak_diff}')
-print(f'Difference in S/N: {sn_diff}')
+print(f'Difference in peak power: {peak_diff} %')
+print(f'Difference in S/N: {sn_diff} %')
 
 
 c_red = '#FF0000'

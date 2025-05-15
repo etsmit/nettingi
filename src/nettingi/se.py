@@ -7,6 +7,7 @@ import scipy.optimize
 import scipy.special
 import math as math
 from blimpy import GuppiRaw
+import matplotlib.pyplot as plt
 
 from .core import mitigateRFI
 
@@ -14,7 +15,7 @@ from .utils import *
 
 from numba import jit
 
-import tqdm
+from tqdm import tqdm
 
 
 class rfi_se(mitigateRFI):
@@ -38,21 +39,21 @@ class rfi_se(mitigateRFI):
 
         self._outfile_pattern = f"m{self.SE_m}_s{self.sigma}"    
 
-        self.infile_raw_full, self.outfile_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
+        self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir,self.output_unmit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
         self._rawFile = GuppiRaw(self.infile_raw_full)
         # any separate results filenames you need, in addition to the flags filename, put them here
         self.npybase = self.infile[:-4]
         
-        self._flags_filename = f"{self.output_srdp_dir}{self.npybase}_flags_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._spect_filename = f"{self.output_srdp_dir}{self.npybase}_spect_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._regen_filename = f"{self.output_srdp_dir}{self.npybase}_regen_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._flags_filename = f"{self.output_mit_srdp_dir}{self.npybase}_flags_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._spect_filename = f"{self.output_mit_srdp_dir}{self.npybase}_spect_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._regen_filename = f"{self.output_mit_srdp_dir}{self.npybase}_regen_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
 
         #self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_mb{self.mb}_{self.cust}{infile[-4:]}"
         
         
         #any derived thresholds/arrays
-        self._zsc_filename = f"{self.output_srdp_dir}{self.npybase}_zsc_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._zsc_filename = f"{self.output_mit_srdp_dir}{self.npybase}_zsc_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
         out = f"""input: {self.infile_raw_full}\noutput: {self.outfile_raw_full}\nspect: {self._spect_filename}"""
         print(out)
@@ -101,9 +102,7 @@ def getHs(a,bins):
     numi,bins,patches = plt.hist(a.imag, bins=bins)
     numi /= np.sum(numi)
     pdfi = get_gaussfit(bins,numi)
-    
     outH = np.sum(-pdfr*np.log(pdfr)) + 1.j*np.sum(-pdfi*np.log(pdfi))
-    
     outHbase=(0.5*(1+np.log(2*np.pi*np.var(a.real)))) + 1.j*(0.5*(1+np.log(2*np.pi*np.var(a.imag))))
 
     return outH, outHbase

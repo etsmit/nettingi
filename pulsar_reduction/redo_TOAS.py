@@ -1,4 +1,5 @@
-import os,sys
+import os
+import sys
 import numpy as np
 
 
@@ -7,11 +8,20 @@ import numpy as np
 basenm = sys.argv[1]
 parfile = sys.argv[2]
 
-arg1 = f"pat -F -f princeton -s {basenm}_fold_sum.std {basenm}_fold_sum.fscr > toas_new.tim"
+arg1 = f"pat -F -f princeton -s {basenm}_fold_sum.std {basenm}_fold_sum.fscr > toas.tim"
 #arg1 = "pat -F -f princeton -s vegas_58966_24098_J1713+0747_0072.0000_fold_sum.std vegas_58966_24098_J1713+0747_0072.0000_fold_sum.fscr > toas_new.tim"
 print(arg1)
 os.system(arg1)
 
+
+#have to remove the last TOA, it is not calculated correctly in some cases.
+f = open("toas.tim",'r')
+t = open('toas_new.tim','x')
+lines = f.readlines()
+for line in lines[:-1]:
+    t.write(line)
+f.close()
+t.close()
 
 
 arg2 = f"tempo -f {parfile} toas_new.tim"
