@@ -7,14 +7,22 @@ While these algorithms are intended for real-time RFI mitigation use, some (like
 
 ## Installing ``nettingi``
 
-``nettingi`` works with Python 3.9.
+``nettingi`` works with Python 3.9. To start a conda environment and enable it for Jupyter notebooks, type in bash:
+
+```bash
+$ conda create --name [env name] -python=3.9
+$ conda activate [env name]
+$ pip install ipython
+$ pip install jupyter
+$ python -m ipykernel install --user --name [env name] --display-name [env name]
+```
 
 ### From GitHub
 
 To install from github:
 
 ```bash
-    $ git clone git@github.com:kaitlynchen1/nettingi.git
+    $ git clone git@github.com:etsmit/nettingi.git
     $ cd nettingi
     $ pip install -e .
 ```
@@ -37,7 +45,7 @@ To install from github:
 ```
 
 ## Quickstart
-After installation, ``nettingi`` can be used in a python environment. The most basic use has default settings for RFI mitigation. There are more complex example uses in the [notebooks folder](https://github.com/kaitlynchen1/nettingi/blob/kait-dev/notebooks/running.ipynb).
+After installation, ``nettingi`` can be used in a python environment. The most basic use has default settings for RFI mitigation. There are more complex example uses in the [notebooks folder](https://github.com/etsmit/nettingi/tree/main/notebooks).
 
 ### In Jupyter Notebooks
 Note that ``filename`` is the file path to the data with RFI you want to mitigate and ``replacement`` is either ``nans`` or ``noise`` depending on what the RFI should be replaced with.
