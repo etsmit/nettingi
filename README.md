@@ -43,21 +43,59 @@ After installation, ``nettingi`` can be used in a python environment. The most b
 Note that ``filename`` is the file path to the data with RFI you want to mitigate and ``replacement`` is either ``nans`` or ``noise`` depending on what the RFI should be replaced with.
 #### IQRM
 ```
-    rfimit = importlib.import_module('rfi-mitigation')
-    running = rfimit.rfi_iqrm(filename)
+    running = rfimit.rfi_iqrm(filename, ...)
     running.run_all()
 ```
 
 #### SK
 ```
-    rfimit = importlib.import_module('rfi-mitigation')
-    running = rfimit.rfi_sk(filename)
+    running = rfimit.rfi_sk(filename, ...)
     running.run_all()
 ```
 
 #### AOF
 ```
-    rfimit = importlib.import_module('rfi-mitigation')
-    running = rfimit.rfi_aof(filename)
+    running = rfimit.rfi_aof(filename, ...)
     running.run_all()
 ```
+
+## Github Etiquette
+
+This code is maintained and improved by creating your own branch for each feature/bug fix/etc. and opening a Pull Request back to `main`. To keep your code and your PR's up to date, here are the steps:
+
+1. Go to the base directory of the repository and update your main branch
+```bash
+$ cd nettingi
+$ git pull origin main
+```
+
+2. Make a new branch and switch to it. For example, I recently added 2-dimensional flagging to the IQRM algorithm. Branch names should be short but informational, with spaces between words as "-".
+```bash
+$ git branch iqrm-2d
+$ git checkout iqrm-2d
+```
+
+3. At this point, make any changes to the code you wish. Once you are satisfied with your progress (with any level of granularity) you can make "commits" by adding your changes to the staging area with `git add` and sending a commit with `git commit`. Make sure you are still in the base directory. You can preview your changes before adding them to the staging area with `git diff`.
+
+```bash
+$ git diff
+$ git add .
+$ git commit -m "2D IQRM implemented"
+```
+4. Once you are satisfied with your local changes, push them to the Github repository.
+
+```bash
+$ git push origin iqrm-2d
+```
+
+5. Finally, on Github, create a pull request to the `main` branch. Github will automatically check for conflicts, which shouldn't really happen. After this check, you will technically be allowed to merge your branch but it is reccommended that someone reviews the PR before that happens.
+
+
+
+
+
+
+
+
+
+
