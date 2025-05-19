@@ -2,21 +2,10 @@
 #These should be used in all mitigateRFI variants
 
 import numpy as np
-import os,sys
-
-import scipy as sp
-import scipy.optimize
-import scipy.special
-
-import matplotlib.pyplot as plt
+import os
+import sys
 
 from numba import jit,prange
-
-from tqdm import tqdm
-import iqrm
-import aoflagger
-
-#from statsmodels.stats.weightstats import DescrStatsW
 
 
 
@@ -81,7 +70,10 @@ def template_bookkeeping(infile,out_patt,det):
 #     #== input stuff ==
 #     #these paths should all exist, so no mkdirs needed
 #     #if they don't exist, 
-    input_raw_dir_base = '/jetstor/scratch/rfimit/unmitigated/rawdata'
+    if infile[0] == "/":
+        input_raw_dir_base = infile[:infile.rfind('/')+1]
+    else:
+        input_raw_dir_base = '/jetstor/scratch/rfimit/unmitigated/rawdata'
     infile_base = infile[infile.rfind('/')+1:infile.find('.')]
     print(infile,infile_base)
     
@@ -97,13 +89,13 @@ def template_bookkeeping(infile,out_patt,det):
     output_raw_dir = f'{output_raw_dir_base}/{output_base}/'
     if not os.path.exists(output_raw_dir):
         os.system(f'mkdir {output_raw_dir}')
-    outfile_raw_full = f'{output_raw_dir}{infile_base[:-4]}_{det}_{out_patt}.raw'
+    outfile_raw_full = f'{output_raw_dir}{infile[:-4]}_{det}_{out_patt}.raw'
 
     #get srdp results directory for mitigated file
     output_mit_srdp_dir_base = '/jetstor/scratch/rfimit/mitigated/reduced'
     if not os.path.exists(f'{output_mit_srdp_dir_base}/{output_base}'):
         os.system(f'mkdir {output_mit_srdp_dir_base}/{output_base}')
-    output_mit_srdp_dir = f'{output_mit_srdp_dir_base}/{output_base}/{infile_base[:-4]}_{det}_{out_patt}/'
+    output_mit_srdp_dir = f'{output_mit_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
     if not os.path.exists(output_mit_srdp_dir):
         os.system(f'mkdir {output_mit_srdp_dir}')
 
@@ -111,7 +103,7 @@ def template_bookkeeping(infile,out_patt,det):
     output_unmit_srdp_dir_base = '/jetstor/scratch/rfimit/unmitigated/reduced'
     if not os.path.exists(f'{output_unmit_srdp_dir_base}/{output_base}'):
         os.system(f'mkdir {output_unmit_srdp_dir_base}/{output_base}')
-    output_unmit_srdp_dir = f'{output_unmit_srdp_dir_base}/{output_base}/{infile_base[:-4]}_{det}_{out_patt}/'
+    output_unmit_srdp_dir = f'{output_unmit_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
     if not os.path.exists(output_unmit_srdp_dir):
         os.system(f'mkdir {output_unmit_srdp_dir}')
 
@@ -392,7 +384,6 @@ def statistical_noise_alt_fir(a,f,SK_M):
 	hfile = '/users/esmith/RFI_MIT/PFBcoeffs/c0800x'+nchan+'_x14_7_24t_095binw_get_pfb_coeffs_h.npy'
 	h = np.load(hfile)
 	dec = h[::2*f.shape[0]]
-	orig = np.copy(a)
 
 	for pol in prange(f.shape[2]):
 		for i in prange(f.shape[0]):
@@ -400,8 +391,6 @@ def statistical_noise_alt_fir(a,f,SK_M):
 				if f[i,SK_M*tb,pol] == 1:
 			#find clean data points from same channel and polarization
 			#good_data = a[i,:,pol][f[i,:,pol] == 0]
-			#how many data points do we need to replace
-					bad_data_size = SK_M
  
 			#print(a[:,:,pol].shape,f[:,:,pol].shape)
 					ave_real,ave_imag,std_real,std_imag = adj_chan_good_data_alt(a[:,tb*SK_M:(tb+1)*SK_M,pol],f[:,tb*SK_M:(tb+1)*SK_M,pol],i,SK_M,tb)
@@ -572,15 +561,6 @@ def template_calc_std(data,m):
     out[:,:,1] = np.nanstd(step1_p1,axis=2)
     return out
 
-def iqrm_power(data, radius, threshold):
-    data = np.abs(data)**2
-    flag_chunk = np.zeros(data.shape)
-    for i in tqdm(range(data.shape[2])): # iterate through polarizations
-        for j in range(data.shape[0]): # iterate through channels
-            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius, threshold = threshold)[0]
-    
-#     avg_post = 
-    return flag_chunk
     
 
 

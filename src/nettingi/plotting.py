@@ -9,7 +9,7 @@ matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 
 import pickle
-import glob
+import glob  # noqa: F401
 
 
 ten_clrs = ["#3f90da", "#ffa90e", "#bd1f01", "#94a4a2", "#832db6", "#a96b59", "#e76300", "#b9ac70", "#717581", "#92dadd"]
@@ -122,7 +122,7 @@ def load_raw_flags(pattern,M):
 
 
     init_f = np.load(infiles[0])
-    out_f = np.empty((f.shape[0],f.shape[1]*len(infiles)/M,f.shape[2]))
+    out_f = np.empty((init_f.shape[0],init_f.shape[1]*len(infiles)/M,init_f.shape[2]))
 
     for i in range(len(infiles)):
 

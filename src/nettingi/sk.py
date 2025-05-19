@@ -1,7 +1,4 @@
 #h
-
-
-
 import numpy as np
 
 import scipy as sp
@@ -11,54 +8,57 @@ import math as math
 from blimpy import GuppiRaw
 
 from .core import mitigateRFI
+from numba import prange
 
-from .utils import *
+from .utils import (
+    template_bookkeeping,
+    )
 
-
-spec = [
- 'SK_detection',
- 'SK_m',
- 'SK_thresholds',
- '_SK_p',
- '_flags_filename',
- '_jetstor_dir',
- '_lt',
- '_ms_lt',
- '_ms_sk_filename',
- '_ms_ut',
- '_out_dir',
- '_outfile',
- '_outfile_pattern',
- '_rawFile',
- '_regen_filename',
- '_spect_filename',
- '_ss_sk_filename',
- '_ut',
- 'ave_factor',
- 'cust',
- 'd',
- 'det_method',
- 'flags_all',
- 'in_dir',
- 'infile',
- 'lowerRoot',
- 'mb',
- 'ms0',
- 'ms1',
- 'ms_sk_all',
- 'mssk',
- 'multi_scale_SK_EST',
- 'n',
- 'output_bool',
- 'rawdata',
- 'regen_all',
- 'repl_method',
- 'run_all',
- 'sigma',
- 'single_scale_SK_EST',
- 'spect_all',
- 'ss_sk_all',
- 'upperRoot']
+#for object-based JIT compile
+# spec = [
+#  'SK_detection',
+#  'SK_m',
+#  'SK_thresholds',
+#  '_SK_p',
+#  '_flags_filename',
+#  '_jetstor_dir',
+#  '_lt',
+#  '_ms_lt',
+#  '_ms_sk_filename',
+#  '_ms_ut',
+#  '_out_dir',
+#  '_outfile',
+#  '_outfile_pattern',
+#  '_rawFile',
+#  '_regen_filename',
+#  '_spect_filename',
+#  '_ss_sk_filename',
+#  '_ut',
+#  'ave_factor',
+#  'cust',
+#  'd',
+#  'det_method',
+#  'flags_all',
+#  'in_dir',
+#  'infile',
+#  'lowerRoot',
+#  'mb',
+#  'ms0',
+#  'ms1',
+#  'ms_sk_all',
+#  'mssk',
+#  'multi_scale_SK_EST',
+#  'n',
+#  'output_bool',
+#  'rawdata',
+#  'regen_all',
+#  'repl_method',
+#  'run_all',
+#  'sigma',
+#  'single_scale_SK_EST',
+#  'spect_all',
+#  'ss_sk_all',
+#  'upperRoot']
 
 
 
@@ -274,12 +274,12 @@ class rfi_sk(mitigateRFI):
         moment_3 = float(( 8*(M**3)*Nd * (1 + Nd) * (-2 + Nd * (-5 + M * (4+Nd))) )) / ( ((M-1)**2) * (2+M*Nd) *(3+M*Nd)*(4+M*Nd)*(5+M*Nd))
         moment_4 = float(( 12*(M**4)*Nd*(1+Nd)*(24+Nd*(48+84*Nd+M*(-32+Nd*(-245-93*Nd+M*(125+Nd*(68+M+(3+M)*Nd)))))) )) / ( ((M-1)**3)*(2+M*Nd)*(3+M*Nd)*(4+M*Nd)*(5+M*Nd)*(6+M*Nd)*(7+M*Nd) )
         #Pearson Type III Parameters
-        delta = moment_1 - ( (2*(moment_2**2))/moment_3 )
+        delta = moment_1 - ( (2*(moment_2**2))/moment_3 )  # noqa: F841
         beta = 4 * ( (moment_2**3)/(moment_3**2) )
         alpha = moment_3 / (2 * moment_2)
         beta_one = (moment_3**2)/(moment_2**3)
         beta_two = (moment_4)/(moment_2**2)
-        error_4 = np.abs( (100 * 3 * beta * (2+beta) * (alpha**4)) / (moment_4 - 1) )
+        error_4 = np.abs( (100 * 3 * beta * (2+beta) * (alpha**4)) / (moment_4 - 1) )  # noqa: F841
         kappa = float( beta_one*(beta_two+3)**2 ) / ( 4*(4*beta_two-3*beta_one)*(2*beta_two-3*beta_one-6) )
         print('kappa: {}'.format(kappa))
         x = [1]
