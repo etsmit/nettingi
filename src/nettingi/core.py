@@ -125,6 +125,9 @@ class mitigateRFI:
                 else:
                     self.zsc_all = np.concatenate((self.zsc_all, zsc_block),axis=1)
 
+            elif self.det_method == 'Conv':
+                flags_block = self.conv_detection(data)
+
             #***********************************************
             #===============================================
 
@@ -147,7 +150,7 @@ class mitigateRFI:
 
 
 
-            #print(f'MEM: spect: {self.spect_all.nbytes/1e9} // flags: {self.flags_all.nbytes/1e9}')
+             #print(f'MEM: spect: {self.spect_all.nbytes/1e9} // flags: {self.flags_all.nbytes/1e9}')
             mu = pp.memory_info()
             print(f'Total RAM usage: {mu[0]/2.**30} GB')
             #track flags
