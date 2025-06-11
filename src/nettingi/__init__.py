@@ -20,3 +20,4 @@ from .iqrmrfi import *
 from .aof import *
 from .mad import *
 from .se import *
+from .ConvRFIrfi import *
