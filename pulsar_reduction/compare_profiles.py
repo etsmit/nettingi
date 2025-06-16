@@ -65,11 +65,16 @@ unmitigated_data = unmitigated_archive.get_data().squeeze()
 unmitigated_data_tp = unmitigated_data[0] + unmitigated_data[1]
 #unmitigated_data_tp = np.roll(unmitigated_data_tp,-1024)
 if args.align:
-    shift = measure_phase(unmitigated_data_tp,mitigated_data_tp)[0]
-    unmitigated_data_tp = fft_rotate(unmitigated_data_tp,-shift)
+    # shift = measure_phase(unmitigated_data_tp,mitigated_data_tp)[0]
+    # unmitigated_data_tp = fft_rotate(unmitigated_data_tp,-shift/2)
+    shift = np.argmax(mitigated_data_tp) - np.argmax(unmitigated_data_tp)
+    print(shift)
+    mitigated_data_tp = np.roll(mitigated_data_tp,-shift)
 residual = mitigated_data_tp-unmitigated_data_tp
 bins = np.arange(mitigated_archive.get_nbin())
 phase = np.linspace(0,1,len(bins))
+
+
 
 #calculate difference in peak flux / noise
 

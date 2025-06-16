@@ -7,19 +7,26 @@ from presto import rfifind
 import warnings
 warnings.filterwarnings("ignore")
 
+
 parser = ArgumentParser()
-parser.add_argument("-m","--mitigated",required=True,help="mitigated mask")
-parser.add_argument("-u","--unmitigated",required=True,help="unmitigated mask")
+parser.add_argument("-f","--filename",required=True,
+                    help="base filename")
 args = parser.parse_args()
 
-mitigated_mask = rfifind.rfifind(args.mitigated)
+mitigated_fnm = f'{args.filename}_rfifind.mask'
+unmitigated_fnm = f'/jetstor/scratch/rfimit/unmitigated/reduced/{args.filename}.raw/{args.filename}_rfifind.mask'
+
+
+
+
+mitigated_mask = rfifind.rfifind(mitigated_fnm)
 mitigated_byte_mask = np.fromfile(
-    args.mitigated.replace(".mask",".bytemask"),dtype=np.int8)
+    mitigated_fnm.replace(".mask",".bytemask"),dtype=np.int8)
 mitigated_byte_mask = mitigated_byte_mask.reshape(
     (mitigated_mask.nint,mitigated_mask.nchan)).astype(bool).astype(int)
-unmitigated_mask = rfifind.rfifind(args.unmitigated)
+unmitigated_mask = rfifind.rfifind(unmitigated_fnm)
 unmitigated_byte_mask = np.fromfile(
-    args.unmitigated.replace(".mask",".bytemask"),dtype=np.int8)
+    unmitigated_fnm.replace(".mask",".bytemask"),dtype=np.int8)
 unmitigated_byte_mask = unmitigated_byte_mask.reshape(
     (unmitigated_mask.nint,unmitigated_mask.nchan)).astype(bool).astype(int)
 
@@ -59,7 +66,7 @@ ax2.set_ylabel("Time (s)")
 fig.suptitle("Mask Difference")
 fig.tight_layout()
 plt.savefig(
-    f"{os.path.basename(args.mitigated).replace('.mask','_mask_comparison.png')}",
+    f"{os.path.basename(mitigated_fnm).replace('.mask','_mask_comparison.png')}",
     dpi=300,bbox_inches="tight")
 plt.show()
 plt.close()
@@ -89,7 +96,7 @@ ax2b.plot(
 ax2b.set_xlabel("Time (s)")
 fig.tight_layout()
 plt.savefig(
-    f"{os.path.basename(args.mitigated).replace('.mask','_masked_fraction_comparison.png')}",
+    f"{os.path.basename(mitigated_fnm).replace('.mask','_masked_fraction_comparison.png')}",
     dpi=300,bbox_inches="tight")
 plt.show()
 plt.close()
