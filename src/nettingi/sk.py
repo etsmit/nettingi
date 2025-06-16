@@ -219,8 +219,8 @@ class rfi_sk(mitigateRFI):
 
 
         #make multiscale S1, S2
-        for ichan in prange(self.ms0):
-                for itime in prange(self.ms1):
+        for ichan in range(self.ms0):
+                for itime in range(self.ms1):
                         ms_s1 += (1./ms_binsize) * (s1[ichan:ichan+(s.shape[0]-(self.ms0-1)),itime:itime+(num_SKbins-(self.ms1-1)),:])
                         ms_s2 += (1./ms_binsize) * (s2[ichan:ichan+(s.shape[0]-(self.ms0-1)),itime:itime+(num_SKbins-(self.ms1-1)),:])
         

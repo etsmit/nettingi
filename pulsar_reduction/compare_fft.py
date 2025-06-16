@@ -28,9 +28,9 @@ plt.semilogx(mitigated_freqs,20*np.log10(np.abs(mitigated_fft)),alpha=0.7,
              label="Mitigated")
 plt.semilogx(unmitigated_freqs,20*np.log10(np.abs(unmitigated_fft)),alpha=0.7,
              label="Unmitigated")
-for n in range(32):
-    label = "Pulsar w/ harmonics)" if n == 0 else "_nolegend_"
-    plt.axvline((n+1)*psr_freq,0.6,0.7,color="C3",label=label,zorder=-99)
+for n in range(16):
+    label = "Pulsar w/ harmonics" if n == 0 else "_nolegend_"
+    plt.axvline((n+1)*psr_freq,0.65,0.75,color="C3",label=label,zorder=-99)
 plt.legend()
 #plt.xlim(freqs.min(),freqs.max())
 plt.xlabel("Freq (Hz)")

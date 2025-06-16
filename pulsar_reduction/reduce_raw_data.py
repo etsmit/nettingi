@@ -380,6 +380,10 @@ def do_search(infiles,basenm,dm,low_dm,dm_step,ndms,nbits=8,nchan=None,
         cmd = "single_pulse_search.py -t 5.0 *%s_search*.singlepulse"%gs
         ret = execute(cmd, out=outfile, err=errfile)
 
+    # clean candidate lists
+    cmd = "python getcands.py {basenm}".format(**kwargs)
+    ret = execute(cmd, out=outfile, err=errfile)
+
     if parfile is not None:
         # Fold the full-resolution data
         ### TODO: CHANGE TO .fits WHEN DIGIFITS IS WORKING
@@ -659,16 +663,17 @@ def do_fold(infiles,basenm,parfile,dm,nbin=2048,nbits=8,nchan=None,cal_psr=None,
         
     # Run tempo
     cmd = "tempo -f {parfile} toas.tim".format(**kwargs)
-    ret = execute(cmd, out=outfile, err=errfile)
+    ret = execute(cmd, out=outfile, err=errfile)  # noqa: F841
+
 
     # Make a plot of the pre-fit residuals
-    r = residuals.read_residuals()
-    plt.errorbar(r.bary_TOA,r.prefit_sec*1e3,yerr=r.uncertainty*1e3,fmt=".")
-    plt.xlabel("MJD")
-    plt.ylabel("Residual (ms)")
-    plt.title("Pre-fit Residuals for {basenm}".format(**kwargs))
-    plt.savefig("{basenm}_residuals.png".format(**kwargs), dpi=300,
-                bbox_inches="tight", pad_inches=0.05)
+    # r = residuals.read_residuals()
+    # plt.errorbar(r.bary_TOA,r.prefit_sec*1e3,yerr=r.uncertainty*1e3,fmt=".")
+    # plt.xlabel("MJD")
+    # plt.ylabel("Residual (ms)")
+    # plt.title("Pre-fit Residuals for {basenm}".format(**kwargs))
+    # plt.savefig("{basenm}_residuals.png".format(**kwargs), dpi=300,
+    #             bbox_inches="tight", pad_inches=0.05)
     
 
 def main():
@@ -742,10 +747,14 @@ def main():
 
     # Fold the data
     if not args.no_fold:
-        print('Folding...')
-        do_fold(args.rawfiles,basenm,args.parfile,args.dm,args.nbin,nbits,
+        fold_successful = len(glob.glob("*fold*fits")) > 0
+        while not fold_successful:
+            print(fold_successful)
+            print('Folding...')
+            do_fold(args.rawfiles,basenm,args.parfile,args.dm,args.nbin,nbits,
                 nchan,args.cal_psr,args.fluxcal,args.fluxcal_on,
                 args.fluxcal_off,outfile,errfile)
+            fold_successful = len(glob.glob("*fold*fits")) > 0
 
     outfile.close()
     errfile.close()
