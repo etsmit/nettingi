@@ -3,7 +3,7 @@ from builtins import map
 import re
 import glob
 import presto.sifting as sifting
-from operator import itemgetter, attrgetter
+from operator import attrgetter
 
 # Note:  You will almost certainly want to adjust
 #        the following variables for your particular search

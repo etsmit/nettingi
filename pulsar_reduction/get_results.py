@@ -1,8 +1,7 @@
-import os,sys
-
-
+import os
 import argparse
 import time
+import numpy as np
 
 
 
@@ -13,7 +12,10 @@ parser.add_argument("-f","--filename",required=True,
                     help="base filename")
 parser.add_argument("-p","--parfile",required=True,
                     help="parfile name")
-
+parser.add_argument("-d","--dm",required=True,
+                    help="dispersion measure")                   
+parser.add_argument("-t","--period",required=True,
+                    help="pulsar period")  
 
 
 
@@ -37,7 +39,7 @@ def waitfornextstep():
 ######################################
 
 
-arg = f"python compare_rfi_masks.py -f {basenm}"
+arg = f"python compare_rfi_masks.py -f {basenm} -u {unmit_red_dir}"
 bash(arg)
 
 waitfornextstep()
@@ -46,7 +48,7 @@ waitfornextstep()
 #  profile comparison
 ######################################
 
-arg = f"python compare_profiles.py -f {basenm} -a"
+arg = f"python compare_profiles.py -f {basenm} -u {unmit_red_dir} -a"
 bash(arg)
 
 waitfornextstep()
@@ -55,10 +57,32 @@ waitfornextstep()
 #  TOAs comparison
 ######################################
 
-arg = f"python get_TOAS.py {basenm} {}"
+arg = f"python get_TOAS.py {basenm} {args.parfile} -u {unmit_red_dir}"
 bash(arg)
 
 waitfornextstep()
 
+######################################
+#  paz TOAs comparison
+######################################
 
+arg = f"python get_paz_TOAS.py {basenm} {args.parfile} -u {unmit_red_dir}"
+bash(arg)
+
+waitfornextstep()
+
+######################################
+#  candidate search comparison
+######################################
+
+#-p here is PERIOD, not PARFILE
+
+arg = f"python do_cands.py -f {basenm} -p {args.period} -u {unmit_red_dir} -d {args.dm}"
+bash(arg)
+
+waitfornextstep()
+
+stop_time = time.time()
+dur = np.around((stop_time - start_time)/60,2)
+print(f'duration: {dur} min')
 

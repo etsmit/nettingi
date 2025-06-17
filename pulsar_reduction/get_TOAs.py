@@ -1,24 +1,29 @@
 import os
-import sys
 import numpy as np
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-f","--filename",required=True,
+                    help="base filename")
+parser.add_argument("-u","--unmit_dir",required=True,
+                    help="unmitigated directory")
+parser.add_argument("-p","--parfile",required=True,
+                    help="parfile name")
+args = parser.parse_args()
 
 
-
-#basenm = "vegas_60299_76977_B0355+54_0009.0000"
-basenm = sys.argv[1]
-parfile = sys.argv[2]
-
-arg1 = f"pat -F -f princeton -s {basenm}_fold_sum.std {basenm}_fold_sum.fscr > toas.tim"
+arg1 = f"pat -F -f princeton -s {args.filename}_fold_sum.std {args.filename}_fold_sum.fscr > toas.tim"
 #arg1 = "pat -F -f princeton -s vegas_58966_24098_J1713+0747_0072.0000_fold_sum.std vegas_58966_24098_J1713+0747_0072.0000_fold_sum.fscr > toas_new.tim"
 print(arg1)
 os.system(arg1)
 
 
 #have to remove the last TOA, it is not calculated correctly in some cases.
+#sometimes have to remove the first TOA too
 f = open("toas.tim",'r')
 try:
     t = open('toas_new.tim','x')
-except:
+except:  # noqa: E722
     os.system('rm toas_new.tim')
     t = open('toas_new.tim','x')
 lines = f.readlines()
@@ -28,22 +33,12 @@ f.close()
 t.close()
 
 
-arg2 = f"tempo -f {parfile} toas_new.tim"
-#arg2 = "tempo -f J1713+0747.par toas_new.tim"
-#arg2 = "tempo -f B0355+54.par toas_new.tim"
+arg2 = f"tempo -f {args.parfile} toas_new.tim"
 print(arg2)
 os.system(arg2)
 
 
-
-unmit_toas = f"/data/scratch/SKresults/pulsar/{basenm}.raw/toas_new.tim"
-unmit_toas = f"/jetstor/scratch/rfimit/unmitigated/reduced/{basenm}.raw/toas_new.tim"
-#unmit_toas = "/data/scratch/SKresults/pulsar/vegas_60299_75914_B0329+54_0003.0000.raw/toas_new.tim"
-#unmit_toas = "/data/scratch/SKresults/pulsar/vegas_60299_75544_B0329+54_0001.0000.raw/toas_new.tim"
-#unmit_toas = "/data/scratch/SKresults/pulsar/vegas_58966_25728_J1713+0747_0080.0000.raw/toas_new.tim"
-#unmit_toas = "/data/scratch/SKresults/pulsar/vegas_58966_24913_J1713+0747_0076.0000.raw/toas_new.tim"
-#unmit_toas = "/data/scratch/SKresults/pulsar/vegas_58966_24098_J1713+0747_0072.0000.raw/toas_new.tim"
-
+unmit_toas = f"{args.unmit_dir}toas_new.tim"
 
 mit_toas = "toas_new.tim"
 
