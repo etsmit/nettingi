@@ -6,8 +6,8 @@ import os
 import sys
 
 from numba import jit,prange
-
-
+import nettingi
+import glob
 
 #get the template arguments
 def template_parse(parser):
@@ -99,21 +99,28 @@ def template_bookkeeping(infile,out_patt,det):
     if not os.path.exists(output_mit_srdp_dir):
         os.system(f'mkdir {output_mit_srdp_dir}')
 
+    template_set_up_pulsar_reduction(output_mit_srdp_dir)
+
     #get srdp results directory for unmitigated file
-    output_unmit_srdp_dir_base = '/jetstor/scratch/rfimit/unmitigated/reduced'
-    if not os.path.exists(f'{output_unmit_srdp_dir_base}/{output_base}'):
-        os.system(f'mkdir {output_unmit_srdp_dir_base}/{output_base}')
-    output_unmit_srdp_dir = f'{output_unmit_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
-    if not os.path.exists(output_unmit_srdp_dir):
-        os.system(f'mkdir {output_unmit_srdp_dir}')
+    # output_unmit_srdp_dir_base = '/jetstor/scratch/rfimit/unmitigated/reduced'
+    # if not os.path.exists(f'{output_unmit_srdp_dir_base}/{output_base}'):
+    #     os.system(f'mkdir {output_unmit_srdp_dir_base}/{output_base}')
+    # output_unmit_srdp_dir = f'{output_unmit_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
+    # if not os.path.exists(output_unmit_srdp_dir):
+    #     os.system(f'mkdir {output_unmit_srdp_dir}')
 
     print(infile_raw_full)
     print(outfile_raw_full)
     print(output_mit_srdp_dir)
-    print(output_unmit_srdp_dir)
-    return infile_raw_full, outfile_raw_full, output_mit_srdp_dir, output_unmit_srdp_dir
+    #print(output_unmit_srdp_dir)
+    return infile_raw_full, outfile_raw_full, output_mit_srdp_dir
 
-
+def template_set_up_pulsar_reduction(output_mit_srdp_dir):
+    psr_redux_dir = f"{nettingi.__file__[:-24]}pulsar_reduction/"
+    psr_redux_scripts = glob.glob(f"{psr_redux_dir}*")
+    for script in psr_redux_scripts:
+        os.system(f"ln -s {script} {output_mit_srdp_dir}")
+    
 
 #check that the outfile doesn't already exist, ask for overwrite confirmation 
 def template_check_outfile(infile,outfile):

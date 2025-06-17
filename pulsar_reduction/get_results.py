@@ -6,14 +6,12 @@ import numpy as np
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-a", "--align",action="store_true",
-                    help="Try to align profiles")
 parser.add_argument("-f","--filename",required=True,
                     help="base filename")
 parser.add_argument("-p","--parfile",required=True,
                     help="parfile name")
 parser.add_argument("-d","--dm",required=True,
-                    help="dispersion measure")                   
+                    help="dispersion measure")
 parser.add_argument("-t","--period",required=True,
                     help="pulsar period")  
 
