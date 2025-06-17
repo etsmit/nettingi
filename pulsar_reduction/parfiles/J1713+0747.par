@@ -1,0 +1,68 @@
+PSR              1713+0747
+LAMBDA   256.6686952270867  0     0.0000000019137
+BETA      30.7003605417820  0     0.0000000032909
+PMLAMBDA            5.2656  0              0.0017
+PMBETA             -3.4637  0              0.0035
+PX                  0.7536  0              0.0221
+POSEPOCH        55391.0000
+F0    218.8118437256561606  0  0.0000000000000619
+F1     -4.083778249366D-16  0  4.314355865180D-22
+PEPOCH        57387.000000
+START            53393.560
+FINISH           57387.663
+DM               15.992196
+SOLARN0               0.00
+EPHEM               DE436
+ECL                 IERS2010
+CLK                 TT(BIPM2015)                    
+UNITS               TDB
+TIMEEPH             FB90
+T2CMETHOD           TEMPO
+CORRECT_TROPOSPHERE N
+PLANET_SHAPIRO      N
+DILATEFREQ          N
+NTOA                 27571
+TRES                  0.53
+TZRMJD  57387.62152169417472
+TZRFRQ            1609.989
+TZRSITE                  AO
+MODE                     1
+NITS                     1
+INFO -f                              
+BINARY            DDK     
+A1            32.342424278  0         0.000000090
+E             0.0000749370  0        0.0000000005
+T0        57355.7640964116  0        0.0002153353
+PB       67.82512990450239  0    0.00000000257989
+OM        176.193739913315  0      0.001142931970
+M2                0.240703  0            0.008047
+KOM                 62.583  0               2.801
+KIN                 74.483  0               0.489
+K96                         0
+T2EFAC -f Rcvr_800_GUPPI   1.067
+T2EFAC -f Rcvr1_2_GASP   1.079
+T2EFAC -f L-wide_ASP   1.018
+T2EFAC -f Rcvr1_2_GUPPI   1.041
+T2EFAC -f S-wide_ASP   1.115
+T2EFAC -f Rcvr_800_GASP   1.085
+T2EFAC -f L-wide_PUPPI   1.088
+T2EFAC -f S-wide_PUPPI   1.116
+T2EQUAD -f Rcvr_800_GUPPI   0.04810
+T2EQUAD -f Rcvr1_2_GASP   0.04500
+T2EQUAD -f L-wide_ASP   0.02900
+T2EQUAD -f Rcvr1_2_GUPPI   0.00040
+T2EQUAD -f S-wide_ASP   0.00010
+T2EQUAD -f Rcvr_800_GASP   0.13430
+T2EQUAD -f L-wide_PUPPI   0.01240
+T2EQUAD -f S-wide_PUPPI   0.01580
+ECORR -f L-wide_ASP   0.09480
+ECORR -f L-wide_PUPPI   0.08870
+ECORR -f Rcvr1_2_GASP   0.09260
+ECORR -f Rcvr1_2_GUPPI   0.07860
+ECORR -f Rcvr_800_GASP   0.01630
+ECORR -f Rcvr_800_GUPPI   0.26400
+ECORR -f S-wide_ASP   0.11770
+ECORR -f S-wide_PUPPI   0.09570
+JUMP -fe Rcvr1_2       0.000003428  1       0.000000035
+JUMP -fe L-wide       0.000013615  1       0.000000036
+JUMP -fe S-wide       0.000023183  1       0.000000039

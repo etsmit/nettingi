@@ -99,7 +99,7 @@ def template_bookkeeping(infile,out_patt,det):
     if not os.path.exists(output_mit_srdp_dir):
         os.system(f'mkdir {output_mit_srdp_dir}')
 
-    template_set_up_pulsar_reduction(output_mit_srdp_dir)
+    template_set_up_pulsar_reduction(output_mit_srdp_dir,infile_base)
 
     #get srdp results directory for unmitigated file
     # output_unmit_srdp_dir_base = '/jetstor/scratch/rfimit/unmitigated/reduced'
@@ -115,11 +115,18 @@ def template_bookkeeping(infile,out_patt,det):
     #print(output_unmit_srdp_dir)
     return infile_raw_full, outfile_raw_full, output_mit_srdp_dir
 
-def template_set_up_pulsar_reduction(output_mit_srdp_dir):
+def template_set_up_pulsar_reduction(output_mit_srdp_dir, infile_base):
     psr_redux_dir = f"{nettingi.__file__[:-24]}pulsar_reduction/"
     psr_redux_scripts = glob.glob(f"{psr_redux_dir}*")
     for script in psr_redux_scripts:
         os.system(f"ln -s {script} {output_mit_srdp_dir}")
+    psr = infile_base[18:23]
+    if psr == 'J1713':
+        os.system(f"ln -s {psr_redux_dir}parfiles/J1713+0747.par {output_mit_srdp_dir}")
+    if psr == 'B0329':
+        os.system(f"ln -s {psr_redux_dir}parfiles/B0329+54.par {output_mit_srdp_dir}")
+    if psr == 'B0355':
+        os.system(f"ln -s {psr_redux_dir}parfiles/B0355+54.par {output_mit_srdp_dir}")
     
 
 #check that the outfile doesn't already exist, ask for overwrite confirmation 

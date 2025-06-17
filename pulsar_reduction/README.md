@@ -43,7 +43,17 @@ bogos binted
 
 On the `leibniz` machine, the SRDPs corresponding to the mitigated data can be found at `/jetstor/scratch/rfimit/mitigated/reduced/`. From there, navigate to the folder that matches the output filename pattern you specified in your RFI mitigation. These filenames and paths are all printed out as part of the RFI mitigation, so if you still have that terminal up, you can use those for reference. Keep in mind that the directory structure takes the scan first, then the file number, so you will have to go two directories down to see e.g. "scan 0004, file 0000". 
 
+Once you are in the SRDP directory, you should see a set of files:
 
+ * `.npy`: These correspond to the intermediate files made during RFI mitigation, and are the pre- and post- mitigation spectrograms, the flagging results, and any other intermediate files.
+ 
+ *`.py`: Pulsar reduction files. These will be used to do pulsar analysis. The method presribed below only requires running a few of these at the top level, but they are mostly all used under-the-hood and can be ran directly with the correct inputs.
+
+ *`.raw`: This is the RFI-mitigated baseband file which undergoes analysis. It is linked from `../../../rawdata/`.
+
+ Once you have activate the `psrenv` and NOT your own `nettingi`-enabled environment, you can run the following script:
+
+ `$ python pu
 
 
 
