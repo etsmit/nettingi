@@ -1,17 +1,13 @@
 import os
 import sys
-import copy
 import subprocess
 import glob
-import tempfile
 import argparse
 import numpy as np
-import matplotlib.pyplot as plt
 import time
 from operator import attrgetter
 from pathlib import Path
 from presto import sifting
-from presto import residuals
 from presto.presto import get_baryv
 from presto.infodata import infodata
 
@@ -43,12 +39,12 @@ def get_args():
                                     "(default=base name of input files)"))
     general_args.add_argument("-O", "--outdir", default=".",
                               help="Output directory (default=%(default)s")
-    general_args.add_argument("--outfile", default=None, 
-                              help=("File to which output is directed "
-                                    "(default=STDOUT)"))
-    general_args.add_argument("--errfile", default=None, 
-                              help=("File to which errors are directed "
-                                    "(default=STDERR)"))
+    # general_args.add_argument("--outfile", default=None, 
+    #                           help=("File to which output is directed "
+    #                                 "(default=STDOUT)"))
+    # general_args.add_argument("--errfile", default=None, 
+    #                           help=("File to which errors are directed "
+    #                                 "(default=STDERR)"))
     general_args.add_argument("-n", "--nchan", type=int, 
                               help="Number of channels to form "
                               "(default=number of coarse voltage channels)")
@@ -236,7 +232,7 @@ def do_search(infiles,basenm,dm,low_dm,dm_step,ndms,nbits=8,nchan=None,
     """
     from astropy.io import fits
     # infiles will be assumed to be a list later on
-    if type(infiles) is str: infiles = [infiles]
+    if type(infiles) is str: infiles = [infiles]  # noqa: E701
     # Make a dictionary of the function arguments.  This will make formatting
     # the commands a lot simpler
     kwargs = {"infiles":" ".join(infiles),"basenm":basenm,"dm":dm,
@@ -458,7 +454,7 @@ def do_search(infiles,basenm,dm,low_dm,dm_step,ndms,nbits=8,nchan=None,
 
                 cmd = ("prepfold -noxwin -timing {parfile} "
                        "{basenm}_topo_zerodm_DM{dm:.2f}.dat".format(**kwargs))
-                ret = execute(cmd, out=outfile, err=errfile)
+                ret = execute(cmd, out=outfile, err=errfile)  # noqa: F841
 
 
 def do_fold(infiles,basenm,parfile,dm,nbin=2048,nbits=8,nchan=None,cal_psr=None,
@@ -498,7 +494,7 @@ def do_fold(infiles,basenm,parfile,dm,nbin=2048,nbits=8,nchan=None,cal_psr=None,
     None
     """
     # infiles will be assumed to be a list later on
-    if type(infiles) is str: infiles = [infiles]
+    if type(infiles) is str: infiles = [infiles]  # noqa: E701
     # Make a dictionary of the function arguments.  This will make formatting
     # the commands a lot simpler
     kwargs = {"infiles":" ".join(infiles),"basenm":basenm,"dm":dm,
@@ -683,9 +679,15 @@ def main():
     start_time = time.time()
     
     args = get_args()
-    
+
+    #hack some defaults to ease the input for nettingi
+    args.no_zero_dm = True
+    args.no_topocentric = True
+    args.outfile = f"{args.basenm}.out"
+    args.errfile = f"{args.basenm}.err"
+
     # Switch to specified outdir
-    if not os.path.isdir(args.outdir): os.mkdir(args.outdir)
+    if not os.path.isdir(args.outdir): os.mkdir(args.outdir)  # noqa: E701
     os.chdir(args.outdir)
 
     # Parse the arguments that dont't have simple defaults
