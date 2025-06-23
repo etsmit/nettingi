@@ -1,5 +1,4 @@
 import os
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from argparse import ArgumentParser
@@ -56,15 +55,16 @@ def read_accelcands(filenm):
                     
 
 parser = ArgumentParser()
-parser.add_argument("-m","--mitigated",required=True,
-                    help="Mitigated .cands file")
-parser.add_argument("-u","--unmitigated",required=True,
-                    help="Unmitigated .cands file")
 parser.add_argument("-p", "--period", required=True,type=float,
                     help="Pulsar period (seconds)")
 parser.add_argument("-d", "--dm", required=True,type=float,
                     help="Pulsar DM (pc/cc)")
+parser.add_argument("-m","--mitigated",required=True,
+                    help="Mitigated .cands file")
+parser.add_argument("-u","--unmitigated",required=True,
+                    help="Unmitigated .cands file")
 args = parser.parse_args()
+
 
 center  = (1/args.period,args.dm)
 

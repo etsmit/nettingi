@@ -263,6 +263,8 @@ class mitigateRFI:
         #flagging stuff
         template_print_flagstats(self.flags_all, True)
 
+        #link final output raw file to srdp directory
+        os.system(f"ln -s {self.outfile_raw_full} {self.output_mit_srdp_dir}")
 
 
         #umm... done?

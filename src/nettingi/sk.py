@@ -8,7 +8,6 @@ import math as math
 from blimpy import GuppiRaw
 
 from .core import mitigateRFI
-from numba import prange
 
 from .utils import (
     template_bookkeeping,
@@ -86,7 +85,7 @@ class rfi_sk(mitigateRFI):
         self.ms1 = int(mssk.split(',')[1])
 
         self._outfile_pattern = f"m{self.SK_m}_s{self.sigma}_ms{self.ms0}-{self.ms1}_{self.repl_method}_{self.cust}"    
-        self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir, self.output_unmit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
+        self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
         self._rawFile = GuppiRaw(self.infile_raw_full)
         # any separate results filenames you need, in addition to the flags filename, put them here
         self.npybase = self.infile[:-4]

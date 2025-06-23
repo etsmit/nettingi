@@ -1,10 +1,8 @@
-import os
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 from psrchive import Archive_load
 from presto import fftfit
-from presto.psr_utils import fft_rotate
+#from presto.psr_utils import fft_rotate
 from argparse import ArgumentParser
 import warnings
 warnings.filterwarnings("ignore")
@@ -34,13 +32,15 @@ parser.add_argument("-a", "--align",action="store_true",
                     help="Try to align profiles")
 parser.add_argument("-f","--filename",required=True,
                     help="base filename")
+parser.add_argument("-u","--unmit_dir",required=True,
+                    help="unmitigated directory")
 
 args = parser.parse_args()
 
-print(f'/jetstor/scratch/rfimit/unmitigated/reduced/{args.filename}.raw/{args.filename}_fold_sum.fits')
+print(f'{args.unmit_dir}{args.filename}_fold_sum.fits')
 
 mitigated_archive = Archive_load(f'{args.filename}_fold_sum.fits')
-unmitigated_archive = Archive_load(f'/jetstor/scratch/rfimit/unmitigated/reduced/{args.filename}.raw/{args.filename}_fold_sum.fits')
+unmitigated_archive = Archive_load(f'{args.unmit_dir}{args.filename}_fold_sum.fits')
 
 mitigated_archive.dedisperse()
 unmitigated_archive.dedisperse()
@@ -133,10 +133,6 @@ ax.spines['bottom'].set_linewidth(ax_lw)
 ax.spines['top'].set_linewidth(ax_lw)
 ax.spines['left'].set_linewidth(ax_lw)
 ax.spines['right'].set_linewidth(ax_lw)
-
-
-
-
 
 
 ax.legend(fontsize=fontsz)

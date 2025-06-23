@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 from argparse import ArgumentParser
 from presto import rfifind
 import warnings
@@ -11,10 +10,12 @@ warnings.filterwarnings("ignore")
 parser = ArgumentParser()
 parser.add_argument("-f","--filename",required=True,
                     help="base filename")
+parser.add_argument("-u","--unmit_dir",required=True,
+                    help="unmitigated directory")
 args = parser.parse_args()
 
 mitigated_fnm = f'{args.filename}_rfifind.mask'
-unmitigated_fnm = f'/jetstor/scratch/rfimit/unmitigated/reduced/{args.filename}.raw/{args.filename}_rfifind.mask'
+unmitigated_fnm = f'{args.unmit_dir}{args.filename}_rfifind.mask'
 
 
 
