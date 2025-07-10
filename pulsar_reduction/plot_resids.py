@@ -1,18 +1,32 @@
-import os,sys
-import numpy as np
 import matplotlib.pyplot as plt
+import argparse
+
 
 from presto.residuals import read_residuals
 
-basenm = sys.argv[1]
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-f","--filename",required=True,
+                    help="base filename")
+# parser.add_argument("-u","--unmit_dir",required=True,
+#                     help="unmitigated directory")
+args = parser.parse_args()
 
 
-unmit_resid = f"/jetstor/scratch/rfimit/unmitigated/reduced/{basenm}.raw/resid2.tmp"
+unmit_red_dir = f'/jetstor/scratch/rfimit/unmitigated/reduced/{args.filename}.raw/'
+
+unmit_resid = f"{unmit_red_dir}resid2.tmp"
 mit_resid = "resid2.tmp"
 
 
 c_red = '#FF0000'
 c_bl = '#0000FF'
+alph = 0.5
+ax_lw=2
+fontsz = 18
+
+fig = plt.figure(figsize=(8,6))
+ax = fig.gca()
 
 ru = read_residuals(unmit_resid)
 
@@ -27,15 +41,25 @@ ym = rm.postfit_phs
 ym_err = rm.uncertainty
 
 
-plt.errorbar(xu,yu,yerr=yu_err,marker='.',color=c_bl,linestyle='',label='Unmitigated',alpha=0.5)
+ax.errorbar(xu,yu,yerr=yu_err,marker='.',color=c_bl,linestyle='',label='Unmitigated',alpha=0.5,markersize=8)
 
-plt.errorbar(xm,ym,yerr=ym_err,marker='.',color=c_red,linestyle='',label='Mitigated',alpha=0.5)
-plt.legend()
+ax.errorbar(xm,ym,yerr=ym_err,marker='.',color=c_red,linestyle='',label='Mitigated',alpha=0.5,markersize=8)
+ax.legend()
 
-plt.axhline(0,c='k')
+ax.axhline(0,c='k')
 
-plt.ylabel('Residuals (phase)')
-plt.xlabel('DMJD')
+ax.tick_params(axis='both',direction='in',width=2,length=8,top=True,right=True,pad=2,labelsize=fontsz)
+#ax.tick_params(axis='x',labelsize=1)
+ax.spines['bottom'].set_linewidth(ax_lw)
+ax.spines['top'].set_linewidth(ax_lw)
+ax.spines['left'].set_linewidth(ax_lw)
+ax.spines['right'].set_linewidth(ax_lw)
+
+
+ax.legend(fontsize=fontsz)
+ax.set_ylabel('Residuals (phase)',fontsize=fontsz)
+ax.set_xlabel('DMJD',fontsize=fontsz)
+plt.tight_layout()
 plt.show()
 
 
