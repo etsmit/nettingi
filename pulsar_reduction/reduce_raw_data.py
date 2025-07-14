@@ -512,18 +512,18 @@ def do_fold(infiles,basenm,parfile,dm,nbin=2048,nbits=8,nchan=None,cal_psr=None,
     # Fold the raw data using dspsr
     if nchan is not None:
         cmd = ("dspsr -t 8 -O {basenm}_fold -a psrfits -e fits -F {nchan}:D "
-               "-D {dm} -d 4 -b {nbin} -E {t2parfile} -A -nsub 32 -L 1.0 "
+               "-D {dm} -d 4 -b {nbin} -E {t2parfile} -A -nsub 1 -L 1.0 "
                "-U 8192 {infiles}".format(**kwargs))
     else:
         cmd = ("dspsr -t 8 -O {basenm}_fold -a psrfits -e fits "
-               "-D {dm} -d 4 -b {nbin} -E {t2parfile} -A -nsub 32 -L 1.0 "
+               "-D {dm} -d 4 -b {nbin} -E {t2parfile} -A -nsub 1 -L 1.0 "
                "-U 8192 {infiles}".format(**kwargs))
     ret = execute(cmd, out=outfile, err=errfile)
     cmd = ("psredit -m -c freq=1500.0,rcvr:hand=-1,be:phase=-1,rcvr:sa=-45deg "
            "*fold*")
     ret = execute(cmd, out=outfile, err=errfile)
     cmd = ("psradd -o {basenm}_fold_sum.fits -E {t2parfile} "
-           "*fold*.fits*".format(**kwargs))
+           "*fold_????.fits*".format(**kwargs))
     ret = execute(cmd, out=outfile, err=errfile)
 
     # If we have raw calibration data taken at the position of the pulsar, 
