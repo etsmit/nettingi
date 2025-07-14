@@ -86,7 +86,7 @@ class rfi_ConvRFI(mitigateRFI):
         self.a3 = a3
         
 
-        self._outfile_pattern = f"a0{self.a0}_a1{self.a1}_a2{self.a2}-_a3{self.a3}_{self.repl_method}_{self.cust}"    
+        self._outfile_pattern = f"a0_{self.a0}_a1_{self.a1}_a2_{self.a2}_a3_{self.a3}_{self.repl_method}_{self.cust}"    
         self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir, self.output_unmit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
         self._rawFile = GuppiRaw(self.infile_raw_full)
         # any separate results filenames you need, in addition to the flags filename, put them here
