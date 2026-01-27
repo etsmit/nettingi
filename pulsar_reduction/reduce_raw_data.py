@@ -742,10 +742,14 @@ def main():
     
     # Search the data
     if not args.no_search:
-        print('Searching...')
-        do_search(args.rawfiles,basenm,args.dm,low_dm,args.dm_step,ndms,nbits,
+        search_successful = len(glob.glob("*cands")) > 0
+        print(f"Are we searching? {not search_successful}")
+        while not search_successful:
+            print('Searching...')
+            do_search(args.rawfiles,basenm,args.dm,low_dm,args.dm_step,ndms,nbits,
                   nchan,args.tint,args.max_harms,args.zmax,args.parfile,
                   not args.no_zero_dm, not args.no_topocentric,outfile,errfile)
+            search_successful = len(glob.glob("*cands")) > 0
 
     # Fold the data
     if not args.no_fold:
