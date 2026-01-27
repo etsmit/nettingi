@@ -533,7 +533,7 @@ def do_fold(infiles,basenm,parfile,dm,nbin=2048,nbits=8,nchan=None,cal_psr=None,
         kwargs["cal_basenm"] = cal_basenm
         cmd = ("dspsr -t 8 -O {cal_basenm}_cal -a psrfits -e fits "
                "-F {nchan}:D -D 0.0 -K -d 4 -b {nbin} -c 0.04 -p 0 -A "
-               "-nsub 32 -L 1.0 -U 8192 {cal_psr}".format(**kwargs))
+               "-nsub 1 -L 1.0 -U 8192 {cal_psr}".format(**kwargs))
         ret = execute(cmd, out=outfile, err=errfile)
         cmd = "pam -m --type PolnCal {cal_basenm}_cal_0001.fits".format(
             **kwargs)
@@ -742,16 +742,20 @@ def main():
     
     # Search the data
     if not args.no_search:
-        print('Searching...')
-        do_search(args.rawfiles,basenm,args.dm,low_dm,args.dm_step,ndms,nbits,
+        search_successful = len(glob.glob("*cands")) > 0
+        print(f"Are we searching? {not search_successful}")
+        while not search_successful:
+            print('Searching...')
+            do_search(args.rawfiles,basenm,args.dm,low_dm,args.dm_step,ndms,nbits,
                   nchan,args.tint,args.max_harms,args.zmax,args.parfile,
                   not args.no_zero_dm, not args.no_topocentric,outfile,errfile)
+            search_successful = len(glob.glob("*cands")) > 0
 
     # Fold the data
     if not args.no_fold:
         fold_successful = len(glob.glob("*fold*fits")) > 0
+        print(f"Are we folding? {not fold_successful}")
         while not fold_successful:
-            print(fold_successful)
             print('Folding...')
             do_fold(args.rawfiles,basenm,args.parfile,args.dm,args.nbin,nbits,
                 nchan,args.cal_psr,args.fluxcal,args.fluxcal_on,

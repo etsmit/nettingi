@@ -35,7 +35,7 @@ except:  # noqa: E722
     os.system('rm toas_new.zap.tim')
     t = open('toas_new.zap.tim','x')
 lines = f.readlines()
-for line in lines[:-1]:
+for line in lines[2:-1]:
     t.write(line)
 f.close()
 t.close()
