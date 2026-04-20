@@ -73,7 +73,7 @@ def template_bookkeeping(infile,out_patt,det):
     if infile[0] == "/":
         input_raw_dir_base = infile[:infile.rfind('/')+1]
     else:
-        input_raw_dir_base = '/jetstor/scratch/rfimit/unmitigated/rawdata'
+        input_raw_dir_base = '/home/scratch/esmith/RFI_MIT/jetstor/scratch/rfimit/unmitigated/rawdata'
     infile_base = infile[infile.rfind('/')+1:infile.find('.')]
     print(infile,infile_base)
     
@@ -84,7 +84,7 @@ def template_bookkeeping(infile,out_patt,det):
 #     #== output stuff ==
 
     #get output raw data file
-    output_raw_dir_base = '/jetstor/scratch/rfimit/mitigated/rawdata'
+    output_raw_dir_base = '/home/scratch/esmith/RFI_MIT/jetstor/scratch/rfimit/mitigated/rawdata'
     output_base = f'{infile_base}_{det}_{out_patt}'
     output_raw_dir = f'{output_raw_dir_base}/{output_base}/'
     if not os.path.exists(output_raw_dir):
@@ -92,7 +92,7 @@ def template_bookkeeping(infile,out_patt,det):
     outfile_raw_full = f'{output_raw_dir}{infile[:-4]}_{det}_{out_patt}.raw'
 
     #get srdp results directory for mitigated file
-    output_mit_srdp_dir_base = '/jetstor/scratch/rfimit/mitigated/reduced'
+    output_mit_srdp_dir_base = '/home/scratch/esmith/RFI_MIT/jetstor/scratch/rfimit/mitigated/reduced'
     if not os.path.exists(f'{output_mit_srdp_dir_base}/{output_base}'):
         os.system(f'mkdir {output_mit_srdp_dir_base}/{output_base}')
     output_mit_srdp_dir = f'{output_mit_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
