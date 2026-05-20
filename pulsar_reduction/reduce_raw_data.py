@@ -244,7 +244,7 @@ def do_search(infiles,basenm,dm,low_dm,dm_step,ndms,nbits=8,nchan=None,
     ### DIGIFTS LEAVES A BUNCH OF KEYWORDS OUT AND PRESTO CANNOT PROCESS
     ### THE OUTPUT.  CONVERTING TO FILTERBANK FOR NOW.
     ### # Make search-mode PSRFITS files
-    cmd = ("digifits -c -L 599.95324416 -t 40.96e-6 "
+    cmd = ("digifits -c -L 599.95324416 -t 40.96e-6 -U 8192"
            " -p 4 -b {nbits} -D {dm} {infiles}".format(**kwargs))
     ret = execute(cmd, out=outfile, err=errfile)
     tmpfilenms = glob.glob("*.sf")

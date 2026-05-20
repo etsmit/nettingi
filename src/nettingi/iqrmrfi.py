@@ -22,7 +22,7 @@ class rfi_iqrm(mitigateRFI):
 
     def __init__(self, infile, repl_method, IQRM_radius_time=5, 
         IQRM_threshold_time=3.0, IQRM_radius_freq=5, IQRM_threshold_freq=3.0, 
-        IQRM_datatype='std', two_d = True, IQRM_breakdown=512, cust='', output_bool = True, 
+        IQRM_datatype='std', two_d = False, IQRM_breakdown=512, cust='', output_bool = True, 
         mb=1, rawdata=False, ave_factor = 512):
 
 
@@ -63,7 +63,8 @@ class rfi_iqrm(mitigateRFI):
             self._outfile_pattern += f'_b{IQRM_breakdown}'
         self._outfile_pattern += f'_{IQRM_datatype}'
 
-        self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir, self.output_unmit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
+        #self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
+        self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
         # any separate results filenames you need, in addition to the flags filename, put them here
         npybase = self.infile[:-4]
 
@@ -146,11 +147,13 @@ def iqrm_std(data, radius_time, threshold_time, radius_freq, threshold_freq, bre
     print('Flag shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
     for i in tqdm(range(data.shape[2])): # iterate through polarizations
         for j in range(data.shape[0]): # iterate through channels
-            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius_time, threshold = threshold_time)[0]
+            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i],
+                radius = radius_time, threshold = threshold_time)[0]
 
         if two_d:
             for j in range(data.shape[1]):
-                flag_chunk[:,j,i] = iqrm.iqrm_mask(data[:,j,i], radius = radius_freq, threshold = threshold_freq)[0]
+                flag_chunk[:,j,i] = iqrm.iqrm_mask(data[:,j,i],
+                    radius = radius_freq, threshold = threshold_freq)[0]
                 #flag_chunk[flag_chunk_f == 1] = 1
             
 
