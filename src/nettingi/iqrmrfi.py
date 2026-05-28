@@ -26,7 +26,7 @@ class rfi_iqrm(mitigateRFI):
         mb=1, rawdata=False, ave_factor = 512):
 
 
-        valid = ["std", "power", "avg", "mad", "sk"] # valid inputs for IQRM_datatype
+        valid = ["std", "power", "avgpwr", "mad", "sk"] # valid inputs for IQRM_datatype
         if IQRM_datatype not in valid:
             raise ValueError("IQRM_datatype must be one of %r." % valid)
         
@@ -58,8 +58,8 @@ class rfi_iqrm(mitigateRFI):
         if self.two_d:
             self._outfile_pattern = f'rt{IQRM_radius_time}_tt{IQRM_threshold_time}_rf{IQRM_radius_freq}_tf{IQRM_threshold_freq}_'
         else:
-            self._outfile_pattern = f'r{IQRM_radius_time}_t{IQRM_threshold_time}_{IQRM_datatype}'
-        if self.IQRM_datatype == 'std':
+            self._outfile_pattern = f'r{IQRM_radius_time}_t{IQRM_threshold_time}_'#{IQRM_datatype}'
+        if self.IQRM_datatype == 'std' or self.IQRM_datatype == 'avgpwr':
             self._outfile_pattern += f'_b{IQRM_breakdown}'
         self._outfile_pattern += f'_{IQRM_datatype}'
 
@@ -115,7 +115,10 @@ class rfi_iqrm(mitigateRFI):
             flag_chunk = iqrm_power(data, self.IQRM_radius, self.IQRM_threshold)
     
         elif self.IQRM_datatype == 'avgpwr':
-            flag_chunk = iqrm_avgpwr(data, self.IQRM_radius_time, self.IQRM_threshold_time, self.IQRM_radius_freq, self.IQRM_threshold_freq, self.IQRM_breakdown, self.two_d)
+            flag_chunk = iqrm_avgpwr(data, self.IQRM_radius_time, self.IQRM_threshold_time, 
+                self.IQRM_radius_freq, self.IQRM_threshold_freq, 
+                self.IQRM_breakdown, self.two_d
+            )
 
         elif self.IQRM_datatype == 'std': 
             flag_chunk = iqrm_std(data, self.IQRM_radius_time, self.IQRM_threshold_time, 
@@ -159,7 +162,7 @@ def iqrm_std(data, radius_time, threshold_time, radius_freq, threshold_freq, bre
 
     return flag_chunk
 
-def iqrm_avgpwr(data, radius, threshold, breakdown):
+def iqrm_avgpwr(data, radius_time, threshold_time, radius_freq, threshold_freq, breakdown, two_d):
     """
     breakdown must be a factor of the time shape data[1].shape()
     """
@@ -168,7 +171,15 @@ def iqrm_avgpwr(data, radius, threshold, breakdown):
     print('Flag shape: {} || block size: {}'.format(flag_chunk.shape,flag_chunk.nbytes))
     for i in tqdm(range(data.shape[2])): # iterate through polarizations
         for j in range(data.shape[0]): # iterate through channels
-            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i], radius = radius, threshold = threshold)[0]
+            flag_chunk[j,:,i] = iqrm.iqrm_mask(data[j,:,i],
+                radius = radius_time, threshold = threshold_time)[0]
+
+        if two_d:
+            for j in range(data.shape[1]):
+                flag_chunk[:,j,i] = iqrm.iqrm_mask(data[:,j,i],
+                    radius = radius_freq, threshold = threshold_freq)[0]
+                #flag_chunk[flag_chunk_f == 1] = 1
+            
 
     return flag_chunk
 
