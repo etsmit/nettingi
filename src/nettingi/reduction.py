@@ -16,8 +16,6 @@ from blimpy.guppi import GuppiRaw
 import glob
 
 
-def load_srdps():
-    pass
 
 
 

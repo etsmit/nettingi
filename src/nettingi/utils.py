@@ -67,7 +67,7 @@ def template_bookkeeping(infile,out_patt,det):
     #                     makes the directory if needed
     #                     includes intermediate numpy files
 
-    base_dir = '/home/scratch/esmith/RFI_MIT/'
+    base_dir = '/'
 
 #     #== input stuff ==
 #     #these paths should all exist, so no mkdirs needed
@@ -94,7 +94,7 @@ def template_bookkeeping(infile,out_patt,det):
     outfile_raw_full = f'{output_raw_dir}{infile[:-4]}_{det}_{out_patt}.raw'
 
     #get srdp results directory for mitigated file
-    output_mit_srdp_dir_base = base_dir + '/jetstor/scratch/rfimit/mitigated/reduced'
+    output_mit_srdp_dir_base = base_dir + 'jetstor/scratch/rfimit/mitigated/reduced'
     if not os.path.exists(f'{output_mit_srdp_dir_base}/{output_base}'):
         os.system(f'mkdir {output_mit_srdp_dir_base}/{output_base}')
     output_mit_srdp_dir = f'{output_mit_srdp_dir_base}/{output_base}/{infile[:-4]}_{det}_{out_patt}/'
@@ -227,6 +227,7 @@ def repl_nans(a,f):
     out : ndarray
         3-dimensional array of power values with flagged data replaced. Shape (Num Channels , Num Raw Spectra , Npol)
     """
+    print('repl_nans')
     ts = a.shape[1] // f.shape[1]
     if ts != 1:
         #for i in range(a.shape[1]):
