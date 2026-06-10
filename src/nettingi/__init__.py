@@ -21,3 +21,4 @@ from .aof import *
 from .mad import *
 from .se import *
 from .ConvRFIrfi import *
+from .swnorm import *

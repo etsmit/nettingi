@@ -63,7 +63,7 @@ from .utils import (
 
 class rfi_sk(mitigateRFI):
     #h
-    def __init__(self, infile, repl_method, m, mssk, n, d, s, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
+    def __init__(self, infile, repl_method, m=512, mssk="1,1", n=1, d=1, s=3.0, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         #user-given attributes
         self.det_method = 'SK'
         self.repl_method = repl_method

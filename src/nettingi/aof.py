@@ -22,7 +22,7 @@ from .core import mitigateRFI
 from .utils import *
 
 class rfi_aof(mitigateRFI):
-    def __init__(self, infile, strategy, num_images, repl_method, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
+    def __init__(self, infile, repl_method, strategy='parkes', num_images=4,  cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         # valid = ["std", "power", "avg", "mad", "sk"] # valid inputs for IQRM_datatype
         # if IQRM_datatype not in valid:
         #     raise ValueError("IQRM_datatype must be one of %r." % valid)
@@ -46,18 +46,9 @@ class rfi_aof(mitigateRFI):
         #self._rawFile = GuppiRaw(self.infile)
 
 
-        # self.IQRM_radius = IQRM_radius
-        # self.IQRM_threshold = IQRM_threshold
-        # self.IQRM_datatype = IQRM_datatype
-        # self.IQRM_breakdown = IQRM_breakdown
-
         self._out_dir = '/data/scratch/SKresults/'
         self._jetstor_dir = '/jetstor/scratch/SK_rawdata_results/'
 
-
-        # if IQRM_datatype == 'std':
-        #     self._outfile_pattern = f'r{IQRM_radius}_t{IQRM_threshold}_{IQRM_datatype}_b{IQRM_breakdown}'
-        # else:
         self._outfile_pattern = f'{self.strategy}_{self.num_images}images'
         self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir, self.output_unmit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
         self._rawFile = GuppiRaw(self.infile_raw_full)

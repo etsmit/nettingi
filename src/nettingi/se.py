@@ -20,7 +20,7 @@ from tqdm import tqdm
 
 class rfi_se(mitigateRFI):
     #h
-    def __init__(self, infile, repl_method, m, s, nbits=8, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
+    def __init__(self, infile, repl_method, m=512, s=3.0, nbits=8, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         #user-given attributes
         self.det_method = 'SE'
         self.repl_method = repl_method
@@ -39,7 +39,7 @@ class rfi_se(mitigateRFI):
 
         self._outfile_pattern = f"m{self.SE_m}_s{self.sigma}"    
 
-        self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir,self.output_unmit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
+        self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
         self._rawFile = GuppiRaw(self.infile_raw_full)
         # any separate results filenames you need, in addition to the flags filename, put them here
         self.npybase = self.infile[:-4]

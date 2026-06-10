@@ -85,6 +85,11 @@ class mitigateRFI:
                     data = np.append(data,np.copy(d2),axis=1)
             #data = np.ascontiguousarray(data)
 
+            #should check for NaNs just in case blimpy silently fails somehow
+            if np.sum(np.isnan(data)) > 0:
+                print(f"Error: Block {bi*self.mb+1} of {self.rawFile} contains NaNs")
+                exit()
+
             #find data shape
             # print(f'Data shape: {data.shape} || block size: {data.nbytes}')
 
@@ -127,6 +132,15 @@ class mitigateRFI:
 
             elif self.det_method == 'Conv':
                 flags_block = self.conv_detection(data)
+
+            elif self.det_method == 'SWNORM':
+                flags_block, ptest_block, stat_block = self.swnorm_detection(data)
+                if bi == 0:
+                    self.ptest_all = ptest_block
+                    self.stat_all = stat_block
+                else:
+                    self.ptest_all = np.concatenate((self.ptest_all,ptest_block),axis=1)
+                    self.stat_all = np.concatenate((self.stat_all,stat_block),axis=1)
 
             #***********************************************
             #===============================================
@@ -197,6 +211,7 @@ class mitigateRFI:
 
 
             #write back raw data
+            print('write back')
             if self.output_bool:
 
                 #print('Re-formatting data and writing back to file...')
@@ -254,6 +269,15 @@ class mitigateRFI:
         #     np.save(self._avg_pre_filename, avg_pre)
             # print(f'avg post: {self._avg_post_filename}')
             # np.save(self._avg_post_filename, self.avg_post)
+
+        elif self.det_method == 'SWNORM':
+            print(f'P-tests: {self._ptest_filename}')
+            np.save(self._ptest_filename, self.ptest_all)
+            print(f'Statistic: {self._stat_filename}')
+            np.save(self._stat_filename, self.stat_all)
+            log = '/data/scratch/SWNORMresults/SWNORM_log.txt'
+            os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}','{self._ptest_filename},'{self._stat_filename}'\n===============================" >> {log}""")
+
 
 
         #***********************************************
