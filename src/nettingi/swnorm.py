@@ -20,7 +20,7 @@ from tqdm import tqdm
 
 class rfi_swnorm(mitigateRFI):
     #h
-    def __init__(self, infile, repl_method, m, alpha, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
+    def __init__(self, infile, repl_method, m=512, alpha=1e-3, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         #user-given attributes
         self.det_method = 'SWNORM'
         self.repl_method = repl_method

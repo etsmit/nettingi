@@ -19,7 +19,7 @@ from numba import jit
 
 class rfi_mad(mitigateRFI):
     #h
-    def __init__(self, infile, repl_method, m, s, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
+    def __init__(self, infile, repl_method, m=512, s=3.0, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         #user-given attributes
         self.det_method = 'MAD'
         self.repl_method = repl_method

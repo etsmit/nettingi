@@ -20,7 +20,7 @@ from tqdm import tqdm
 
 class rfi_se(mitigateRFI):
     #h
-    def __init__(self, infile, repl_method, m, s, nbits=8, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
+    def __init__(self, infile, repl_method, m=512, s=3.0, nbits=8, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         #user-given attributes
         self.det_method = 'SE'
         self.repl_method = repl_method
