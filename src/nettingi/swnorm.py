@@ -67,7 +67,7 @@ class rfi_swnorm(mitigateRFI):
 
         #yippee, a scipy stats function for free, for me!
         print("swnorm...")
-        shap = sp.stats.shapiro(a,axis=1, nan_policy='omit')
+        shap = sp.stats.shapiro(a,axis=2, nan_policy='omit')
         ptest = shap.pvalue
         stat = shap.statistic
 

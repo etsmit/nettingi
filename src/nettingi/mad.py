@@ -19,7 +19,7 @@ from numba import jit
 
 class rfi_mad(mitigateRFI):
     #h
-    def __init__(self, infile, repl_method, m=512, s=3.0, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
+    def __init__(self, infile, repl_method, m=512, n=128, s=3.0, cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):
         #user-given attributes
         self.det_method = 'MAD'
         self.repl_method = repl_method
@@ -34,6 +34,7 @@ class rfi_mad(mitigateRFI):
 
         self.sigma = s
         self.MAD_m = m
+        self.MAD_n = n
 
         self._outfile_pattern = f"m{self.MAD_m}_s{self.sigma}"    
 
@@ -84,6 +85,38 @@ class rfi_mad(mitigateRFI):
         return f
 
 
+    def mad_detection_inside(data,N,M,th_mod):
+
+        if data.shape[1] // (N*M) != data.shape[1] / (N*M):
+            print(f'{N} x {M} need to integer divide {data.shape[1]}')
+            exit()
+
+        
+        s = np.abs(data)**2
+        a = np.mean(np.reshape(s,(s.shape[0],-1,N)),axis=2)
+
+        b = np.reshape(a,(a.shape[0],-1,M))
+
+        Mpulse = np.ones((1,1,M))
+        Npulse = np.ones((1,N))
+
+        median = np.kron( np.expand_dims(np.median(b,axis=2),axis=2), Mpulse )
+        #median = np.kron( np.median(b,axis=2), Mpulse )
+        mad = np.kron( np.expand_dims(np.median(np.abs(b-median),axis=2),axis=2), Mpulse )
+
+        sigma_r = (1.4826*th_mod) * mad
+        ut = median + sigma_r
+        lt = median - sigma_r
+
+        f = np.zeros(b.shape,dtype=np.int8)
+            
+        f[b > ut] = 1
+        f[b < lt] = 1
+
+        f = np.reshape(f,(f.shape[0],f.shape[1]*M))
+        f = np.kron( f, Npulse)
+
+        return f,ut,lt
 
 
 
