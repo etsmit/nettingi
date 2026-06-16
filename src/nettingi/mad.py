@@ -2,19 +2,12 @@
 
 import numpy as np
 
-import scipy as sp
-import scipy.optimize
-import scipy.special
 import math as math
 from blimpy import GuppiRaw
 
 from .core import mitigateRFI
 
-from .utils import *
-
-from numba import jit
-
-
+from .utils import template_bookkeeping
 
 
 class rfi_mad(mitigateRFI):
@@ -111,7 +104,7 @@ class rfi_mad(mitigateRFI):
             b = np.reshape(a,(a.shape[0],-1,M))
 
             Mpulse = np.ones((1,1,M))
-            Npulse = np.ones((1,N))
+            # Npulse = np.ones((1,N))
 
             median = np.kron( np.expand_dims(np.median(b,axis=2),axis=2), Mpulse )
             #median = np.kron( np.median(b,axis=2), Mpulse )
