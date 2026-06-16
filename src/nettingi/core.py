@@ -121,7 +121,17 @@ class mitigateRFI:
                 flags_block = self.aof_detection(data)
 
             elif self.det_method == 'MAD':
-                flags_block = self.mad_detection(data)
+                flags_block, ut_block, lt_block = self.mad_detection_inside(data,self.MAD_m,self.MAD_n,3.0)
+                # flags_block = np.expand_dims(flags_block,axis=2)
+                # ut_block = np.expand_dims(ut_block,axis=2)
+                # lt_block = np.expand_dims(lt_block,axis=2)
+                # flags_block, ut_block, lt_block = self.mad_detection_inside(data[:,:,0],self.MAD_m,self.MAD_n,3.0)
+                if bi == 0:
+                    self.ut_all = ut_block
+                    self.lt_all = lt_block
+                else:
+                    self.ut_all = np.concatenate((self.ut_all,ut_block),axis=1)
+                    self.lt_all = np.concatenate((self.lt_all,lt_block),axis=1)
         
             elif self.det_method == 'SE':
                 flags_block, zsc_block = self.se_detection(data)
@@ -155,7 +165,7 @@ class mitigateRFI:
                 self.flags_all = np.concatenate((self.flags_all, flags_block),axis=1)
                 self.spect_all = np.concatenate((self.spect_all, spect_block),axis=1)
 
-            if (self.det_method == 'AOF') or (self.det_method == 'MAD'):
+            if (self.det_method == 'AOF'):# or (self.det_method == 'MAD'):
                 block_fname = str(bi).zfill(3)
                 save_fname = self.output_mit_srdp_dir+self.npybase+'_flags_block'+block_fname+'.npy'
                 np.save(save_fname,flags_block)
@@ -255,6 +265,8 @@ class mitigateRFI:
         elif self.det_method == 'MAD':
             log = '/data/scratch/MADresults/MAD_log.txt'
             os.system(f"""echo "'{self._spect_filename}','{self._flags_filename}','{self._regen_filename}'\n===============================" >> {log}""")
+            np.save(self._ut_filename, self.ut_all)
+            np.save(self._lt_filename, self.lt_all)
 
         elif self.det_method == 'SE':
             print(f'mod Z-score: {self._zsc_filename}')
@@ -380,7 +392,7 @@ class mitigateRFI:
 
         out = (logs,logsm)
         
-        if (self.det_method == 'AOF') or (self.det_method == 'MAD'):
+        if (self.det_method == 'AOF'):# or (self.det_method == 'MAD'):
             f = load_raw_flags(self.output_srdp_dir+self.npybase+'_flags_block*.npy',self.ave_factor)
             out = out + (f,)
         else:

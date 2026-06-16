@@ -36,16 +36,20 @@ class rfi_mad(mitigateRFI):
         self.MAD_m = m
         self.MAD_n = n
 
-        self._outfile_pattern = f"m{self.MAD_m}_s{self.sigma}"    
+        self._outfile_pattern = f"m{self.MAD_m}_n{self.MAD_n}_s{3.0}"    
 
-        self.infile_raw_full, self.outfile_raw_full, self.output_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
+        self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir = template_bookkeeping(self.infile,self._outfile_pattern,self.det_method)
         self._rawFile = GuppiRaw(self.infile_raw_full)
         # any separate results filenames you need, in addition to the flags filename, put them here
         self.npybase = self.infile[:-4]
         
-        self._flags_filename = f"{self.output_srdp_dir}{self.npybase}_flags_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._spect_filename = f"{self.output_srdp_dir}{self.npybase}_spect_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
-        self._regen_filename = f"{self.output_srdp_dir}{self.npybase}_regen_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._flags_filename = f"{self.output_mit_srdp_dir}{self.npybase}_flags_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._spect_filename = f"{self.output_mit_srdp_dir}{self.npybase}_spect_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._regen_filename = f"{self.output_mit_srdp_dir}{self.npybase}_regen_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+
+        self._ut_filename = f"{self.output_mit_srdp_dir}{self.npybase}_ut_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+        self._lt_filename = f"{self.output_mit_srdp_dir}{self.npybase}_lt_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
+
 
 
         #self._outfile = f"{self._jetstor_dir}{infile[:-4]}_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_mb{self.mb}_{self.cust}{infile[-4:]}"
@@ -85,38 +89,59 @@ class rfi_mad(mitigateRFI):
         return f
 
 
-    def mad_detection_inside(data,N,M,th_mod):
+    def mad_detection_inside(self,data,N,M,th_mod):
 
-        if data.shape[1] // (N*M) != data.shape[1] / (N*M):
-            print(f'{N} x {M} need to integer divide {data.shape[1]}')
-            exit()
+        out_shape = (data.shape[0],data.shape[1]//N,data.shape[2])
+        out_f = np.zeros(out_shape)
+        out_ut = np.zeros(out_shape)
+        out_lt = np.zeros(out_shape)
 
-        
-        s = np.abs(data)**2
-        a = np.mean(np.reshape(s,(s.shape[0],-1,N)),axis=2)
+        for i in range(data.shape[2]):
 
-        b = np.reshape(a,(a.shape[0],-1,M))
+            td = data[:,:,i]
 
-        Mpulse = np.ones((1,1,M))
-        Npulse = np.ones((1,N))
+            if td.shape[1] // (N*M) != td.shape[1] / (N*M):
+                print(f'{N} x {M} need to integer divide {td.shape[1]}')
+                exit()
 
-        median = np.kron( np.expand_dims(np.median(b,axis=2),axis=2), Mpulse )
-        #median = np.kron( np.median(b,axis=2), Mpulse )
-        mad = np.kron( np.expand_dims(np.median(np.abs(b-median),axis=2),axis=2), Mpulse )
-
-        sigma_r = (1.4826*th_mod) * mad
-        ut = median + sigma_r
-        lt = median - sigma_r
-
-        f = np.zeros(b.shape,dtype=np.int8)
             
-        f[b > ut] = 1
-        f[b < lt] = 1
+            s = np.abs(td)**2
+            a = np.mean(np.reshape(s,(s.shape[0],-1,N)),axis=2)
 
-        f = np.reshape(f,(f.shape[0],f.shape[1]*M))
-        f = np.kron( f, Npulse)
+            b = np.reshape(a,(a.shape[0],-1,M))
 
-        return f,ut,lt
+            Mpulse = np.ones((1,1,M))
+            Npulse = np.ones((1,N))
+
+            median = np.kron( np.expand_dims(np.median(b,axis=2),axis=2), Mpulse )
+            #median = np.kron( np.median(b,axis=2), Mpulse )
+            mad = np.kron( np.expand_dims(np.median(np.abs(b-median),axis=2),axis=2), Mpulse )
+
+            sigma_r = (1.4826*th_mod) * mad
+            ut = median + sigma_r
+            lt = median - sigma_r
+
+            f = np.zeros(b.shape,dtype=np.int8)
+                
+            f[b > ut] = 1
+            f[b < lt] = 1
+
+            f = np.reshape(f,(f.shape[0],f.shape[1]*M))
+            #f = np.kron( f, Npulse)
+
+            ut = np.reshape(ut,(ut.shape[0],ut.shape[1]*M))
+            #ut = np.kron( ut, Npulse)
+
+            lt = np.reshape(lt,(lt.shape[0],lt.shape[1]*M))
+            #lt = np.kron( lt, Npulse)
+
+            out_f[:,:,i] = f
+            out_ut[:,:,i] = ut
+            out_lt[:,:,i] = lt
+
+            #print(f'f shape: {f.shape}')
+
+        return out_f,out_ut,out_lt
 
 
 
