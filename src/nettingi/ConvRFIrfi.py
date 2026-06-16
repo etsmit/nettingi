@@ -1,18 +1,13 @@
 #h
 import numpy as np
 
-import scipy as sp
-import scipy.optimize
-import scipy.special
+
 import math as math
 import torch
-
-import nettingi
 
 from blimpy import GuppiRaw
 
 from .core import mitigateRFI
-from numba import prange
 from ConvRFI  import  RFIconv,init_RFIconv
 
 from .utils import (

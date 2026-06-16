@@ -2,7 +2,6 @@
 
 import numpy as np
 
-import scipy as sp
 import scipy.optimize
 import scipy.special
 import math as math
@@ -11,9 +10,7 @@ import matplotlib.pyplot as plt
 
 from .core import mitigateRFI
 
-from .utils import *
-
-from numba import jit
+from .utils import template_bookkeeping
 
 from tqdm import tqdm
 
@@ -116,7 +113,7 @@ def get_gaussfit(bins,num):
     try:
         popt,pcov = scipy.optimize.curve_fit(gauss_func,bins[:-1],num,p0=(0,1))
         return gauss_func(bins[:-1],popt[0],popt[1])
-    except:
+    except:  # noqa: E722
         popt = np.array([np.nan,np.nan])
         return popt
 

@@ -211,8 +211,8 @@ def pklplot(ps_sets,labels):
     #plt.text(1418,-0.1, "(c)", fontsize=fontsz)
 
     #cent_freq = freqs[int(0.5*len(freqs)]
-    co_res = 3.125
-    co_res = 200./1024
+    #co_res = 3.125
+    #co_res = 200./1024
 
     #for xv in np.arange(freqs[-1],freqs[0],co_res/2):
     #	plt.axvline(xv,c='#858585',linewidth=0.5)

@@ -1,25 +1,17 @@
 import numpy as np
-import os,sys
-import matplotlib.pyplot as plt
 
-import scipy as sp
-import scipy.optimize
-import scipy.special
+
 import math as math
 
-import argparse
-
-import time
 
 from blimpy import GuppiRaw
 
 
 import aoflagger
 
-from tqdm import tqdm
 from .core import mitigateRFI
 
-from .utils import *
+from .utils import template_bookkeeping
 
 class rfi_aof(mitigateRFI):
     def __init__(self, infile, repl_method, strategy='parkes', num_images=4,  cust='', output_bool = True, mb=1, rawdata=False, ave_factor = 512):

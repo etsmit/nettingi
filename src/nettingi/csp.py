@@ -1,14 +1,14 @@
-import numpy as np
+#import numpy as np
 
-import scipy as sp
-import scipy.optimize
-import scipy.special
+#import scipy as sp
+#import scipy.optimize
+#import scipy.special
 import math as math
-from blimpy import GuppiRaw
+#from blimpy import GuppiRaw
 
 from .core import mitigateRFI
 
-from .utils import *
+#from .utils import template_bookkeeping
 
 
 class rfi_csp(mitigateRFI):

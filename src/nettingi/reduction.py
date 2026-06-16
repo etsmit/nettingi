@@ -4,13 +4,10 @@
 
 import numpy as np
 from scipy import signal
-from scipy import stats
-from scipy.integrate import cumtrapz
 
 
 import os
 import pickle
-from blimpy.guppi import GuppiRaw
 
 
 import glob
@@ -293,7 +290,7 @@ def raw2spec_god(resolution,gr, det,outfile,mask=None):
     bw = float(hdr0["OBSBW"])
     nchan = int(hdr0["OBSNCHAN"])
     chanbw = bw/nchan
-    chanfreqs = fctr - 0.5*bw + chanbw*(np.arange(nchan)+0.5)
+    # chanfreqs = fctr - 0.5*bw + chanbw*(np.arange(nchan)+0.5)
     nchan_pfb = 2**int(np.round(np.log2(np.abs(chanbw/(resolution/1e3)))))
     print(f'given output res is {resolution} kHz, actual will be {np.abs(chanbw/nchan_pfb)*1e3} khz')
 
@@ -368,7 +365,7 @@ def raw2spec_god(resolution,gr, det,outfile,mask=None):
     else:
         spectrum /= gr.n_blocks
 
-    pfb_chanbw = chanbw/nchan_pfb
+    # pfb_chanbw = chanbw/nchan_pfb
 
     freqs = fctr - 0.5*bw + bw/(nchan*nchan_pfb)*np.arange(nchan*nchan_pfb)
 

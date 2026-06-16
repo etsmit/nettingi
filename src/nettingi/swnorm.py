@@ -7,15 +7,11 @@ import scipy.optimize
 import scipy.special
 import math as math
 from blimpy import GuppiRaw
-import matplotlib.pyplot as plt
 
 from .core import mitigateRFI
 
-from .utils import *
+from .utils import template_bookkeeping
 
-from numba import jit
-
-from tqdm import tqdm
 
 
 class rfi_swnorm(mitigateRFI):
