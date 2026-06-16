@@ -31,44 +31,44 @@ ten_clrs = ["#3f90da", "#ffa90e", "#bd1f01", "#94a4a2", "#832db6", "#a96b59", "#
 
 #and for this example, put ps=True so that it does the (on-off)/off
 
-def pkl_plot(infiles, labels, ps=False):
+# def pkl_plot(infiles, labels, ps=False):
 
-    def pkll(inf):
-        with open(inf,'rb') as f:                                         
-            m_f,m_s = pickle.load(f)                                                  
-        return m_f,m_s  
+#     def pkll(inf):
+#         with open(inf,'rb') as f:                                         
+#             m_f,m_s = pickle.load(f)                                                  
+#         return m_f,m_s  
 
-    def smooth(x,nchan):
-        kernel = 1.0*np.ones(nchan) / nchan
-        return np.convolve(x,kernel,mode='same')
+#     def smooth(x,nchan):
+#         kernel = 1.0*np.ones(nchan) / nchan
+#         return np.convolve(x,kernel,mode='same')
 
-    def load_tp(fname):
-        freqs, data = pkll(fname)
-        return freqs,data
+#     def load_tp(fname):
+#         freqs, data = pkll(fname)
+#         return freqs,data
 
-    def load_ps_set(infiles):
-        freqs, data_on = pkll(infiles[0])
-        data_off = pkll(infiles[1])[1]
-        psscan = (data_on-data_off)/data_off
-        return freqs,psscan
+#     def load_ps_set(infiles):
+#         freqs, data_on = pkll(infiles[0])
+#         data_off = pkll(infiles[1])[1]
+#         psscan = (data_on-data_off)/data_off
+#         return freqs,psscan
 
-    spectra = []
+#     spectra = []
 
-    if ps:
-        for i in range(len(infiles)/2):
-            freqs, data = load_ps_set(infiles[2*i],infiles[(2*i)+1])
-            spectra.append(data)
+#     if ps:
+#         for i in range(len(infiles)/2):
+#             freqs, data = load_ps_set(infiles[2*i],infiles[(2*i)+1])
+#             spectra.append(data)
             
-    else:
-        for i in range(len(infiles)):
-            freqs, data = load_tp(infiles[i])
-            spectra.append(data)
+#     else:
+#         for i in range(len(infiles)):
+#             freqs, data = load_tp(infiles[i])
+#             spectra.append(data)
 
-    for i in range(len(spectra)):
-        plt.plot(freqs, spectra[i], alpha=0.7, c=ten_clrs[i], label=labels[i])
+#     for i in range(len(spectra)):
+#         plt.plot(freqs, spectra[i], alpha=0.7, c=ten_clrs[i], label=labels[i])
 
-    plt.legend()
-    plt.show()
+#     plt.legend()
+#     plt.show()
 
 
 
@@ -139,7 +139,87 @@ def load_raw_flags(pattern,M):
 
 
 
+def pkll(inf):
+	with open(inf,'rb') as f:                                         
+		m_f,m_s = pickle.load(f)                                                  
+	return m_f,m_s  
 
+def smooth(x,nchan):
+	kernel = 1.0*np.ones(nchan) / nchan
+	return np.convolve(x,kernel,mode='same')
+
+
+
+def load_ps_set(fname_on,fname_off):
+	freqs, data_on = pkll(fname_on)
+	data_off = pkll(fname_off)[1]
+
+	#np.save(f'spectra/{fname_on}',np.mean(data_on,axis=0))
+	#np.save(f'spectra/{fname_off}',np.mean(data_off,axis=0))
+	#print(data_on.shape)
+	psscan = (data_on-data_off)/data_off
+	return freqs,psscan
+
+def pklplot(ps_sets,labels):
+    c_bl = '#0000FF'
+    mycolors = ['#00FF00','#FF0000',"#0700c7",'#08c40e','#de0000', '#00e6da','#b57026','#f56ce0','#666666']
+
+
+    plt.figure(figsize=(12,6))
+
+
+    ax=plt.axes()
+    ax_lw = 2.5
+    ax.tick_params(axis='both',direction='in',width=2,length=8,top=True,right=True,pad=2)
+    ax.spines['bottom'].set_linewidth(ax_lw)
+    ax.spines['top'].set_linewidth(ax_lw)
+    ax.spines['left'].set_linewidth(ax_lw)
+    ax.spines['right'].set_linewidth(ax_lw)
+
+#np.save('spectra/Arp220_f.npy',freqs)
+
+#plt.plot(freqs_111187-9, unmit_ps_111187, alpha=0.7, label='Unmitigated')
+#plt.plot(freqs_002370-27, unmit_ps_002370, alpha=0.7, label='Unmitigated')
+
+#plt.plot(freqs_002370-27, mit_ps_1, alpha=0.7, label=label1)
+#plt.plot(freqs_002370-27, mit_ps_2, alpha=0.7, label=label2)
+#plt.plot(freqs_002370-27, mit_ps_3, alpha=0.7, label=label3)
+#plt.plot(freqs, mit_ps_4, alpha=0.7, label=label4)
+
+#plt.plot(freqs, unmit_ps, alpha=0.7, label='Unmitigated')
+    plt.plot(ps_sets[0][0], ps_sets[0][1], alpha=0.7, label=labels[0],c=c_bl)
+
+    for i,ps_set in enumerate(ps_sets[1:]):
+        plt.plot(ps_set[0],ps_set[1], alpha=0.7, label=labels[i+1], c=mycolors[i])
+
+
+    fontsz = 18
+    plt.ylabel('Pseudo-power',fontsize=fontsz)
+    plt.xlabel('Frequency (MHz)',fontsize=fontsz)
+    plt.xticks(fontsize=fontsz)
+    plt.yticks(fontsize=fontsz)
+    plt.tight_layout()
+
+    #plt.xlim((1605,1645))
+    #plt.ylim((-0.05,0.12))
+
+    plt.title('III Zw 35 OH Maser',fontsize=fontsz)
+    plt.tight_layout()
+
+    #plt.text(1635,0.08, "(a)", fontsize=fontsz)
+    #plt.text(1409,-0.02, "(b)", fontsize=fontsz)
+    #plt.text(1418,-0.1, "(c)", fontsize=fontsz)
+
+    #cent_freq = freqs[int(0.5*len(freqs)]
+    co_res = 3.125
+    co_res = 200./1024
+
+    #for xv in np.arange(freqs[-1],freqs[0],co_res/2):
+    #	plt.axvline(xv,c='#858585',linewidth=0.5)
+
+    plt.legend(fontsize=fontsz)
+
+    plt.show()
 
 
 

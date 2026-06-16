@@ -203,85 +203,85 @@ def raw2spec(resolution,gr,infile):
 
 
 #do fine channelization using a mask
-def raw2spec_mask(resolution,gr,mask, infile, outfile):
-    basenm = os.path.basename(infile)
-    outfile_test = os.path.join('/data/scratch/IQRMresults',basenm.replace(".raw",f".{resolution}.spec.pkl"))
-    print("hi")
-   
-    print(outfile_test)
-    print("hi2")
-    hdr0 = gr.read_first_header()
-    fctr = float(hdr0["OBSFREQ"])
-    bw = float(hdr0["OBSBW"])
-    nchan = int(hdr0["OBSNCHAN"])
-    chanbw = bw/nchan
-    chanfreqs = fctr - 0.5*bw + chanbw*(np.arange(nchan)+0.5)
-    nchan_pfb = 2**int(np.round(np.log2(np.abs(chanbw/(args.resolution/1e3)))))
-
-    print(f'given output res is {resolution} kHz, actual will be {np.abs(chanbw/nchan_pfb)*1e3} khz')
-
-    SKf = np.load(args.flags)
-    SKM = int(args.SKM)
-
-    spectrum = np.zeros(nchan_pfb*nchan)
-    unflagged_blocks = np.zeros(nchan_pfb*nchan)
-
-    gr.reset_index()
-    for bb in range(gr.n_blocks):
-        print(f"Working on block {bb+1} of {gr.n_blocks}")
-        hdr,data = gr.read_next_data_block()
-        x = data[:,:,0]
-        y = data[:,:,1]
-
-        #apply mask
-        #find M
-        M = int((x.shape[1]*gr.n_blocks) / SKf.shape[1])
-        #pulse = np.ones((1,M,1))
-        num_fbins = SKf.shape[1]//gr.n_blocks
-
-        mask = SKf[:,bb*num_fbins:(bb+1)*num_fbins,:]
-
-        #mask = np.kron(this_f,pulse)
-
-        union_mask = np.copy(mask[:,:,0])
-        union_mask[mask[:,:,1]==1] = 1
-
-        #xma = np.ma.masked_array(x,union_mask)
-        #yma = np.ma.masked_array(y,union_mask)
-
-        for nn in range(data.shape[0]):
-            #print('----',nn)
-            xpfb = np.fft.fftshift(
-                pfb_mask(x[nn],nchan_pfb,12, union_mask[nn], SKM, force_complex=True),axes=-1)
-            ypfb = np.fft.fftshift(
-                pfb_mask(y[nn],nchan_pfb,12, union_mask[nn], SKM, force_complex=True),axes=-1)
-            #print(ypfb.size,np.sum(np.isnan(ypfb)))
-            spec = (np.nanmean(np.abs(xpfb)**2,axis=0)\
-                    +np.nanmean(np.abs(ypfb)**2,axis=0))/2
-            #print(spec.size,np.sum(np.isnan(spec)))
-            if np.sum(np.isnan(spec)) == 0:
-                spectrum[nn*nchan_pfb:(nn+1)*nchan_pfb] += np.flip(spec[::-1])
-                unflagged_blocks[nn*nchan_pfb:(nn+1)*nchan_pfb] += 1
-            #print(spectrum.size, T.np.sum(np.isnan(spectrum)))
-
-    spectrum /= unflagged_blocks
-    #print(spectrum.size,np.sum(np.isnan(spectrum)))
-    pfb_chanbw = chanbw/nchan_pfb
-    #freqs = chanfreqs[0]-0.5*pfb_chanbw+np.arange(nchan_pfb*nchan)*pfb_chanbw
-    freqs = fctr - 0.5*bw + bw/(nchan*nchan_pfb)*np.arange(nchan*nchan_pfb)
-    #bad_chans = np.arange(nchan)*nchan_pfb + nchan_pfb//2
-    #mask = np.zeros(spectrum.shape)
-    #mask[bad_chans] = 1
-    #masked_spectrum = np.ma.masked_array(spectrum,mask)
-    out1 = (freqs,spectrum)
-    #out2 = (freqs,masked_spectrum)
+# def raw2spec_mask(resolution,gr,mask, infile, outfile):
 #     basenm = os.path.basename(infile)
-    with open(os.path.join('/data/scratch/IQRMresults',basenm.replace(".raw",f"mask.{resolution}.spec.pkl")),"wb") as f: 
-        pickle.dump(out1,f)
-        print(f)
-    self._pkl_filename = f
-    #with open(os.path.join(args.outdir,basenm.replace(".raw",".20.spec_mask.pkl")), "wb") as f: 
-    #    pickle.dump(out2,f)
+#     outfile_test = os.path.join('/data/scratch/IQRMresults',basenm.replace(".raw",f".{resolution}.spec.pkl"))
+#     print("hi")
+   
+#     print(outfile_test)
+#     print("hi2")
+#     hdr0 = gr.read_first_header()
+#     fctr = float(hdr0["OBSFREQ"])
+#     bw = float(hdr0["OBSBW"])
+#     nchan = int(hdr0["OBSNCHAN"])
+#     chanbw = bw/nchan
+#     chanfreqs = fctr - 0.5*bw + chanbw*(np.arange(nchan)+0.5)
+#     nchan_pfb = 2**int(np.round(np.log2(np.abs(chanbw/(args.resolution/1e3)))))
+
+#     print(f'given output res is {resolution} kHz, actual will be {np.abs(chanbw/nchan_pfb)*1e3} khz')
+
+#     SKf = np.load(args.flags)
+#     SKM = int(args.SKM)
+
+#     spectrum = np.zeros(nchan_pfb*nchan)
+#     unflagged_blocks = np.zeros(nchan_pfb*nchan)
+
+#     gr.reset_index()
+#     for bb in range(gr.n_blocks):
+#         print(f"Working on block {bb+1} of {gr.n_blocks}")
+#         hdr,data = gr.read_next_data_block()
+#         x = data[:,:,0]
+#         y = data[:,:,1]
+
+#         #apply mask
+#         #find M
+#         M = int((x.shape[1]*gr.n_blocks) / SKf.shape[1])
+#         #pulse = np.ones((1,M,1))
+#         num_fbins = SKf.shape[1]//gr.n_blocks
+
+#         mask = SKf[:,bb*num_fbins:(bb+1)*num_fbins,:]
+
+#         #mask = np.kron(this_f,pulse)
+
+#         union_mask = np.copy(mask[:,:,0])
+#         union_mask[mask[:,:,1]==1] = 1
+
+#         #xma = np.ma.masked_array(x,union_mask)
+#         #yma = np.ma.masked_array(y,union_mask)
+
+#         for nn in range(data.shape[0]):
+#             #print('----',nn)
+#             xpfb = np.fft.fftshift(
+#                 pfb_mask(x[nn],nchan_pfb,12, union_mask[nn], SKM, force_complex=True),axes=-1)
+#             ypfb = np.fft.fftshift(
+#                 pfb_mask(y[nn],nchan_pfb,12, union_mask[nn], SKM, force_complex=True),axes=-1)
+#             #print(ypfb.size,np.sum(np.isnan(ypfb)))
+#             spec = (np.nanmean(np.abs(xpfb)**2,axis=0)\
+#                     +np.nanmean(np.abs(ypfb)**2,axis=0))/2
+#             #print(spec.size,np.sum(np.isnan(spec)))
+#             if np.sum(np.isnan(spec)) == 0:
+#                 spectrum[nn*nchan_pfb:(nn+1)*nchan_pfb] += np.flip(spec[::-1])
+#                 unflagged_blocks[nn*nchan_pfb:(nn+1)*nchan_pfb] += 1
+#             #print(spectrum.size, T.np.sum(np.isnan(spectrum)))
+
+#     spectrum /= unflagged_blocks
+#     #print(spectrum.size,np.sum(np.isnan(spectrum)))
+#     pfb_chanbw = chanbw/nchan_pfb
+#     #freqs = chanfreqs[0]-0.5*pfb_chanbw+np.arange(nchan_pfb*nchan)*pfb_chanbw
+#     freqs = fctr - 0.5*bw + bw/(nchan*nchan_pfb)*np.arange(nchan*nchan_pfb)
+#     #bad_chans = np.arange(nchan)*nchan_pfb + nchan_pfb//2
+#     #mask = np.zeros(spectrum.shape)
+#     #mask[bad_chans] = 1
+#     #masked_spectrum = np.ma.masked_array(spectrum,mask)
+#     out1 = (freqs,spectrum)
+#     #out2 = (freqs,masked_spectrum)
+# #     basenm = os.path.basename(infile)
+#     with open(os.path.join('/data/scratch/IQRMresults',basenm.replace(".raw",f"mask.{resolution}.spec.pkl")),"wb") as f: 
+#         pickle.dump(out1,f)
+#         print(f)
+#     self._pkl_filename = f
+#     #with open(os.path.join(args.outdir,basenm.replace(".raw",".20.spec_mask.pkl")), "wb") as f: 
+#     #    pickle.dump(out2,f)
 
 
 
@@ -303,8 +303,9 @@ def raw2spec_god(resolution,gr, det,outfile,mask=None):
             f = glob.glob(mask)
             f.sort()
             if len(f) != gr.n_blocks:
-                print(f'There are {numblocks} blocks and you set -mb {mb}, pick a divisible integer')
-                sys.exit()
+                pass
+                #print(f'There are {numblocks} blocks and you set -mb {mb}, pick a divisible integer')
+                #sys.exit()
         else:
             f = np.load(mask)
 
@@ -334,6 +335,9 @@ def raw2spec_god(resolution,gr, det,outfile,mask=None):
 
         union_mask = np.copy(mask[:,:,0])
         union_mask[mask[:,:,1]==1] = 1
+
+        pulse = np.ones((1,x.shape[1]//union_mask.shape[1]))
+        union_mask = np.kron(union_mask,pulse)
 
         xma = np.ma.masked_array(x,union_mask)
         yma = np.ma.masked_array(y,union_mask)
