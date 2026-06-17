@@ -1,42 +1,50 @@
-
-
-
 import numpy as np
 
 
 import matplotlib
-matplotlib.use('Qt5Agg')
+
+matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 
 import pickle
 import glob  # noqa: F401
 
+ten_clrs = [
+    "#3f90da",
+    "#ffa90e",
+    "#bd1f01",
+    "#94a4a2",
+    "#832db6",
+    "#a96b59",
+    "#e76300",
+    "#b9ac70",
+    "#717581",
+    "#92dadd",
+]
 
-ten_clrs = ["#3f90da", "#ffa90e", "#bd1f01", "#94a4a2", "#832db6", "#a96b59", "#e76300", "#b9ac70", "#717581", "#92dadd"]
 
+# infiles should be list of input pkl files. If position switched data, pair them up with
+# the ON scan first then the OFF scan.
+# example for two position switched pairs, first one being the unmitigated:
 
-#infiles should be list of input pkl files. If position switched data, pair them up with 
-#the ON scan first then the OFF scan.
-#example for two position switched pairs, first one being the unmitigated:
-
-#infiles = [
+# infiles = [
 #    'vegas_60279_50072_Arp220_0004.0000.20.spec.pkl',
 #    'vegas_60279_50334_Arp220_0005.0000.20.spec.pkl',
 #    'vegas_60279_50072_Arp220_0004.0000_SK_m2032_ms1-1_thresh0.997_stats.20.spec_mask.pkl',
 #    'vegas_60279_50334_Arp220_0005.0000_SK_m2032_ms1-1_thresh0.997_stats.20.spec_mask.pkl',
 #    ]
 
-#labels are just the list of custom labels you want to put in the legend
-#labels = ['Unmitigated', 'Mitigated']
+# labels are just the list of custom labels you want to put in the legend
+# labels = ['Unmitigated', 'Mitigated']
 
-#and for this example, put ps=True so that it does the (on-off)/off
+# and for this example, put ps=True so that it does the (on-off)/off
 
 # def pkl_plot(infiles, labels, ps=False):
 
 #     def pkll(inf):
-#         with open(inf,'rb') as f:                                         
-#             m_f,m_s = pickle.load(f)                                                  
-#         return m_f,m_s  
+#         with open(inf,'rb') as f:
+#             m_f,m_s = pickle.load(f)
+#         return m_f,m_s
 
 #     def smooth(x,nchan):
 #         kernel = 1.0*np.ones(nchan) / nchan
@@ -58,7 +66,7 @@ ten_clrs = ["#3f90da", "#ffa90e", "#bd1f01", "#94a4a2", "#832db6", "#a96b59", "#
 #         for i in range(len(infiles)/2):
 #             freqs, data = load_ps_set(infiles[2*i],infiles[(2*i)+1])
 #             spectra.append(data)
-            
+
 #     else:
 #         for i in range(len(infiles)):
 #             freqs, data = load_tp(infiles[i])
@@ -71,33 +79,43 @@ ten_clrs = ["#3f90da", "#ffa90e", "#bd1f01", "#94a4a2", "#832db6", "#a96b59", "#
 #     plt.show()
 
 
-
-#plot image of spectrogram
-#s: 2D npy array you want to plot [chan, time]. NEEDS TO BE LOG10 SCALED
+# plot image of spectrogram
+# s: 2D npy array you want to plot [chan, time]. NEEDS TO BE LOG10 SCALED
 #    can be the original spectrogram, the mitigated spectrogram,
 #    or you can combine the original and the flags (spect[flags==1]=0, s = spect)
 #    to make the flagged portions black
-#rf: MHz center frequency of the data (can read from the headers in the raw file)
-#bw: MHz bandwidth of data (800 for the pulsar data)
-#M:  averaging factor
+# rf: MHz center frequency of the data (can read from the headers in the raw file)
+# bw: MHz bandwidth of data (800 for the pulsar data)
+# M:  averaging factor
 
-#the latter 3 required arguments just help label the axes correctly
-def implot(s,rf,bw,M,vmin=2.2,vmax=3.2):
-    plt.figure(figsize=(14,10))
-    ax=plt.axes()
+
+# the latter 3 required arguments just help label the axes correctly
+def implot(s, rf, bw, M, vmin=2.2, vmax=3.2):
+    plt.figure(figsize=(14, 10))
+    ax = plt.axes()
     ax_lw = 3
-    ax.tick_params(axis='both',direction='in',width=2,length=8,top=True,right=True,pad=2)
-    ax.spines['bottom'].set_linewidth(ax_lw)
-    ax.spines['top'].set_linewidth(ax_lw)
-    ax.spines['left'].set_linewidth(ax_lw)
-    ax.spines['right'].set_linewidth(ax_lw)
-    ms = s.shape[1]*(M*1e3*(s.shape[0]/(bw*1e6)))
+    ax.tick_params(
+        axis="both", direction="in", width=2, length=8, top=True, right=True, pad=2
+    )
+    ax.spines["bottom"].set_linewidth(ax_lw)
+    ax.spines["top"].set_linewidth(ax_lw)
+    ax.spines["left"].set_linewidth(ax_lw)
+    ax.spines["right"].set_linewidth(ax_lw)
+    ms = s.shape[1] * (M * 1e3 * (s.shape[0] / (bw * 1e6)))
     print(ms)
-    #ext = [0,s.shape[1],1100,1900]
-    ext = [0,ms/1e3,rf-0.5*bw,rf+0.5*bw]
-    plt.imshow(s,interpolation='nearest',aspect='auto',cmap='hot',vmin=vmin,vmax=vmax,extent=ext)
-    plt.ylabel('Frequency (MHz)',fontsize=20)
-    plt.xlabel('Time (sec)',fontsize=20)
+    # ext = [0,s.shape[1],1100,1900]
+    ext = [0, ms / 1e3, rf - 0.5 * bw, rf + 0.5 * bw]
+    plt.imshow(
+        s,
+        interpolation="nearest",
+        aspect="auto",
+        cmap="hot",
+        vmin=vmin,
+        vmax=vmax,
+        extent=ext,
+    )
+    plt.ylabel("Frequency (MHz)", fontsize=20)
+    plt.xlabel("Time (sec)", fontsize=20)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
     cbar = plt.colorbar()
@@ -107,131 +125,125 @@ def implot(s,rf,bw,M,vmin=2.2,vmax=3.2):
     plt.show()
 
 
-
-def load_raw_flags(pattern,M):
+def load_raw_flags(pattern, M):
     infiles = glob.glob(pattern)
     infiles.sort()
 
-    for i,ff in enumerate(infiles):
-        #print(ff, inflags[i])
+    for i, ff in enumerate(infiles):
+        # print(ff, inflags[i])
         print(ff)
-    print(f'{len(infiles)} files found')
-    print('------------------------')
+    print(f"{len(infiles)} files found")
+    print("------------------------")
 
-    input('Good?')
-
+    input("Good?")
 
     init_f = np.load(infiles[0])
-    out_f = np.empty((init_f.shape[0],init_f.shape[1]*len(infiles)/M,init_f.shape[2]))
+    out_f = np.empty(
+        (init_f.shape[0], init_f.shape[1] * len(infiles) / M, init_f.shape[2])
+    )
 
     for i in range(len(infiles)):
 
         tf = np.load(infiles[i])
-        a = np.reshape(tf,(tf.shape[0],-1,M,tf.shape[2]))
+        a = np.reshape(tf, (tf.shape[0], -1, M, tf.shape[2]))
 
-        nbins = tf.shape[1]//M
-        start = i*nbins
-        end = (i+1)*nbins
+        nbins = tf.shape[1] // M
+        start = i * nbins
+        end = (i + 1) * nbins
 
-        out_f[:,start:end,:] = np.mean(a,axis=2)
+        out_f[:, start:end, :] = np.mean(a, axis=2)
 
     return out_f
 
 
-
 def pkll(inf):
-	with open(inf,'rb') as f:                                         
-		m_f,m_s = pickle.load(f)                                                  
-	return m_f,m_s  
-
-def smooth(x,nchan):
-	kernel = 1.0*np.ones(nchan) / nchan
-	return np.convolve(x,kernel,mode='same')
+    with open(inf, "rb") as f:
+        m_f, m_s = pickle.load(f)
+    return m_f, m_s
 
 
-
-def load_ps_set(fname_on,fname_off):
-	freqs, data_on = pkll(fname_on)
-	data_off = pkll(fname_off)[1]
-
-	#np.save(f'spectra/{fname_on}',np.mean(data_on,axis=0))
-	#np.save(f'spectra/{fname_off}',np.mean(data_off,axis=0))
-	#print(data_on.shape)
-	psscan = (data_on-data_off)/data_off
-	return freqs,psscan
-
-def pklplot(ps_sets,labels):
-    c_bl = '#0000FF'
-    mycolors = ['#00FF00','#FF0000',"#0700c7",'#08c40e','#de0000', '#00e6da','#b57026','#f56ce0','#666666']
+def smooth(x, nchan):
+    kernel = 1.0 * np.ones(nchan) / nchan
+    return np.convolve(x, kernel, mode="same")
 
 
-    plt.figure(figsize=(12,6))
+def load_ps_set(fname_on, fname_off):
+    freqs, data_on = pkll(fname_on)
+    data_off = pkll(fname_off)[1]
+
+    # np.save(f'spectra/{fname_on}',np.mean(data_on,axis=0))
+    # np.save(f'spectra/{fname_off}',np.mean(data_off,axis=0))
+    # print(data_on.shape)
+    psscan = (data_on - data_off) / data_off
+    return freqs, psscan
 
 
-    ax=plt.axes()
+def pklplot(ps_sets, labels):
+    c_bl = "#0000FF"
+    mycolors = [
+        "#00FF00",
+        "#FF0000",
+        "#0700c7",
+        "#08c40e",
+        "#de0000",
+        "#00e6da",
+        "#b57026",
+        "#f56ce0",
+        "#666666",
+    ]
+
+    plt.figure(figsize=(12, 6))
+
+    ax = plt.axes()
     ax_lw = 2.5
-    ax.tick_params(axis='both',direction='in',width=2,length=8,top=True,right=True,pad=2)
-    ax.spines['bottom'].set_linewidth(ax_lw)
-    ax.spines['top'].set_linewidth(ax_lw)
-    ax.spines['left'].set_linewidth(ax_lw)
-    ax.spines['right'].set_linewidth(ax_lw)
+    ax.tick_params(
+        axis="both", direction="in", width=2, length=8, top=True, right=True, pad=2
+    )
+    ax.spines["bottom"].set_linewidth(ax_lw)
+    ax.spines["top"].set_linewidth(ax_lw)
+    ax.spines["left"].set_linewidth(ax_lw)
+    ax.spines["right"].set_linewidth(ax_lw)
 
-#np.save('spectra/Arp220_f.npy',freqs)
+    # np.save('spectra/Arp220_f.npy',freqs)
 
-#plt.plot(freqs_111187-9, unmit_ps_111187, alpha=0.7, label='Unmitigated')
-#plt.plot(freqs_002370-27, unmit_ps_002370, alpha=0.7, label='Unmitigated')
+    # plt.plot(freqs_111187-9, unmit_ps_111187, alpha=0.7, label='Unmitigated')
+    # plt.plot(freqs_002370-27, unmit_ps_002370, alpha=0.7, label='Unmitigated')
 
-#plt.plot(freqs_002370-27, mit_ps_1, alpha=0.7, label=label1)
-#plt.plot(freqs_002370-27, mit_ps_2, alpha=0.7, label=label2)
-#plt.plot(freqs_002370-27, mit_ps_3, alpha=0.7, label=label3)
-#plt.plot(freqs, mit_ps_4, alpha=0.7, label=label4)
+    # plt.plot(freqs_002370-27, mit_ps_1, alpha=0.7, label=label1)
+    # plt.plot(freqs_002370-27, mit_ps_2, alpha=0.7, label=label2)
+    # plt.plot(freqs_002370-27, mit_ps_3, alpha=0.7, label=label3)
+    # plt.plot(freqs, mit_ps_4, alpha=0.7, label=label4)
 
-#plt.plot(freqs, unmit_ps, alpha=0.7, label='Unmitigated')
-    plt.plot(ps_sets[0][0], ps_sets[0][1], alpha=0.7, label=labels[0],c=c_bl)
+    # plt.plot(freqs, unmit_ps, alpha=0.7, label='Unmitigated')
+    plt.plot(ps_sets[0][0], ps_sets[0][1], alpha=0.7, label=labels[0], c=c_bl)
 
-    for i,ps_set in enumerate(ps_sets[1:]):
-        plt.plot(ps_set[0],ps_set[1], alpha=0.7, label=labels[i+1], c=mycolors[i])
-
+    for i, ps_set in enumerate(ps_sets[1:]):
+        plt.plot(ps_set[0], ps_set[1], alpha=0.7, label=labels[i + 1], c=mycolors[i])
 
     fontsz = 18
-    plt.ylabel('Pseudo-power',fontsize=fontsz)
-    plt.xlabel('Frequency (MHz)',fontsize=fontsz)
+    plt.ylabel("Pseudo-power", fontsize=fontsz)
+    plt.xlabel("Frequency (MHz)", fontsize=fontsz)
     plt.xticks(fontsize=fontsz)
     plt.yticks(fontsize=fontsz)
     plt.tight_layout()
 
-    #plt.xlim((1605,1645))
-    #plt.ylim((-0.05,0.12))
+    # plt.xlim((1605,1645))
+    # plt.ylim((-0.05,0.12))
 
-    plt.title('III Zw 35 OH Maser',fontsize=fontsz)
+    plt.title("III Zw 35 OH Maser", fontsize=fontsz)
     plt.tight_layout()
 
-    #plt.text(1635,0.08, "(a)", fontsize=fontsz)
-    #plt.text(1409,-0.02, "(b)", fontsize=fontsz)
-    #plt.text(1418,-0.1, "(c)", fontsize=fontsz)
+    # plt.text(1635,0.08, "(a)", fontsize=fontsz)
+    # plt.text(1409,-0.02, "(b)", fontsize=fontsz)
+    # plt.text(1418,-0.1, "(c)", fontsize=fontsz)
 
-    #cent_freq = freqs[int(0.5*len(freqs)]
-    #co_res = 3.125
-    #co_res = 200./1024
+    # cent_freq = freqs[int(0.5*len(freqs)]
+    # co_res = 3.125
+    # co_res = 200./1024
 
-    #for xv in np.arange(freqs[-1],freqs[0],co_res/2):
-    #	plt.axvline(xv,c='#858585',linewidth=0.5)
+    # for xv in np.arange(freqs[-1],freqs[0],co_res/2):
+    # 	plt.axvline(xv,c='#858585',linewidth=0.5)
 
     plt.legend(fontsize=fontsz)
 
     plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

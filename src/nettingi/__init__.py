@@ -21,6 +21,3 @@ def version():
     :rtype: str
     """
     return __version__
-
-
-
