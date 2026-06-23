@@ -178,7 +178,7 @@ class mitigateRFI:
 
             # print(f'MEM: spect: {self.spect_all.nbytes/1e9} // flags: {self.flags_all.nbytes/1e9}')
             mu = pp.memory_info()
-            print(f"Total RAM usage: {mu[0]/2.**30} GB")
+            print(f"Total RAM usage: {np.around((mu[0]/2.**30),2)} GB")
             # track flags
 
             template_print_flagstats(flags_block, False)
@@ -236,7 +236,7 @@ class mitigateRFI:
                     out_rawFile.write(d1.tostring())
 
             bend = time.time()
-            print(f"block duration: {(bend-bstart)/60}")
+            print(f"block duration: {np.around((bend-bstart)/60,2)}")
 
         # ===============================================
         # ***********************************************
