@@ -327,7 +327,7 @@ def do_search(
     ### THE OUTPUT.  CONVERTING TO FILTERBANK FOR NOW.
     ### # Make search-mode PSRFITS files
     cmd = (
-        "digifits -c -L 599.95324416 -t 40.96e-6 -U 16384 -threads 4"
+        "digifits -c -L 599.95324416 -t 40.96e-6 -U 8192"
         " -p 4 -b {nbits} -D {dm} {infiles}".format(**kwargs)
     )
     ret = execute(cmd, out=outfile, err=errfile)

@@ -119,7 +119,7 @@ class mitigateRFI:
 
             elif self.det_method == "MAD":
                 flags_block, ut_block, lt_block = self.mad_detection_inside(
-                    data, self.MAD_m, self.MAD_n, 3.0
+                    data, self.MAD_m, self.MAD_n, self.sigma
                 )
                 # flags_block = np.expand_dims(flags_block,axis=2)
                 # ut_block = np.expand_dims(ut_block,axis=2)
@@ -128,9 +128,13 @@ class mitigateRFI:
                 if bi == 0:
                     self.ut_all = ut_block
                     self.lt_all = lt_block
+                    self.flags_all = flags_block
                 else:
                     self.ut_all = np.concatenate((self.ut_all, ut_block), axis=1)
                     self.lt_all = np.concatenate((self.lt_all, lt_block), axis=1)
+                    self.flags_all = np.concatenate(
+                        (self.flags_all, flags_block), axis=1
+                    )
 
             elif self.det_method == "SE":
                 flags_block, zsc_block = self.se_detection(data)
