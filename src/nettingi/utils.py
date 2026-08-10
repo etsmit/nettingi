@@ -207,9 +207,10 @@ def template_check_nblocks(rawFile, mb):
 # read the first block's header
 def template_print_header(rawFile):
     header, headersize = rawFile.read_header()
-    print("Header size: {} bytes".format(headersize))
+    out = f"Header size: {headersize} bytes\n"
     for line in header:
-        print(line + ":  " + str(header[line]))
+        out += f"{line}:  {header[line]}\n"
+    print(out)
     return headersize
 
 
@@ -602,15 +603,17 @@ def template_print_flagstats(flags_array, end):
         add = "--Final--\n"
     else:
         add = ""
-    print(f"{add}Pol 0: {np.around(100*np.mean(flags_array[:,:,0]),2)}% flagged")
-    print(f"{add}Pol 1: {np.around(100*np.mean(flags_array[:,:,1]),2)}% flagged")
+
+    add += f"Pol 0: {np.around(100*np.mean(flags_array[:,:,0]),2)}% flagged\n"
+    add += f"Pol 1: {np.around(100*np.mean(flags_array[:,:,1]),2)}% flagged\n"
 
     uf = flags_array[:, :, 0]
     uf[flags_array[:, :, 1] == 1] = 1
 
-    print(f"Union: {np.around(100*np.mean(uf),2)}% flagged")
+    add += f"Union: {np.around(100*np.mean(uf),2)}% flagged\n"
     if end:
-        print("--Final--")
+        add += "--Final--\n"
+    print(add)
 
 
 # @jit(parallel=True)

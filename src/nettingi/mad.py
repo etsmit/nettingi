@@ -41,7 +41,7 @@ class rfi_mad(mitigateRFI):
         self.MAD_m = m
         self.MAD_n = n
 
-        self._outfile_pattern = f"m{self.MAD_m}_n{self.MAD_n}_s{3.0}"
+        self._outfile_pattern = f"m{self.MAD_m}_n{self.MAD_n}_s{self.sigma}"
 
         self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir = (
             template_bookkeeping(self.infile, self._outfile_pattern, self.det_method)
@@ -92,18 +92,18 @@ class rfi_mad(mitigateRFI):
         out_ut = np.zeros(out_shape)
         out_lt = np.zeros(out_shape)
 
+        if data.shape[1] // (N * M) != data.shape[1] / (N * M):
+            print(f"{N} x {M} needs to integer divide {data.shape[1]}")
+            exit()
+
         for i in range(data.shape[2]):
 
-            td = data[:, :, i]
-
-            if td.shape[1] // (N * M) != td.shape[1] / (N * M):
-                print(f"{N} x {M} need to integer divide {td.shape[1]}")
-                exit()
-
-            s = np.abs(td) ** 2
+            s = np.abs(data[:, :, i]) ** 2
             a = np.mean(np.reshape(s, (s.shape[0], -1, N)), axis=2)
+            del s
 
             b = np.reshape(a, (a.shape[0], -1, M))
+            del a
 
             Mpulse = np.ones((1, 1, M))
             # Npulse = np.ones((1,N))

@@ -8,11 +8,14 @@ import scipy.special
 import math as math
 from blimpy import GuppiRaw
 
+# from numba.experimental import jitclass
+
 from .core import mitigateRFI
 
 from .utils import template_bookkeeping
 
 
+# @jitclass
 class rfi_swnorm(mitigateRFI):
     # h
     def __init__(
@@ -42,7 +45,9 @@ class rfi_swnorm(mitigateRFI):
         self.m = m
         self.alpha = alpha
 
-        self._outfile_pattern = f"m{self.m}_a{self.alpha}"
+        self._outfile_pattern = (
+            f"m{self.m}_a{self.alpha}_{self.repl_method}_{self.cust}"
+        )
 
         self.infile_raw_full, self.outfile_raw_full, self.output_mit_srdp_dir = (
             template_bookkeeping(self.infile, self._outfile_pattern, self.det_method)
