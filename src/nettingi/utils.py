@@ -210,7 +210,7 @@ def template_print_header(rawFile):
     out = f"Header size: {headersize} bytes\n"
     for line in header:
         out += f"{line}:  {header[line]}\n"
-    print(out)
+    # print(out)
     return headersize
 
 
@@ -614,6 +614,7 @@ def template_print_flagstats(flags_array, end):
     if end:
         add += "--Final--\n"
     print(add)
+    return np.around(100 * np.mean(uf), 2)
 
 
 # @jit(parallel=True)

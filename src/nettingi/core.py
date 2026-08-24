@@ -1,27 +1,25 @@
-import numpy as np
 import os
-import psutil
-
-import math as math
-
+import sys
 import time
 
+import numpy as np
+import psutil
 from blimpy import GuppiRaw
 
+from .plotting import load_raw_flags
+from .reduction import raw2spec_god
 from .utils import (
-    template_check_outfile,
-    template_check_nblocks,
-    template_print_header,
-    template_save_npy,
-    template_calc_ave,
-    template_print_flagstats,
     repl_nans_jit,
     repl_zeros,
     statistical_noise_fir,
+    template_calc_ave,
+    template_check_nblocks,
+    template_check_outfile,
     template_guppi_format,
+    template_print_flagstats,
+    template_print_header,
+    template_save_npy,
 )
-from .reduction import raw2spec_god
-from .plotting import load_raw_flags
 
 
 class mitigateRFI:
@@ -83,7 +81,7 @@ class mitigateRFI:
             # should check for NaNs just in case blimpy silently fails somehow
             if np.sum(np.isnan(data)) > 0:
                 print(f"Error: Block {bi*self.mb+1} of {self.rawFile} contains NaNs")
-                exit()
+                sys.exit()
 
             # find data shape
             # print(f'Data shape: {data.shape} || block size: {data.nbytes}')
@@ -97,65 +95,78 @@ class mitigateRFI:
             # ===============================================
             # ***********************************************
 
-            if self.det_method == "SK":
-                print("SK mitigation")
-                flags_block, ss_sk_block, ms_sk_block = self.SK_detection(data)
-                if bi == 0:
-                    self.ss_sk_all = ss_sk_block
-                    self.ms_sk_all = ms_sk_block
-                else:
-                    self.ss_sk_all = np.concatenate(
-                        (self.ss_sk_all, ss_sk_block), axis=1
+            print(self.det_method)
+            match self.det_method:
+                case "SK":
+                    print("SK mitigation")
+                    flags_block, ss_sk_block, ms_sk_block = self.SK_detection(data)
+                    if bi == 0:
+                        self.ss_sk_all = ss_sk_block
+                        self.ms_sk_all = ms_sk_block
+                    else:
+                        self.ss_sk_all = np.concatenate(
+                            (self.ss_sk_all, ss_sk_block), axis=1
+                        )
+                        self.ms_sk_all = np.concatenate(
+                            (self.ms_sk_all, ms_sk_block), axis=1
+                        )
+
+                case "IQRM":
+                    flags_block = self.iqrm_detection(data)
+
+                case "AOF":
+                    flags_block = self.aof_detection(data)
+
+                case "MAD":
+                    flags_block, ut_block, lt_block = self.mad_detection_inside(
+                        data, self.MAD_m, self.MAD_n, self.sigma
                     )
-                    self.ms_sk_all = np.concatenate(
-                        (self.ms_sk_all, ms_sk_block), axis=1
+                    # flags_block = np.expand_dims(flags_block,axis=2)
+                    # ut_block = np.expand_dims(ut_block,axis=2)
+                    # lt_block = np.expand_dims(lt_block,axis=2)
+                    # flags_block, ut_block, lt_block = self.mad_detection_inside(data[:,:,0],self.MAD_m,self.MAD_n,3.0)
+                    if bi == 0:
+                        self.ut_all = ut_block
+                        self.lt_all = lt_block
+                        self.flags_all = flags_block
+                    else:
+                        self.ut_all = np.concatenate((self.ut_all, ut_block), axis=1)
+                        self.lt_all = np.concatenate((self.lt_all, lt_block), axis=1)
+                        self.flags_all = np.concatenate(
+                            (self.flags_all, flags_block), axis=1
+                        )
+
+                case "SE":
+                    flags_block, zsc_block = self.se_detection(data)
+                    if bi == 0:
+                        self.zsc_all = zsc_block
+                    else:
+                        self.zsc_all = np.concatenate((self.zsc_all, zsc_block), axis=1)
+
+                case "Conv":
+                    flags_block = self.conv_detection(data)
+
+                case "SWNORM":
+                    flags_block, ptest_block, stat_block = self.swnorm_detection(data)
+                    if bi == 0:
+                        self.ptest_all = ptest_block
+                        self.stat_all = stat_block
+                    else:
+                        self.ptest_all = np.concatenate(
+                            (self.ptest_all, ptest_block), axis=1
+                        )
+                        self.stat_all = np.concatenate(
+                            (self.stat_all, stat_block), axis=1
+                        )
+
+                case "CSP":
+                    flags_block = self.csp_detection_cu(data)
+
+                case "_":
+                    print(
+                        f"Unknown RFI detection method '{self.det_method}'. How did you get here?"
                     )
-
-            elif self.det_method == "IQRM":
-                flags_block = self.iqrm_detection(data)
-
-            elif self.det_method == "AOF":
-                flags_block = self.aof_detection(data)
-
-            elif self.det_method == "MAD":
-                flags_block, ut_block, lt_block = self.mad_detection_inside(
-                    data, self.MAD_m, self.MAD_n, self.sigma
-                )
-                # flags_block = np.expand_dims(flags_block,axis=2)
-                # ut_block = np.expand_dims(ut_block,axis=2)
-                # lt_block = np.expand_dims(lt_block,axis=2)
-                # flags_block, ut_block, lt_block = self.mad_detection_inside(data[:,:,0],self.MAD_m,self.MAD_n,3.0)
-                if bi == 0:
-                    self.ut_all = ut_block
-                    self.lt_all = lt_block
-                    self.flags_all = flags_block
-                else:
-                    self.ut_all = np.concatenate((self.ut_all, ut_block), axis=1)
-                    self.lt_all = np.concatenate((self.lt_all, lt_block), axis=1)
-                    self.flags_all = np.concatenate(
-                        (self.flags_all, flags_block), axis=1
-                    )
-
-            elif self.det_method == "SE":
-                flags_block, zsc_block = self.se_detection(data)
-                if bi == 0:
-                    self.zsc_all = zsc_block
-                else:
-                    self.zsc_all = np.concatenate((self.zsc_all, zsc_block), axis=1)
-
-            elif self.det_method == "Conv":
-                flags_block = self.conv_detection(data)
-
-            elif self.det_method == "SWNORM":
-                flags_block, ptest_block, stat_block = self.swnorm_detection(data)
-                if bi == 0:
-                    self.ptest_all = ptest_block
-                    self.stat_all = stat_block
-                else:
-                    self.ptest_all = np.concatenate(
-                        (self.ptest_all, ptest_block), axis=1
-                    )
-                    self.stat_all = np.concatenate((self.stat_all, stat_block), axis=1)
+                    sys.exit()
 
             # ***********************************************
             # ===============================================
@@ -310,7 +321,7 @@ class mitigateRFI:
         # ===============================================
 
         # flagging stuff
-        template_print_flagstats(self.flags_all, True)
+        self.uf_flagrate = template_print_flagstats(self.flags_all, True)
 
         # link final output raw file to srdp directory
         os.system(f"ln -s {self.outfile_raw_full} {self.output_mit_srdp_dir}")

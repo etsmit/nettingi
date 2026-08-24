@@ -1,17 +1,15 @@
 # spectral entropy
 
-import numpy as np
+import math as math
 
+import numpy as np
 import scipy as sp
 import scipy.optimize
 import scipy.special
-import math as math
 from blimpy import GuppiRaw
 
 # from numba.experimental import jitclass
-
 from .core import mitigateRFI
-
 from .utils import template_bookkeeping
 
 
