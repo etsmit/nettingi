@@ -324,11 +324,8 @@ def statistical_noise_fir(a, f, ts_factor):
     """
     # find correct PFB coefficents
     nchan = str(f.shape[0]).zfill(4)
-    hfile = (
-        "/users/esmith/RFI_MIT/PFBcoeffs/c0800x"
-        + nchan
-        + "_x14_7_24t_095binw_get_pfb_coeffs_h.npy"
-    )
+    netpath = f"{(nettingi.__path__)[0][:-12]}PFBcoeffs/"
+    hfile = f"{netpath}c0800x{nchan}_x14_7_24t_095binw_get_pfb_coeffs_h.npy"
     # print(f'loading {hfile} for FIR coefficients')
     h = np.load(hfile)
     dec = h[:: 2 * f.shape[0]]
@@ -448,11 +445,8 @@ def statistical_noise_alt_fir(a, f, SK_M):
     # nchan = str(f.shape[0]*4).zfill(4)
     nchan = str(f.shape[0]).zfill(4)
     # print(nchan,type(nchan))
-    hfile = (
-        "/users/esmith/RFI_MIT/PFBcoeffs/c0800x"
-        + nchan
-        + "_x14_7_24t_095binw_get_pfb_coeffs_h.npy"
-    )
+    netpath = f"{(nettingi.__path__)[0][:-12]}PFBcoeffs/"
+    hfile = f"{netpath}c0800x{nchan}_x14_7_24t_095binw_get_pfb_coeffs_h.npy"
     h = np.load(hfile)
     dec = h[:: 2 * f.shape[0]]
 
