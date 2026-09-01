@@ -10,6 +10,10 @@ import nettingi
 import glob
 
 
+def verboseprint(s):
+    print(s)
+
+
 # get the template arguments
 def template_parse(parser):
 
@@ -118,7 +122,7 @@ def template_bookkeeping(infile, out_patt, det):
     else:
         input_raw_dir_base = base_dir + "jetstor/scratch/rfimit/unmitigated/rawdata"
     infile_base = infile[infile.rfind("/") + 1 : infile.find(".")]
-    print(infile, infile_base)
+    # print(infile, infile_base)
 
     # find input directory and file
     in_dir = f"{input_raw_dir_base}/{infile_base}/"
@@ -154,9 +158,9 @@ def template_bookkeeping(infile, out_patt, det):
     # if not os.path.exists(output_unmit_srdp_dir):
     #     os.system(f'mkdir {output_unmit_srdp_dir}')
 
-    print(infile_raw_full)
-    print(outfile_raw_full)
-    print(output_mit_srdp_dir)
+    # print(infile_raw_full)
+    # print(outfile_raw_full)
+    # print(output_mit_srdp_dir)
     # print(output_unmit_srdp_dir)
     return infile_raw_full, outfile_raw_full, output_mit_srdp_dir
 
@@ -591,7 +595,7 @@ def template_guppi_format(a):
     return out_arr
 
 
-def template_print_flagstats(flags_array, end):
+def template_print_flagstats(flags_array, end, verbose):
 
     if end:
         add = "--Final--\n"
@@ -607,7 +611,8 @@ def template_print_flagstats(flags_array, end):
     add += f"Union: {np.around(100*np.mean(uf),2)}% flagged\n"
     if end:
         add += "--Final--\n"
-    print(add)
+    if end or verbose:
+        print(add)
     return np.around(100 * np.mean(uf), 2)
 
 

@@ -27,6 +27,7 @@ class rfi_swnorm(mitigateRFI):
         mb=1,
         rawdata=False,
         ave_factor=512,
+        verbose=True,
     ):
         # user-given attributes
         self.det_method = "SWNORM"
@@ -37,6 +38,7 @@ class rfi_swnorm(mitigateRFI):
         self.rawdata = rawdata
         self.ave_factor = ave_factor
         self.infile = infile
+        self.verbose = verbose
 
         # default/hardcoded attributes
 
@@ -65,21 +67,17 @@ class rfi_swnorm(mitigateRFI):
         self._stat_filename = f"{self.output_mit_srdp_dir}{self.npybase}_stat_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
         out = f"""input: {self.infile_raw_full}\noutput: {self.outfile_raw_full}\nspect: {self._spect_filename}"""
-        print(out)
+        # print(out)
 
     def swnorm_detection(self, data):
 
         a = np.reshape(data, (data.shape[0], -1, self.m, data.shape[2]))
 
         # yippee, a scipy stats function for free, for me!
-        print("swnorm...")
-        shap = sp.stats.shapiro(a, axis=2, nan_policy="omit")
+        shap = sp.stats.shapiro(a.real, axis=2, nan_policy="omit")
         ptest = shap.pvalue
         stat = shap.statistic
 
-        # print(ptest.shape)
-
-        print("flagging")
         # flag
         flags_block = np.zeros(ptest.shape, dtype=np.int8)
         flags_block[np.isnan(ptest)] = 1

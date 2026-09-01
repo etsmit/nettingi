@@ -5,6 +5,7 @@ import time
 import numpy as np
 import psutil
 from blimpy import GuppiRaw
+from tqdm import tqdm
 
 from .plotting import load_raw_flags
 from .reduction import raw2spec_god
@@ -43,6 +44,7 @@ class mitigateRFI:
 
         # default/hardcoded attributes
         self.in_dir = "/jetstor/scratch/rfimit/unmitigated/rawdata/"
+        # verboseprint = print if self.verbose else lambda *a, **k: None
 
     def run_all(self):
         # do all the rfi mitigation steps
@@ -57,9 +59,10 @@ class mitigateRFI:
         template_check_nblocks(self._rawFile, self.mb)
         numblocks = self._rawFile.find_n_data_blocks()
 
-        for bi in range(numblocks // self.mb):
-            print("------------------------------------------")
-            print(f"Block: {(bi*self.mb)+1}/{numblocks}")
+        for bi in tqdm(range(numblocks // self.mb)):
+            if self.verbose:
+                print("------------------------------------------")
+                print(f"Block: {(bi*self.mb)+1}/{numblocks}")
 
             bstart = time.time()
 
@@ -95,10 +98,9 @@ class mitigateRFI:
             # ===============================================
             # ***********************************************
 
-            print(self.det_method)
             match self.det_method:
                 case "SK":
-                    print("SK mitigation")
+                    # print("SK mitigation")
                     flags_block, ss_sk_block, ms_sk_block = self.SK_detection(data)
                     if bi == 0:
                         self.ss_sk_all = ss_sk_block
@@ -193,10 +195,11 @@ class mitigateRFI:
 
             # print(f'MEM: spect: {self.spect_all.nbytes/1e9} // flags: {self.flags_all.nbytes/1e9}')
             mu = pp.memory_info()
-            print(f"Total RAM usage: {np.around((mu[0]/2.**30),2)} GB")
+            if self.verbose:
+                print(f"Total RAM usage: {np.around((mu[0]/2.**30),2)} GB")
             # track flags
 
-            template_print_flagstats(flags_block, False)
+            _ = template_print_flagstats(flags_block, False, self.verbose)
 
             # now flag shape is (chan,spectra,pol)
             # apply union of flags between the pols
@@ -238,7 +241,7 @@ class mitigateRFI:
                 self.regen_all = np.concatenate((self.regen_all, regen_block), axis=1)
 
             # write back raw data
-            print("write back")
+            # print("write back")
             if self.output_bool:
 
                 # print('Re-formatting data and writing back to file...')
@@ -248,10 +251,11 @@ class mitigateRFI:
                     d1 = template_guppi_format(
                         data[:, d1s * mb_i : d1s * (mb_i + 1), :]
                     )
-                    out_rawFile.write(d1.tostring())
+                    out_rawFile.write(d1.tobytes())
 
             bend = time.time()
-            print(f"block duration: {np.around((bend-bstart)/60,2)}")
+            if self.verbose:
+                print(f"block duration: {np.around((bend-bstart)/60,2)}")
 
         # ===============================================
         # ***********************************************
@@ -321,7 +325,7 @@ class mitigateRFI:
         # ===============================================
 
         # flagging stuff
-        self.uf_flagrate = template_print_flagstats(self.flags_all, True)
+        self.uf_flagrate = template_print_flagstats(self.flags_all, True, self.verbose)
 
         # link final output raw file to srdp directory
         os.system(f"ln -s {self.outfile_raw_full} {self.output_mit_srdp_dir}")
