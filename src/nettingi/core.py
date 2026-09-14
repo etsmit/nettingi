@@ -2,6 +2,7 @@ import os
 import sys
 import time
 
+import cupy as cp
 import numpy as np
 import psutil
 from blimpy import GuppiRaw
@@ -73,16 +74,16 @@ class mitigateRFI:
             # loading multiple blocks at once?
             for mb_i in range(self.mb):
                 if mb_i == 0:
-                    header, data = self._rawFile.read_next_data_block()
-                    data = np.copy(data)
+                    _, data = self._rawFile.read_next_data_block()
+                    data = cp.array(data)
                     d1s = data.shape[1]
                 else:
-                    h2, d2 = self._rawFile.read_next_data_block()
-                    data = np.append(data, np.copy(d2), axis=1)
+                    _, d2 = self._rawFile.read_next_data_block()
+                    data = cp.append(data, cp.array(d2), axis=1)
             # data = np.ascontiguousarray(data)
 
             # should check for NaNs just in case blimpy silently fails somehow
-            if np.sum(np.isnan(data)) > 0:
+            if cp.sum(cp.isnan(data)) > 0:
                 print(f"Error: Block {bi*self.mb+1} of {self.rawFile} contains NaNs")
                 sys.exit()
 
