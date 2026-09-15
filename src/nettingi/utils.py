@@ -280,16 +280,16 @@ def repl_nans(a, f):
     out : ndarray
         3-dimensional array of power values with flagged data replaced. Shape (Num Channels , Num Raw Spectra , Npol)
     """
-    print("repl_nans")  # hi
+    # print("repl_nans")  # hi
     ts = a.shape[1] // f.shape[1]
     if ts != 1:
         # for i in range(a.shape[1]):
         #    a[:,i,:][f[:,i//ts,:] == 1] = np.nan
-        i = np.arange(a.shape[1])
+        i = cp.arange(a.shape[1])
         m = f[:, i // ts, :]
-        a[m == 1] = np.nan
+        a[m == 1] = cp.nan
     else:
-        a[f == 1] = np.nan
+        a[f == 1] = cp.nan
     return a
 
 
@@ -586,10 +586,10 @@ def template_guppi_format(a):
     """
     # init output
     out_arr = cp.empty(shape=2 * a.size, dtype=np.int8)
-    print(out_arr.nbytes / 1e9)
+    # print(out_arr.nbytes / 1e9)
     # get real values, ravel, cast to int8
     arav = a.ravel()
-    print(arav.nbytes / 1e9)
+    # print(arav.nbytes / 1e9)
     # a_real = cp.clip(cp.floor(arav.real), -128, 127).astype(np.int8)
     out_arr[::2] = cp.clip(cp.floor(arav.real), -128, 127).astype(np.int8)
     # del a_real

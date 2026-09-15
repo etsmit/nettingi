@@ -12,6 +12,7 @@ from .plotting import load_raw_flags
 from .reduction import raw2spec_god
 from .utils import (
     repl_nans_jit,
+    repl_nans,
     repl_zeros,
     statistical_noise_fir,
     template_calc_ave,
@@ -214,7 +215,7 @@ class mitigateRFI:
             rlen = flags_block.shape[1] * ts_factor
 
             if self.repl_method == "nans":
-                data[:, :rlen, :] = repl_nans_jit(data[:, :rlen, :], flags_block)
+                data[:, :rlen, :] = repl_nans(data[:, :rlen, :], flags_block)
 
             if self.repl_method == "zeros":
                 # replace data with zeros
@@ -260,9 +261,9 @@ class mitigateRFI:
             del regen_block, spect_block, flags_block
 
             bend = time.time()
-            print(
-                f"GPU Mem Usage: {mempool.used_bytes()/1e9}/{mempool.total_bytes()/1e9} GB"
-            )
+            # print(
+            #     f"GPU Mem Usage: {mempool.used_bytes()/1e9}/{mempool.total_bytes()/1e9} GB"
+            # )
             if self.verbose:
                 print(f"block duration: {np.around((bend-bstart)/60,2)}")
 
@@ -334,7 +335,9 @@ class mitigateRFI:
         # ===============================================
 
         # flagging stuff
-        self.uf_flagrate = template_print_flagstats(self.flags_all, True, self.verbose)
+        self.uf_flagrate = template_print_flagstats(
+            self.flags_all, True, self.verbose
+        ).get()
 
         # link final output raw file to srdp directory
         os.system(f"ln -s {self.outfile_raw_full} {self.output_mit_srdp_dir}")
