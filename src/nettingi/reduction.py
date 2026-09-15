@@ -3,8 +3,10 @@
 
 
 import numpy as np
+import cupy as cp
+import cupyx as cpx
 from scipy import signal
-
+from tqdm import tqdm
 
 import os
 import pickle
@@ -79,6 +81,79 @@ def pfb_mask(
             np.fft.rfftfreq(nchan, d=1.0 / fs)
             if real
             else np.fft.fftfreq(nchan, d=1.0 / fs)
+        )
+        return xpfb, freqs
+    else:
+        return xpfb
+
+
+def pfb_mask_cupy(
+    x, ma, nchan, ntap, window="hann", fs=1.0, return_freqs=False, force_complex=False
+):
+    """
+    Channelize data using a polyphase filterbank
+
+    Parameters
+    ----------
+    x : ndarray
+       The input time series.
+    ma : ndarray
+       Mask array. Needs to be same size as x.
+    nchan : int
+       The number of channels to form.
+    ntap : int
+       The number of PFB taps to use.
+    window : str
+       The windowing function to use for the PFB coefficients.
+    fs : float
+       The sampling frequency of the input data.
+    return_freqs : bool
+       If True, return the center frequency of each channel.
+    force_complex : bool
+       If True, treat input as complex even if the imaginary component is zero.
+
+    Returns
+    -------
+    x_pfb : ndarray
+       The channelized data
+    freqs : ndarray
+       The center frequency of each channel.  Omitted if
+       return_freqs == False
+
+    Notes
+    -----
+    If the input data are real-valued then only positive frequencies
+    are returned.
+    """
+    real = np.isreal(x).all() and not force_complex
+    h = cpx.scipy.signal.firwin(ntap * nchan, cutoff=1.0 / nchan, window="rectangular")
+    h *= cpx.scipy.signal.get_window(window, ntap * nchan)
+    nwin = x.shape[0] // ntap // nchan
+    x = x[: nwin * ntap * nchan].reshape((nwin * ntap, nchan)).T
+    ma = ma[: nwin * ntap * nchan].reshape((nwin * ntap, nchan)).T
+    # xma = np.ma.getmask(x)
+    h = h.reshape((ntap, nchan)).T
+    xs = cp.zeros((nchan, ntap * (nwin - 1) + 1), dtype=x.dtype)
+    for ii in range(ntap * (nwin - 1) + 1):
+        xw = h * x[:, ii : ii + ntap]
+        if ma[:, ii : ii + ntap].sum() == 0:
+            xs[:, ii] = xw.sum(axis=1)
+        else:
+            xs[:, ii] = cp.empty(xw.shape[0], dtype=x.dtype)
+            xs[:, ii] = cp.nan
+    xs = xs.T
+    # compare input flagging vs. output flags
+    # print(100.*(np.ma.count_masked(x)/x.size) , 100.*np.sum(np.isnan(xs))/xs.size)
+    xpfb = cp.fft.rfft(xs, nchan, axis=1) if real else cp.fft.fft(xs, nchan, axis=1)
+    xpfb *= np.sqrt(nchan)
+
+    # print(100.*np.sum(np.isnan(xs))/xs.size, 100.*np.sum(np.isnan(xpfb))/xpfb.size)
+
+    if return_freqs:
+        freqs = (
+            cp.fft.rfftfreq(nchan, d=1.0 / fs)
+            if real
+            else cp.fft.fftfreq(nchan, d=1.0 / fs)
         )
         return xpfb, freqs
     else:
@@ -317,17 +392,19 @@ def raw2spec_god(resolution, gr, det, outfile, mask=None):
                 # print(f'There are {numblocks} blocks and you set -mb {mb}, pick a divisible integer')
                 # sys.exit()
         else:
-            f = np.load(mask)
+            f = cp.load(mask)
 
-    spectrum = np.zeros(nchan_pfb * nchan)
-    unflagged_blocks = np.zeros(nchan_pfb * nchan)
+    spectrum = cp.zeros(nchan_pfb * nchan)
+    unflagged_blocks = cp.zeros(nchan_pfb * nchan)
 
     gr.reset_index()
-    for bb in range(gr.n_blocks):
-        print(f"Working on block {bb+1} of {gr.n_blocks}")
-        hdr, data = gr.read_next_data_block()
-        x = data[:, :, 0]
-        y = data[:, :, 1]
+    for bb in tqdm(range(gr.n_blocks)):
+        # print(f"Working on block {bb+1} of {gr.n_blocks}")
+        _, data = gr.read_next_data_block()
+        ds = data.shape
+        x = cp.array(data[:, :, 0])
+        y = cp.array(data[:, :, 1])
+        del data
 
         # apply mask
         # find M
@@ -343,32 +420,40 @@ def raw2spec_god(resolution, gr, det, outfile, mask=None):
 
         # mask = np.kron(this_f,pulse)
 
-        union_mask = np.copy(mask[:, :, 0])
+        union_mask = cp.copy(mask[:, :, 0])
         union_mask[mask[:, :, 1] == 1] = 1
 
-        pulse = np.ones((1, x.shape[1] // union_mask.shape[1]))
-        union_mask = np.kron(union_mask, pulse)
+        pulse = cp.ones((1, x.shape[1] // union_mask.shape[1]))
+        union_mask = cp.kron(union_mask, pulse)
 
-        xma = np.ma.masked_array(x, union_mask)
-        yma = np.ma.masked_array(y, union_mask)
+        # not valid in cupy
+        # so need to track union mask and not do pfb when mask has trues
+        # xma = np.ma.masked_array(x, union_mask)
+        # yma = np.ma.masked_array(y, union_mask)
 
-        for nn in range(data.shape[0]):
+        for nn in range(ds[0]):
 
             if mask is not None:
-                xpfb = np.fft.fftshift(
-                    pfb_mask(xma[nn], nchan_pfb, 12, force_complex=True), axes=-1
+                xpfb = cp.fft.fftshift(
+                    pfb_mask_cupy(
+                        x[nn], union_mask[nn], nchan_pfb, 12, force_complex=True
+                    ),
+                    axes=-1,
                 )
-                ypfb = np.fft.fftshift(
-                    pfb_mask(yma[nn], nchan_pfb, 12, force_complex=True), axes=-1
+                ypfb = cp.fft.fftshift(
+                    pfb_mask_cupy(
+                        y[nn], union_mask[nn], nchan_pfb, 12, force_complex=True
+                    ),
+                    axes=-1,
                 )
 
                 spec = (
-                    np.nanmean(np.abs(xpfb) ** 2, axis=0)
-                    + np.nanmean(np.abs(ypfb) ** 2, axis=0)
+                    cp.nanmean(cp.abs(xpfb) ** 2, axis=0)
+                    + cp.nanmean(cp.abs(ypfb) ** 2, axis=0)
                 ) / 2
 
-                if np.sum(np.isnan(spec)) == 0:
-                    spectrum[nn * nchan_pfb : (nn + 1) * nchan_pfb] += np.flip(
+                if cp.sum(cp.isnan(spec)) == 0:
+                    spectrum[nn * nchan_pfb : (nn + 1) * nchan_pfb] += cp.flip(
                         spec[::-1]
                     )
                     unflagged_blocks[nn * nchan_pfb : (nn + 1) * nchan_pfb] += 1
@@ -385,7 +470,7 @@ def raw2spec_god(resolution, gr, det, outfile, mask=None):
                     + np.mean(np.abs(ypfb) ** 2, axis=0)
                 ) / 2
 
-                spectrum[nn * nchan_pfb : (nn + 1) * nchan_pfb] += np.flip(spec[::-1])
+                spectrum[nn * nchan_pfb : (nn + 1) * nchan_pfb] += cp.flip(spec[::-1])
 
     if (det == "AOF") or (det == "MAD"):
         spectrum /= unflagged_blocks
@@ -394,7 +479,7 @@ def raw2spec_god(resolution, gr, det, outfile, mask=None):
 
     # pfb_chanbw = chanbw/nchan_pfb
 
-    freqs = fctr - 0.5 * bw + bw / (nchan * nchan_pfb) * np.arange(nchan * nchan_pfb)
+    freqs = fctr - 0.5 * bw + bw / (nchan * nchan_pfb) * cp.arange(nchan * nchan_pfb)
 
     out1 = (freqs, spectrum)
     with open(outfile, "wb") as outf:

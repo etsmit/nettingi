@@ -51,6 +51,7 @@ class mitigateRFI:
         # do all the rfi mitigation steps
 
         pp = psutil.Process(os.getpid())
+        mempool = cp.get_default_memory_pool()
 
         start_time = time.time()
         if self.output_bool:
@@ -113,6 +114,7 @@ class mitigateRFI:
                         self.ms_sk_all = np.concatenate(
                             (self.ms_sk_all, ms_sk_block), axis=1
                         )
+                    del ss_sk_block, ms_sk_block
 
                 case "IQRM":
                     flags_block = self.iqrm_detection(data)
@@ -254,7 +256,13 @@ class mitigateRFI:
                     )
                     out_rawFile.write(d1.tobytes())
 
+            del data, d1
+            del regen_block, spect_block, flags_block
+
             bend = time.time()
+            print(
+                f"GPU Mem Usage: {mempool.used_bytes()/1e9}/{mempool.total_bytes()/1e9} GB"
+            )
             if self.verbose:
                 print(f"block duration: {np.around((bend-bstart)/60,2)}")
 

@@ -205,6 +205,7 @@ class rfi_sk(mitigateRFI):
         sk_est = ((self.SK_m * nd + 1) / (self.SK_m - 1)) * (
             ((self.SK_m * sum2) / (sum1**2)) - 1
         )
+        del sum1, sum2, a
         return sk_est
 
     # @jit(nopython=True, parallel=True)
@@ -254,7 +255,7 @@ class rfi_sk(mitigateRFI):
         sk_est = ((self.SK_m * nd + 1) / (self.SK_m - 1)) * (
             ((self.SK_m * ms_s2) / (ms_s1**2)) - 1
         )
-        # print(sk_est)
+        del s1, s2, ms_s1, ms_s2, a
         return sk_est
 
     def upperRoot(self, x, moment_2, moment_3, p):

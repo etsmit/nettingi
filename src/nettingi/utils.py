@@ -586,16 +586,19 @@ def template_guppi_format(a):
     """
     # init output
     out_arr = cp.empty(shape=2 * a.size, dtype=np.int8)
+    print(out_arr.nbytes / 1e9)
     # get real values, ravel, cast to int8
     arav = a.ravel()
-    a_real = cp.clip(cp.floor(arav.real), -128, 127).astype(np.int8)
-    out_arr[::2] = a_real
-    del a_real
+    print(arav.nbytes / 1e9)
+    # a_real = cp.clip(cp.floor(arav.real), -128, 127).astype(np.int8)
+    out_arr[::2] = cp.clip(cp.floor(arav.real), -128, 127).astype(np.int8)
+    # del a_real
     # get imag values, ravel, cast to int8
-    a_imag = cp.clip(cp.floor(arav.imag), -128, 127).astype(np.int8)
+    # a_imag = cp.clip(cp.floor(arav.imag), -128, 127).astype(np.int8)
     # interleave
-    out_arr[1::2] = a_imag
-    del a_imag
+    out_arr[1::2] = cp.clip(cp.floor(arav.imag), -128, 127).astype(np.int8)
+    # del a_imag
+    del arav
     return out_arr
 
 
