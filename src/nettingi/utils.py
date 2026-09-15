@@ -1,13 +1,15 @@
 # Support functions for mitigateRFI_template.py
 # These should be used in all mitigateRFI variants
 
-import numpy as np
+import glob
 import os
 import sys
 
+import cupy as cp
+import numpy as np
 from numba import jit, prange
+
 import nettingi
-import glob
 
 
 def verboseprint(s):
@@ -222,7 +224,7 @@ def template_print_header(rawFile):
 def template_save_npy(data, block, npy_base):
     block_fname = str(block).zfill(3)
     save_fname = npy_base + "_block" + block_fname + ".npy"
-    np.save(save_fname, data)
+    np.save(save_fname, data.get())
 
 
 # =======================
@@ -278,16 +280,16 @@ def repl_nans(a, f):
     out : ndarray
         3-dimensional array of power values with flagged data replaced. Shape (Num Channels , Num Raw Spectra , Npol)
     """
-    print("repl_nans")  # hi
+    # print("repl_nans")  # hi
     ts = a.shape[1] // f.shape[1]
     if ts != 1:
         # for i in range(a.shape[1]):
         #    a[:,i,:][f[:,i//ts,:] == 1] = np.nan
-        i = np.arange(a.shape[1])
+        i = cp.arange(a.shape[1])
         m = f[:, i // ts, :]
-        a[m == 1] = np.nan
+        a[m == 1] = cp.nan
     else:
-        a[f == 1] = np.nan
+        a[f == 1] = cp.nan
     return a
 
 
@@ -332,7 +334,7 @@ def statistical_noise_fir(a, f, ts_factor):
     hfile = f"{netpath}c0800x{nchan}_x14_7_24t_095binw_get_pfb_coeffs_h.npy"
     # print(f'loading {hfile} for FIR coefficients')
     h = np.load(hfile)
-    dec = h[:: 2 * f.shape[0]]
+    dec = cp.array(h[:: 2 * f.shape[0]])
     if ts_factor != 1:
         pulse = np.ones((1, ts_factor, 1))
         f = np.kron(f, pulse)
@@ -542,7 +544,7 @@ def adj_chan_good_data_alt(a, f, c, SK_M, tb):
     return ave_real, ave_imag, std_real, std_imag
 
 
-@jit
+# @jit
 def noise_filter(ave, std, msk, dec):
     """
     Create gaussian noise filtered by the correct PFB coefficients to mimic the VEGAS coarse channel SEFD
@@ -562,13 +564,13 @@ def noise_filter(ave, std, msk, dec):
         1-dimensional string of filtered gaussian noise to inject back over masked data
     """
     # make correctly scaled noise
-    out = np.random.normal(ave, std, msk)
+    out = cp.random.normal(ave, std, msk)
     # do FIR
-    out_filtered = np.convolve(dec, out, mode="same")
+    out_filtered = cp.convolve(dec, out, mode="same")
     return out_filtered
 
 
-@jit
+# @jit
 def template_guppi_format(a):
     """
     takes array of np.complex64,ravels it and outputs as 1D array of signed 8 bit integers
@@ -583,15 +585,20 @@ def template_guppi_format(a):
         1-dimensional array of values to be written back to the copied data file
     """
     # init output
-    out_arr = np.empty(shape=2 * a.size, dtype=np.int8)
+    out_arr = cp.empty(shape=2 * a.size, dtype=np.int8)
+    # print(out_arr.nbytes / 1e9)
     # get real values, ravel, cast to int8
     arav = a.ravel()
-    a_real = np.clip(np.floor(arav.real), -128, 127).astype(np.int8)
+    # print(arav.nbytes / 1e9)
+    # a_real = cp.clip(cp.floor(arav.real), -128, 127).astype(np.int8)
+    out_arr[::2] = cp.clip(cp.floor(arav.real), -128, 127).astype(np.int8)
+    # del a_real
     # get imag values, ravel, cast to int8
-    a_imag = np.clip(np.floor(arav.imag), -128, 127).astype(np.int8)
+    # a_imag = cp.clip(cp.floor(arav.imag), -128, 127).astype(np.int8)
     # interleave
-    out_arr[::2] = a_real
-    out_arr[1::2] = a_imag
+    out_arr[1::2] = cp.clip(cp.floor(arav.imag), -128, 127).astype(np.int8)
+    # del a_imag
+    del arav
     return out_arr
 
 
@@ -618,18 +625,18 @@ def template_print_flagstats(flags_array, end, verbose):
 
 # @jit(parallel=True)
 def template_calc_ave(data, m):
-    out = np.zeros((data.shape[0], data.shape[1] // m, data.shape[2]), dtype=np.float64)
-    s = np.abs(data) ** 2
-    # step1_p0 = np.ascontiguousarray(np.reshape(s[:,:,0], (s.shape[0],-1,m)))
-    # step1_p1 = np.ascontiguousarray(np.reshape(s[:,:,1], (s.shape[0],-1,m)))
-    # out[:,:,0] = np.nanmean(step1_p0,axis=2)
-    # out[:,:,1] = np.nanmean(step1_p1,axis=2)
-    a = np.reshape(s, (s.shape[0], -1, m, s.shape[2]))
+    out = cp.zeros((data.shape[0], data.shape[1] // m, data.shape[2]), dtype=np.float64)
+    s = cp.abs(data) ** 2
+    step1_p0 = cp.reshape(s[:, :, 0], (s.shape[0], -1, m))
+    step1_p1 = cp.reshape(s[:, :, 1], (s.shape[0], -1, m))
+    out[:, :, 0] = np.nanmean(step1_p0, axis=2)
+    out[:, :, 1] = np.nanmean(step1_p1, axis=2)
+    # a = cp.reshape(s, (s.shape[0], -1, m, s.shape[2]))
     # numba nanmean cannot select by axis
-    for pol in range(out.shape[2]):
-        for chan in range(out.shape[0]):
-            for tb in range(out.shape[1]):
-                out[chan, tb, pol] = np.nanmean(a[chan, tb, :, pol])
+    # for pol in range(out.shape[2]):
+    #     for chan in range(out.shape[0]):
+    #         for tb in range(out.shape[1]):
+    #             out[chan, tb, pol] = cp.nanmean(a[chan, tb, :, pol])
     return out
 
 

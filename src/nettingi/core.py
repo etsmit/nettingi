@@ -2,6 +2,7 @@ import os
 import sys
 import time
 
+import cupy as cp
 import numpy as np
 import psutil
 from blimpy import GuppiRaw
@@ -11,6 +12,7 @@ from .plotting import load_raw_flags
 from .reduction import raw2spec_god
 from .utils import (
     repl_nans_jit,
+    repl_nans,
     repl_zeros,
     statistical_noise_fir,
     template_calc_ave,
@@ -50,6 +52,7 @@ class mitigateRFI:
         # do all the rfi mitigation steps
 
         pp = psutil.Process(os.getpid())
+        mempool = cp.get_default_memory_pool()
 
         start_time = time.time()
         if self.output_bool:
@@ -73,16 +76,16 @@ class mitigateRFI:
             # loading multiple blocks at once?
             for mb_i in range(self.mb):
                 if mb_i == 0:
-                    header, data = self._rawFile.read_next_data_block()
-                    data = np.copy(data)
+                    _, data = self._rawFile.read_next_data_block()
+                    data = cp.array(data)
                     d1s = data.shape[1]
                 else:
-                    h2, d2 = self._rawFile.read_next_data_block()
-                    data = np.append(data, np.copy(d2), axis=1)
+                    _, d2 = self._rawFile.read_next_data_block()
+                    data = cp.append(data, cp.array(d2), axis=1)
             # data = np.ascontiguousarray(data)
 
             # should check for NaNs just in case blimpy silently fails somehow
-            if np.sum(np.isnan(data)) > 0:
+            if cp.sum(cp.isnan(data)) > 0:
                 print(f"Error: Block {bi*self.mb+1} of {self.rawFile} contains NaNs")
                 sys.exit()
 
@@ -112,6 +115,7 @@ class mitigateRFI:
                         self.ms_sk_all = np.concatenate(
                             (self.ms_sk_all, ms_sk_block), axis=1
                         )
+                    del ss_sk_block, ms_sk_block
 
                 case "IQRM":
                     flags_block = self.iqrm_detection(data)
@@ -211,7 +215,7 @@ class mitigateRFI:
             rlen = flags_block.shape[1] * ts_factor
 
             if self.repl_method == "nans":
-                data[:, :rlen, :] = repl_nans_jit(data[:, :rlen, :], flags_block)
+                data[:, :rlen, :] = repl_nans(data[:, :rlen, :], flags_block)
 
             if self.repl_method == "zeros":
                 # replace data with zeros
@@ -253,7 +257,13 @@ class mitigateRFI:
                     )
                     out_rawFile.write(d1.tobytes())
 
+            del data, d1
+            del regen_block, spect_block, flags_block
+
             bend = time.time()
+            # print(
+            #     f"GPU Mem Usage: {mempool.used_bytes()/1e9}/{mempool.total_bytes()/1e9} GB"
+            # )
             if self.verbose:
                 print(f"block duration: {np.around((bend-bstart)/60,2)}")
 
@@ -325,7 +335,9 @@ class mitigateRFI:
         # ===============================================
 
         # flagging stuff
-        self.uf_flagrate = template_print_flagstats(self.flags_all, True, self.verbose)
+        self.uf_flagrate = template_print_flagstats(
+            self.flags_all, True, self.verbose
+        ).get()
 
         # link final output raw file to srdp directory
         os.system(f"ln -s {self.outfile_raw_full} {self.output_mit_srdp_dir}")

@@ -1,6 +1,6 @@
 # h
 import numpy as np
-
+import cupy as cp
 
 import math as math
 import torch
@@ -77,6 +77,7 @@ class rfi_ConvRFI(mitigateRFI):
         mb=1,
         rawdata=False,
         ave_factor=512,
+        verbose=True,
     ):
         # user-given attributes
         self.det_method = "Conv"
@@ -87,6 +88,7 @@ class rfi_ConvRFI(mitigateRFI):
         self.rawdata = rawdata
         self.ave_factor = ave_factor
         self.infile = infile
+        self.verbose = verbose
 
         # convRFI related parameters
         self.a0 = a0
@@ -125,19 +127,14 @@ class rfi_ConvRFI(mitigateRFI):
 
         s_ave = template_calc_ave(data, self.ave_factor).astype(np.float32)
         net = init_RFIconv(net, aggressive_factor=agg_factor, device=device).to(device)
-        flags_block = np.empty(s_ave.shape)
+        flags_block = cp.empty(s_ave.shape)
         for pol in range(s_ave.shape[2]):
             with torch.no_grad():
-                output = (
-                    net(
-                        torch.tensor(s_ave[:, :, pol].squeeze()[None, None, :, :]).to(
-                            device
-                        )
+                output = net(
+                    torch.tensor(s_ave[:, :, pol].squeeze()[None, None, :, :]).to(
+                        device
                     )
-                    .squeeze()
-                    .cpu()
-                    .numpy()
-                )
+                ).squeeze()
             flags_block[:, :, pol] = output
 
         net = init_RFIconv(net, aggressive_factor=agg_factor, device=device).to(device)

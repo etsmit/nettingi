@@ -1,14 +1,14 @@
 # h
-import numpy as np
+import math
 
+import cupy as cp
+import numpy as np
 import scipy as sp
 import scipy.optimize
 import scipy.special
-import math as math
 from blimpy import GuppiRaw
 
 from .core import mitigateRFI
-
 from .utils import (
     template_bookkeeping,
 )
@@ -76,6 +76,7 @@ class rfi_sk(mitigateRFI):
         mb=1,
         rawdata=False,
         ave_factor=512,
+        verbose=True,
     ):
         # user-given attributes
         self.det_method = "SK"
@@ -86,6 +87,7 @@ class rfi_sk(mitigateRFI):
         self.rawdata = rawdata
         self.ave_factor = ave_factor
         self.infile = infile
+        self.verbose = verbose
 
         # sk related parameters
         self.SK_m = m
@@ -134,7 +136,7 @@ class rfi_sk(mitigateRFI):
     # @jit(nopython=True, parallel=True)
     def SK_detection(self, data):
 
-        s = np.abs(data) ** 2
+        s = cp.abs(data) ** 2
 
         num_coarsechan = s.shape[0]
         num_timesamples = s.shape[1]
@@ -142,10 +144,10 @@ class rfi_sk(mitigateRFI):
 
         self.check_m(self.SK_m, data.shape[1])
 
-        flags_block = np.zeros(
+        flags_block = cp.zeros(
             (s.shape[0], s.shape[1] // self.SK_m, s.shape[2]), dtype=np.int8
         )
-        ms_flags_block = np.zeros(
+        ms_flags_block = cp.zeros(
             (
                 s.shape[0] - (self.ms0 - 1),
                 flags_block.shape[1] - (self.ms1 - 1),
@@ -177,7 +179,7 @@ class rfi_sk(mitigateRFI):
         else:
             ms_sk_block = np.ones(ms_flags_block.shape)
 
-        return flags_block, ss_sk_block, ms_sk_block
+        return flags_block.get(), ss_sk_block, ms_sk_block
 
         # pass
 
@@ -197,12 +199,13 @@ class rfi_sk(mitigateRFI):
             Spectrum of SK values.
         """
         nd = self.n * self.d
-        a = np.reshape(s, (s.shape[0], -1, self.SK_m, s.shape[2]))
-        sum1 = np.sum(a, axis=2)
-        sum2 = np.sum(a**2, axis=2)
+        a = cp.reshape(s, (s.shape[0], -1, self.SK_m, s.shape[2]))
+        sum1 = cp.sum(a, axis=2)
+        sum2 = cp.sum(a**2, axis=2)
         sk_est = ((self.SK_m * nd + 1) / (self.SK_m - 1)) * (
             ((self.SK_m * sum2) / (sum1**2)) - 1
         )
+        del sum1, sum2, a
         return sk_est
 
     # @jit(nopython=True, parallel=True)
@@ -223,13 +226,13 @@ class rfi_sk(mitigateRFI):
 
         ms_binsize = self.ms0 * self.ms1
         num_SKbins = s.shape[1] // self.SK_m
-        ms_s1 = np.zeros((s.shape[0] - (self.ms0 - 1), num_SKbins - (self.ms1 - 1), 2))
-        ms_s2 = np.zeros((s.shape[0] - (self.ms0 - 1), num_SKbins - (self.ms1 - 1), 2))
+        ms_s1 = cp.zeros((s.shape[0] - (self.ms0 - 1), num_SKbins - (self.ms1 - 1), 2))
+        ms_s2 = cp.zeros((s.shape[0] - (self.ms0 - 1), num_SKbins - (self.ms1 - 1), 2))
         nd = self.n * self.d
 
-        a = np.reshape(s, (s.shape[0], -1, self.SK_m, s.shape[2]))
-        s1 = np.sum(a, axis=2)
-        s2 = np.sum(a**2, axis=2)
+        a = cp.reshape(s, (s.shape[0], -1, self.SK_m, s.shape[2]))
+        s1 = cp.sum(a, axis=2)
+        s2 = cp.sum(a**2, axis=2)
 
         # make multiscale S1, S2
         for ichan in range(self.ms0):
@@ -252,7 +255,7 @@ class rfi_sk(mitigateRFI):
         sk_est = ((self.SK_m * nd + 1) / (self.SK_m - 1)) * (
             ((self.SK_m * ms_s2) / (ms_s1**2)) - 1
         )
-        # print(sk_est)
+        del s1, s2, ms_s1, ms_s2, a
         return sk_est
 
     def upperRoot(self, x, moment_2, moment_3, p):
@@ -316,27 +319,21 @@ class rfi_sk(mitigateRFI):
             (8 * (M**3) * Nd * (1 + Nd) * (-2 + Nd * (-5 + M * (4 + Nd))))
         ) / (((M - 1) ** 2) * (2 + M * Nd) * (3 + M * Nd) * (4 + M * Nd) * (5 + M * Nd))
         moment_4 = float(
-            (
-                12
-                * (M**4)
-                * Nd
-                * (1 + Nd)
+            12
+            * (M**4)
+            * Nd
+            * (1 + Nd)
+            * (
+                24
+                + Nd
                 * (
-                    24
-                    + Nd
+                    48
+                    + 84 * Nd
+                    + M
                     * (
-                        48
-                        + 84 * Nd
-                        + M
-                        * (
-                            -32
-                            + Nd
-                            * (
-                                -245
-                                - 93 * Nd
-                                + M * (125 + Nd * (68 + M + (3 + M) * Nd))
-                            )
-                        )
+                        -32
+                        + Nd
+                        * (-245 - 93 * Nd + M * (125 + Nd * (68 + M + (3 + M) * Nd)))
                     )
                 )
             )
