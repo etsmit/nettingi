@@ -1,7 +1,7 @@
+import glob
 import os
 import sys
-import glob
-from multiprocessing import Process, Queue, JoinableQueue
+from multiprocessing import JoinableQueue, Process, Queue
 
 # dictionary of pulsar info
 # Epoch/RA is key, value is list with [par file name, DM, period]

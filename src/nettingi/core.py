@@ -11,7 +11,6 @@ from tqdm import tqdm
 from .plotting import load_raw_flags
 from .reduction import raw2spec_god
 from .utils import (
-    repl_nans_jit,
     repl_nans,
     repl_zeros,
     statistical_noise_fir,
@@ -52,12 +51,12 @@ class mitigateRFI:
         # do all the rfi mitigation steps
 
         pp = psutil.Process(os.getpid())
-        mempool = cp.get_default_memory_pool()
+        # mempool = cp.get_default_memory_pool()
 
         start_time = time.time()
         if self.output_bool:
             template_check_outfile(self.infile_raw_full, self.outfile_raw_full)
-            out_rawFile = open(self.outfile_raw_full, "rb+")
+            out_rawFile = open(self.outfile_raw_full, "rb+")  # noqa: SIM115
 
         template_check_nblocks(self._rawFile, self.mb)
         numblocks = self._rawFile.find_n_data_blocks()

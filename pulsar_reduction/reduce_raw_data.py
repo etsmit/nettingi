@@ -1,15 +1,16 @@
-import os
-import sys
-import subprocess
-import glob
 import argparse
-import numpy as np
+import glob
+import os
+import subprocess
+import sys
 import time
 from operator import attrgetter
 from pathlib import Path
-from presto import sifting
-from presto.presto import get_baryv
-from presto.infodata import infodata
+
+import numpy as np
+from presto import sifting  # type: ignore
+from presto.infodata import infodata  # type: ignore
+from presto.presto import get_baryv  # type: ignore
 
 
 class FullPath(argparse.Action):
@@ -182,7 +183,12 @@ def execute(command, out=sys.stdout, err=sys.stderr, quiet=False, dry_run=False)
     """
     if not dry_run:
         process = subprocess.run(
-            command, shell=True, stdout=out, stderr=err, universal_newlines=True
+            command,
+            shell=True,
+            stdout=out,
+            stderr=err,
+            text=True,
+            check=True,
         )
         if not quiet:
             print("#####  " + command, file=out)
@@ -303,7 +309,7 @@ def do_search(
 
     # infiles will be assumed to be a list later on
     if type(infiles) is str:
-        infiles = [infiles]  # noqa: E701
+        infiles = [infiles]
     # Make a dictionary of the function arguments.  This will make formatting
     # the commands a lot simpler
     kwargs = {
@@ -338,16 +344,14 @@ def do_search(
             basenm=kwargs["basenm"], num=ii + 1
         )
         print(newfilenm)
-        cmd = "mv {0} {1}".format(filenm, newfilenm)
+        cmd = f"mv {filenm} {newfilenm}"
         ret = execute(cmd, out=outfile, err=errfile)
         # NCHNOFFS is set to "*" by digifits, so we need to set it to zero
         # before making filterbank file
         with fits.open(newfilenm, "update") as f:
             f[-1].header["NCHNOFFS"] = 0
         # Make a filterbank file
-        cmd = "/data/rfimit/unmitigated/reduced/psrfits2fil.py --sumpols " "{0}".format(
-            newfilenm
-        )
+        cmd = "/data/rfimit/unmitigated/reduced/psrfits2fil.py --sumpols {newfilenm}"
         ret = execute(cmd, out=outfile, err=errfile)
 
     ### cmd = ("digifil -b {nbits} -d 4 -F {nchan}:D -D {dm} -K "
@@ -438,8 +442,7 @@ def do_search(
     except FileNotFoundError:
         baryv = 0.0
     cmd = (
-        "ls *search*.fft | xargs -L 1 accelsearch -numharm 16 -zmax 50 "
-        "-baryv %f " % baryv
+        f"ls *search*.fft | xargs -L 1 accelsearch -numharm 16 -zmax 50 -baryv {baryv} "
     )
     ret = execute(cmd, out=outfile, err=errfile)
 
@@ -466,12 +469,12 @@ def do_search(
         if len(cands):
             cands = sifting.remove_duplicate_candidates(cands)
             cands.sort(key=attrgetter("sigma"), reverse=True)
-            sifting.write_candlist(cands, "{}_{}.accelcands".format(basenm, gs))
+            sifting.write_candlist(cands, f"{basenm}_{gs}.accelcands")
         else:
-            Path("{}_{}.accelcands".format(basenm, gs)).touch()
+            Path(f"{basenm}_{gs}.accelcands").touch()
 
         # Create single-pulse plots for each group of time series
-        cmd = "single_pulse_search.py -t 5.0 *%s_search*.singlepulse" % gs
+        cmd = f"single_pulse_search.py -t 5.0 *{gs}_search*.singlepulse"
         ret = execute(cmd, out=outfile, err=errfile)
 
     # clean candidate lists
@@ -632,7 +635,7 @@ def do_fold(
     """
     # infiles will be assumed to be a list later on
     if type(infiles) is str:
-        infiles = [infiles]  # noqa: E701
+        infiles = [infiles]
     # Make a dictionary of the function arguments.  This will make formatting
     # the commands a lot simpler
     kwargs = {
@@ -745,8 +748,7 @@ def do_fold(
                 f.write(cal_basenm + "_cal_0001.fits\n")
                 f.write(fluxcal_on_basenm + "_cal_0001.fits\n")
                 f.write(fluxcal_off_basenm + "_cal_0001.fits\n")
-                for filenm in glob.glob("*fold*.fits"):
-                    f.write(filenm + "\n")
+                f.writelines(filenm + "\n" for filenm in glob.glob("*fold*.fits"))
             cmd = "pac -w -W calfiles.txt"
             ret = execute(cmd, out=outfile, err=errfile)
 
@@ -760,8 +762,7 @@ def do_fold(
             with open("calfiles.txt", "w") as f:
                 f.write(cal_basenm + "_cal_0001.fits\n")
                 f.write(fluxcal + "\n")
-                for filenm in glob.glob("*fold*.fits"):
-                    f.write(filenm + "\n")
+                f.writelines(filenm + "\n" for filenm in glob.glob("*fold*.fits"))
             cmd = "pac -w -W calfiles.txt"
             ret = execute(cmd, out=outfile, err=errfile)
 
@@ -770,8 +771,7 @@ def do_fold(
         else:
             with open("calfiles.txt", "w") as f:
                 f.write(cal_basenm + "cal_0001.fits\n")
-                for filenm in glob.glob("*fold*.fits"):
-                    f.write(filenm + "\n")
+                f.writelines(filenm + "\n" for filenm in glob.glob("*fold*.fits"))
             cmd = "pac -w -W calfiles.txt"
             ret = execute(cmd, out=outfile, err=errfile)
 
@@ -787,7 +787,7 @@ def do_fold(
         ret = execute(cmd, out=outfile, err=errfile)
 
         # Make a fully scrunched version for generating a standard template
-        cmd = "pam -e scr -FTp %s_fold_sum.calib*" % basenm
+        cmd = f"pam -e scr -FTp {basenm}_fold_sum.calib*"
         ret = execute(cmd, out=outfile, err=errfile)
 
         # Make a frequency-scunched version for generating TOAs
@@ -855,7 +855,7 @@ def main():
 
     # Switch to specified outdir
     if not os.path.isdir(args.outdir):
-        os.mkdir(args.outdir)  # noqa: E701
+        os.mkdir(args.outdir)
     os.chdir(args.outdir)
 
     # Parse the arguments that dont't have simple defaults
@@ -871,7 +871,7 @@ def main():
         elif args.outfile == "STDERR" or args.outfile == "stderr":
             outfile = sys.stderr  # Why would anyone do this?
         else:
-            outfile = open(args.outfile, "w")
+            outfile = open(args.outfile, "w")  # noqa: SIM115
     else:
         outfile = sys.stdout
 
@@ -881,7 +881,7 @@ def main():
         elif args.outfile == "STDOUT" or args.outfile == "stdout":
             outfile = sys.stdout
         else:
-            errfile = open(args.errfile, "w")
+            errfile = open(args.errfile, "w")  # noqa: SIM115
     else:
         errfile = sys.stdout
 

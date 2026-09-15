@@ -1,7 +1,3 @@
-# spectral entropy
-
-import math as math
-
 import numpy as np
 import scipy as sp
 import scipy.optimize
@@ -67,7 +63,7 @@ class rfi_swnorm(mitigateRFI):
         self._stat_filename = f"{self.output_mit_srdp_dir}{self.npybase}_stat_{self.det_method}_{self.repl_method}_{self._outfile_pattern}_{self.cust}.npy"
 
         out = f"""input: {self.infile_raw_full}\noutput: {self.outfile_raw_full}\nspect: {self._spect_filename}"""
-        # print(out)
+        print(out)
 
     def swnorm_detection(self, data):
 

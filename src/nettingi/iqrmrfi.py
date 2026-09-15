@@ -1,14 +1,11 @@
-import numpy as np
-
-import math as math
-
-from blimpy import GuppiRaw
+import sys
 
 import iqrm
-
+import numpy as np
+from blimpy import GuppiRaw
 from tqdm import tqdm
-from .core import mitigateRFI
 
+from .core import mitigateRFI
 from .utils import (
     template_bookkeeping,
     template_calc_ave,
@@ -44,7 +41,7 @@ class rfi_iqrm(mitigateRFI):
             "sk",
         ]  # valid inputs for IQRM_datatype
         if IQRM_datatype not in valid:
-            raise ValueError("IQRM_datatype must be one of %r." % valid)
+            raise ValueError(f"IQRM_datatype must be one of {valid}.")
 
         # user-given attributes
         self.det_method = "IQRM"
@@ -103,8 +100,8 @@ class rfi_iqrm(mitigateRFI):
         IQRM_lag_time = iqrm.core.genlags(IQRM_radius_time, geofactor=1.5)
         IQRM_lag_freq = iqrm.core.genlags(IQRM_radius_freq, geofactor=1.5)
 
-        print("integer time lags, k: {}".format(IQRM_lag_time))
-        print("integer freq lags, k: {}".format(IQRM_lag_freq))
+        print(f"integer time lags, k: {IQRM_lag_time}")
+        print(f"integer freq lags, k: {IQRM_lag_freq}")
 
     def iqrm_detection(self, data):
         """
@@ -120,10 +117,10 @@ class rfi_iqrm(mitigateRFI):
                 An array of flags, indicating where the RFI is.
         """
         if self.IQRM_datatype == "std" and data.shape[1] % self.IQRM_breakdown != 0:
-            raise ValueError("IQRM_breakdown must be a factor of %r." % self.shape[1])
+            raise ValueError(f"IQRM_breakdown must be a factor of {self.shape[1]}.")
 
         if data.shape[1] % self.ave_factor != 0:
-            raise ValueError("ave_factor must be a factor of %r." % self.shape[1])
+            raise ValueError(f"ave_factor must be a factor of {self.shape[1]}.")
 
         if self.IQRM_datatype == "power":
             flag_chunk = iqrm_power(data, self.IQRM_radius, self.IQRM_threshold)
@@ -152,7 +149,7 @@ class rfi_iqrm(mitigateRFI):
 
         else:
             print("Data metric not supported yet")
-            exit()
+            sys.exit()
 
         return flag_chunk
 
@@ -173,9 +170,7 @@ def iqrm_std(
 
     data = template_calc_std(np.abs(data) ** 2, breakdown)
     flag_chunk = np.zeros(data.shape)
-    print(
-        "Flag shape: {} || block size: {}".format(flag_chunk.shape, flag_chunk.nbytes)
-    )
+    print(f"Flag shape: {flag_chunk.shape} || block size: {flag_chunk.nbytes}")
     for i in tqdm(range(data.shape[2])):  # iterate through polarizations
         for j in range(data.shape[0]):  # iterate through channels
             flag_chunk[j, :, i] = iqrm.iqrm_mask(
@@ -200,9 +195,7 @@ def iqrm_avgpwr(
     """
     data = template_calc_ave(np.abs(data) ** 2, breakdown)
     flag_chunk = np.zeros(data.shape)
-    print(
-        "Flag shape: {} || block size: {}".format(flag_chunk.shape, flag_chunk.nbytes)
-    )
+    print(f"Flag shape: {flag_chunk.shape} || block size: {flag_chunk.nbytes}")
     for i in tqdm(range(data.shape[2])):  # iterate through polarizations
         for j in range(data.shape[0]):  # iterate through channels
             flag_chunk[j, :, i] = iqrm.iqrm_mask(

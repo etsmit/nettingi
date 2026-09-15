@@ -312,11 +312,11 @@ class rfi_sk(mitigateRFI):
         p = self._SK_p
         # Statistical moments
         moment_1 = 1
-        moment_2 = float((2 * (M**2) * Nd * (1 + Nd))) / (
+        moment_2 = float(2 * (M**2) * Nd * (1 + Nd)) / (
             (M - 1) * (6 + 5 * M * Nd + (M**2) * (Nd**2))
         )
         moment_3 = float(
-            (8 * (M**3) * Nd * (1 + Nd) * (-2 + Nd * (-5 + M * (4 + Nd))))
+            8 * (M**3) * Nd * (1 + Nd) * (-2 + Nd * (-5 + M * (4 + Nd)))
         ) / (((M - 1) ** 2) * (2 + M * Nd) * (3 + M * Nd) * (4 + M * Nd) * (5 + M * Nd))
         moment_4 = float(
             12
@@ -354,11 +354,11 @@ class rfi_sk(mitigateRFI):
         beta_two = (moment_4) / (moment_2**2)
         error_4 = np.abs(  # noqa: F841
             (100 * 3 * beta * (2 + beta) * (alpha**4)) / (moment_4 - 1)
-        )  # noqa: F841
+        )
         kappa = float(beta_one * (beta_two + 3) ** 2) / (
             4 * (4 * beta_two - 3 * beta_one) * (2 * beta_two - 3 * beta_one - 6)
         )
-        print("kappa: {}".format(kappa))
+        print(f"kappa: {kappa}")
         x = [1]
         upperThreshold = sp.optimize.newton(
             self.upperRoot, x[0], args=(moment_2, moment_3, p)
