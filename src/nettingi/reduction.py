@@ -2,17 +2,15 @@
 # before and/or after mitigation
 
 
-import numpy as np
-import cupy as cp
-import cupyx as cpx
-from scipy import signal
-from tqdm import tqdm
-
+import glob
 import os
 import pickle
 
-
-import glob
+import cupy as cp
+import cupyx as cpx
+import numpy as np
+from scipy import signal
+from tqdm import tqdm
 
 
 def pfb_mask(
@@ -247,8 +245,8 @@ def raw2spec(resolution, gr, infile):
 
     gr.reset_index()
     for bb in range(gr.n_blocks):
-        print("Working on block {0} of {1}".format(bb + 1, gr.n_blocks))
-        hdr, data = gr.read_next_data_block()
+        print(f"Working on block {bb + 1} of {gr.n_blocks}")
+        _, data = gr.read_next_data_block()
         x = data[:, :, 0]
         y = data[:, :, 1]
         for nn in range(data.shape[0]):
@@ -520,7 +518,7 @@ def raw2spec_god(resolution, gr, det, outfile, mask=None):
     gr.reset_index()
     for bb in tqdm(range(gr.n_blocks)):
         print(f"Working on block {bb+1} of {gr.n_blocks}")
-        hdr, data = gr.read_next_data_block()
+        _, data = gr.read_next_data_block()
         x = data[:, :, 0]
         y = data[:, :, 1]
 

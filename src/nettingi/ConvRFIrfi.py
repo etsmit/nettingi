@@ -1,19 +1,14 @@
-# h
+import cupy as cp  # noqa: N999
 import numpy as np
-import cupy as cp
-
-import math as math
 import torch
-
 from blimpy import GuppiRaw
+from ConvRFI import RFIconv, init_RFIconv  # type: ignore
 
 from .core import mitigateRFI
-from ConvRFI import RFIconv, init_RFIconv
-
 from .utils import (
     template_bookkeeping,
+    template_calc_ave,
 )
-from .utils import template_calc_ave
 
 # for object-based JIT compile
 # spec = [

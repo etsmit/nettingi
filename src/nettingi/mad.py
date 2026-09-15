@@ -1,12 +1,9 @@
-# mad
+import sys
 
 import numpy as np
-
-import math as math
 from blimpy import GuppiRaw
 
 from .core import mitigateRFI
-
 from .utils import template_bookkeeping
 
 
@@ -94,7 +91,7 @@ class rfi_mad(mitigateRFI):
 
         if data.shape[1] // (N * M) != data.shape[1] / (N * M):
             print(f"{N} x {M} needs to integer divide {data.shape[1]}")
-            exit()
+            sys.exit()
 
         for i in range(data.shape[2]):
 
